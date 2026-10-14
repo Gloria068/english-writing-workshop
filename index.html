@@ -473,6 +473,186 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 }
 </style>
 
+<style id="liquid-glass-style">
+/* ============================================================
+   Liquid Glass 设计系统（iPhone 17 代视觉）— 分阶段启用、可整体关闭
+   开关：URL ?glass=off|p2|p3|p4|all（默认 all），选择记忆在 localStorage
+   铁律（防 Safari 白屏，2026-10 复盘）：
+   1) 玻璃层绝不嵌套 —— 玻璃容器内的子面板一律实色/高饱和对比，绝无第二个 backdrop-filter
+   2) backdrop-filter 只挂在固定大面板上，绝不挂在列表里的每个小项
+   3) 玻璃底下的"折射源"是静态渐变（body::before），无任何动画，GPU 成本≈0
+   4) @supports 无 backdrop-filter / 系统偏好减少透明度 → 自动回落实色面板
+   ============================================================ */
+:root {
+  --lg-blur: 20px;
+  --lg-sat: 180%;
+  --lg-radius: 18px;
+  --lg-bg: rgba(255, 255, 255, .52);          /* 浅色玻璃底（保证深色文字对比） */
+  --lg-bg-side: rgba(255, 255, 255, .36);     /* 侧栏大面积玻璃（更透，macOS 侧栏惯例） */
+  --lg-bar: rgba(255, 255, 255, .44);         /* 顶栏 */
+  --lg-rim: rgba(255, 255, 255, .25);         /* 1px 边缘高光（specular） */
+  --lg-rim-top: rgba(255, 255, 255, .55);     /* 顶缘环境光 */
+  --lg-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 10px 34px rgba(15, 23, 42, .10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lg-bg: rgba(30, 30, 30, .4);
+    --lg-bg-side: rgba(22, 22, 24, .4);
+    --lg-bar: rgba(18, 18, 20, .5);
+    --lg-rim: rgba(255, 255, 255, .14);
+    --lg-rim-top: rgba(255, 255, 255, .09);
+    --lg-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 34px rgba(0, 0, 0, .45);
+  }
+}
+:root[data-theme="dark"] {
+  --lg-bg: rgba(30, 30, 30, .4);
+  --lg-bg-side: rgba(22, 22, 24, .4);
+  --lg-bar: rgba(18, 18, 20, .5);
+  --lg-rim: rgba(255, 255, 255, .14);
+  --lg-rim-top: rgba(255, 255, 255, .09);
+  --lg-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 34px rgba(0, 0, 0, .45);
+}
+
+/* ---------- Phase 1 交付：可复用玻璃类（本阶段不应用到任何组件） ---------- */
+.liquid-glass {
+  background: var(--lg-bg);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  border: 1px solid var(--lg-rim);
+  border-radius: var(--lg-radius);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim-top);
+  corner-shape: squircle; /* 支持连续曲率的浏览器渐进增强，其余浏览器忽略 */
+  isolation: isolate;
+}
+
+/* ---------- 兜底：引擎不支持 backdrop-filter → 玻璃全落回实色 ----------
+   （系统偏好"减少透明度"由开关脚本检测并直接摘除 data-glass） */
+@supports not ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
+  .liquid-glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--panel); }
+}
+
+/* ============================================================
+   Phase 2（试点）：环境折射源（静态渐变，无动画）+ 单个隔离组件 .q-panel
+   ============================================================ */
+/* 玻璃要"底下有东西可折射"：四区主题色的静态环境光（紫/橙/蓝/绿），fixed 全屏，
+   z-index:-1 沉底；无任何动画，GPU 成本≈0 */
+html[data-glass] body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 34% at 12% 8%,  rgba(175, 82, 222, .17), transparent 70%),
+    radial-gradient(40% 36% at 88% 4%,  rgba(255, 149, 0,  .13), transparent 70%),
+    radial-gradient(46% 40% at 92% 88%, rgba(0, 122, 255,  .14), transparent 70%),
+    radial-gradient(44% 36% at 6% 92%,  rgba(48, 209, 89,  .10), transparent 70%);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-glass]:not([data-theme="light"]) body::before {
+    background:
+      radial-gradient(42% 34% at 12% 8%,  rgba(191, 90, 242, .12), transparent 70%),
+      radial-gradient(40% 36% at 88% 4%,  rgba(255, 159, 10, .09), transparent 70%),
+      radial-gradient(46% 40% at 92% 88%, rgba(10, 132, 255, .11), transparent 70%),
+      radial-gradient(44% 36% at 6% 92%,  rgba(48, 209, 89,  .06), transparent 70%);
+  }
+}
+html[data-glass][data-theme="dark"] body::before {
+  background:
+    radial-gradient(42% 34% at 12% 8%,  rgba(191, 90, 242, .12), transparent 70%),
+    radial-gradient(40% 36% at 88% 4%,  rgba(255, 159, 10, .09), transparent 70%),
+    radial-gradient(46% 40% at 92% 88%, rgba(10, 132, 255, .11), transparent 70%),
+    radial-gradient(44% 36% at 6% 92%,  rgba(48, 209, 89,  .06), transparent 70%);
+}
+
+/* 试点组件：题目卡（右栏顶部、无嵌套玻璃子项、非交互关键路径） */
+html[data-glass~="p2"] .q-panel {
+  background: var(--lg-bg);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  border-color: var(--lg-rim);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim-top);
+  corner-shape: squircle;
+}
+
+/* ============================================================
+   Phase 3（推广）：主布局 — 顶栏补光 / 侧栏整面玻璃 / 当前句工作台玻璃
+   铁律执行：玻璃面板的所有子元素（观点卡 / 中文框 / 拼装条）保持实色对比，
+   全页面同时挂 backdrop-filter 的只有 侧栏 + 题目卡 + 工作台 三块固定面板。
+   ============================================================ */
+html[data-glass~="p3"] .topbar {
+  background: var(--lg-bar);
+  box-shadow: inset 0 1px 0 var(--lg-rim-top);
+}
+html[data-glass~="p3"] .db {
+  background: var(--lg-bg-side);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+}
+/* 侧栏观点卡 = 玻璃上的实色对比面（不嵌玻璃），用浮起阴影分层 */
+html[data-glass~="p3"] .card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 4px 14px rgba(15, 23, 42, .08);
+}
+html[data-glass~="p3"] .stage {
+  background: var(--lg-bg);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+  border-color: var(--lg-rim);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 var(--lg-rim-top);
+  corner-shape: squircle;
+}
+/* 工作台内的输入托盘（zh-box / asm-box）保持实色，但底色改为半透明白以便与玻璃底座分区 */
+html[data-glass~="p3"] .zh-box,
+html[data-glass~="p3"] .asm-box {
+  background: rgba(255, 255, 255, .82);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-glass~="p3"]:not([data-theme="light"]) .zh-box,
+  html[data-glass~="p3"]:not([data-theme="light"]) .asm-box { background: rgba(44, 44, 46, .88); }
+}
+html[data-glass~="p3"][data-theme="dark"] .zh-box,
+html[data-glass~="p3"][data-theme="dark"] .asm-box { background: rgba(44, 44, 46, .88); }
+
+/* ============================================================
+   Phase 4（分组容器）：四词区 .zone —— 共享采样区原则
+   词区不挂 backdrop-filter（避免与固定面板的采样互相畸变、控制滤镜总数），
+   只做 1px 内缘高光 + 轻浮起 + 连续曲率，靠既有分区色保持"干净的分框"。
+   ============================================================ */
+html[data-glass~="p4"] .zone {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 1px 2px rgba(15, 23, 42, .04);
+  corner-shape: squircle;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-glass~="p4"]:not([data-theme="light"]) .zone {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 1px 2px rgba(0, 0, 0, .3);
+  }
+}
+html[data-glass~="p4"][data-theme="dark"] .zone {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 1px 2px rgba(0, 0, 0, .3);
+}
+</style>
+
+<script>
+/* Liquid Glass 总开关：?glass=off|p2|p3|p4|all（默认 all），选择记忆在 localStorage（键 yasi-glass-mode）。
+   纯视觉开关：只改 <html> 的 data-glass 属性，不触碰任何业务状态。 */
+(function () {
+  try {
+    var m = location.search.match(/[?&]glass=([a-z0-9]+)/);
+    var mode = m ? m[1] : 'all';
+    try {
+      if (m) { localStorage.setItem('yasi-glass-mode', mode); }
+      else { var saved = localStorage.getItem('yasi-glass-mode'); if (saved) mode = saved; }
+    } catch (e) {}
+    var levels = { p2: ['p2'], p3: ['p2', 'p3'], p4: ['p2', 'p3', 'p4'], all: ['p2', 'p3', 'p4'] };
+    var set = levels[mode] || [];
+    var reduce = false;
+    try { reduce = window.matchMedia && window.matchMedia('(prefers-reduced-transparency: reduce)').matches; } catch (e) {}
+    if (set.length && !reduce) document.documentElement.setAttribute('data-glass', set.join(' '));
+    else document.documentElement.removeAttribute('data-glass');
+  } catch (e) { /* 开关失败不影响主应用 */ }
+})();
+</script>
+
 <div class="app">
   <header class="topbar">
     <div class="logo" aria-hidden="true"></div>
