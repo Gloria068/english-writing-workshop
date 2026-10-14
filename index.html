@@ -1553,45 +1553,54 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     { a: 'remain', b: 'increase', t: 'ant', note: 'remain 与 increase 相反：保持不变 / 增长' }
   ];
 
-  /* ================= 加分词·语境词块库 v2（模块隔离区 · 试点 10 条） =================
-     规格 VocabularyEntry：词块（chunk）按功能组索引、按语义四维区分（强度/情感/学科/语体），
-     附屈折匹配、同义簇、句法变换与类型化纠错——取代"高级词单"式的词典释义。
+  /* ================= 加分词·语境词块库 v2（模块隔离区 · 试点 18 条） =================
+     规格 VocabularyEntry：词块（chunk）按功能组索引、按语义维度区分（强度/情感/学科/语体/
+     隐喻标记），附屈折匹配、同义簇、双侧搭配（名词条目收左搭配形/动，动词收右搭配宾语）、
+     句法变换（名词化/短语↔正式/副形互换/倒装）与类型化纠错——取代"高级词单"式的词典释义。
      模块铁律（隔离边界）：
        · 本区自带数据/索引/适配层，不改动既有 ACAD/索引/评判代码路径；
        · 对外仅暴露两个接口：bonusTriggerDict()（→本地规则翻译选块）、
-         bonusCheckText(s)（→自建配件微提示）；其余模块保持安静；
+         bonusCheckText(s)（→自建配件微提示）+ 词块 tooltip 数据；其余模块保持安静；
        · 无独立 AI 聊天框：一切提示最小化、内联、不直接给出练习答案。
      or 生成规则（引擎侧，取代手写 eq）：同 cluster_id 且 intensity、sentiment 一致，
-     formality 相差 ≤1 级 → 簇内自动互为 or 等价；intensity 不同 → 仅生成程度辨析注记
-     （不得成 or）；主动/被动等句法变体不走簇，走 transformations 对接。
+     formality 四级标尺（informal_spoken/neutral/formal/highly_academic）相差 ≤1 级 →
+     簇内自动互为 or 等价；intensity 不同 → 仅生成程度辨析注记（不得成 or）；
+     主动/被动等句法变体不走簇，走 transformations 对接（phrasal_to_formal 亦然：
+     语体映射只在 tooltip 展示，不生成 or，跨语体互换不当等价）。
+     ielts_suitability 门控：discouraged 词条（如正式语境的口语短语动词）不进匹配索引/
+     触发词表/摘要，仅其 register_trap 纠错项经 bonusCheckText 出语体微提示。
      生产流程沿用 v1：draft（AI 起草）→ validated（语料核对）→ reviewed（人工审核，仅此态上线）。 */
 
-  /** VocabularyEntry v2 —— 加分词·语境词块（JSDoc，对照规格 §2）
+  /** VocabularyEntry v2 —— 加分词·语境词块（JSDoc，对照规格 §1）
    * @typedef {Object} VocabularyEntry
    * @property {string} id                 唯一编号（vb-NNN）
    * @property {string} chunk_form         词块表面形式（含固定介词；A/B 为槽位助记，如 attribute A to B）
    * @property {string[]} inflections      屈折形式（stems from / stemmed from…，进匹配索引）
-   * @property {'verb'|'noun'|'adjective'|'adverb'|'phrase_block'} pos 词性
-   * @property {string[]} function_groups  功能组索引（归因与因果 / 程度与聚焦 / 转述与立场…）
+   * @property {'verb'|'noun'|'adjective'|'adverb'|'phrasal_verb'|'phrase_block'} pos 词性
+   * @property {string[]} function_groups  功能组索引（归因与因果 / 数量与程度 / 变化与趋势 /
+   *                                       评价与强调 / 转述与立场 / 隐喻与修辞…）
    * @property {string[]} chinese_triggers 中文触发词（→翻译选块）
    * @property {string} [cluster_id]       同义簇：簇内按上方 or 规则自动生成等价
-   * @property {Object} nuance             语义四维
+   * @property {Object} nuance             语义维度
    * @property {'neutral'|'strong'|'extreme'} nuance.intensity
    * @property {'neutral'|'negative'|'sudden_negative'|'positive'} nuance.sentiment
-   * @property {'general'|'academic'|'medical'|'technical'} nuance.domain
-   * @property {'informal'|'formal'|'highly_academic'} nuance.formality
-   * @property {Object} collocations       按词性分类的典型搭配
-   * @property {string[]} [collocations.nouns]
-   * @property {string[]} [collocations.adverbs]
-   * @property {string[]} [collocations.adjectives]
+   * @property {'general'|'academic'|'medical'|'physics'|'social_science'} nuance.domain
+   * @property {'informal_spoken'|'neutral'|'formal'|'highly_academic'} nuance.formality
+   * @property {boolean} [nuance.is_metaphorical] 隐喻/习语标记（如 shed light on）
+   * @property {Object} collocations       双侧搭配：名词条目收左搭配（形/动），动词/形收右搭配（宾语）
+   * @property {string[]} [collocations.paired_adjectives] 名词的惯用形容词（heated debate）
+   * @property {string[]} [collocations.paired_verbs]      名词的惯用动词（engage in debate）
+   * @property {string[]} [collocations.paired_nouns]      动词/形容词的惯用宾语
+   * @property {string[]} [collocations.adverbs]           惯用副词
    * @property {Object} syntax             句法与组合
    * @property {string} [syntax.fixed_preposition]
    * @property {string[]} [syntax.patterns]
    * @property {'frequent'|'occasional'|'rare'} syntax.passivization_tendency
-   * @property {{type:'nominalization'|'adverb_adj_shift'|'inversion', equivalent_form:string}[]} [transformations]
+   * @property {{type:'nominalization'|'phrasal_to_formal'|'adverb_adj_shift'|'inversion',
+   *             equivalent_form:string}[]} [transformations] 句法变换/语体映射（仅 tooltip 展示）
    * @property {{incorrect_form:string, correct_form:string, rule_hint:string,
-   *             type:'preposition'|'pos'|'collocation'|'confusable'}[]} [common_errors]
-   * @property {'core'|'optional'|'discouraged'} ielts_suitability
+   *             type:'preposition'|'pos'|'collocation'|'uncountable'|'subject_verb_agreement'|'register_trap'}[]} [common_errors]
+   * @property {'core'|'optional'|'discouraged'} ielts_suitability discouraged＝不奖励不推荐（不进索引/词表/摘要）
    * @property {string[]} original_examples 1–2 条原创例句
    * @property {'draft'|'validated'|'reviewed'} status 仅 reviewed 上线
    * 过渡期兼容字段（v1 引擎仍消费；引擎全面 v2 化后移除）：en/zh 一行释义、pa 惯用句式提示 */
@@ -1600,7 +1609,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: ['stems from', 'stemmed from', 'stemming from'], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: ['源于', '源自', '起因于'], cluster_id: 'cl-source',
       nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
-      collocations: { nouns: ['disputes', 'anxiety', 'confusion', 'prejudice'] },
+      collocations: { paired_nouns: ['disputes', 'anxiety', 'confusion', 'prejudice'] },
       syntax: { fixed_preposition: 'from', patterns: ['S(果) + stem from + NP(因)'], passivization_tendency: 'rare' },
       transformations: [{ type: 'nominalization', equivalent_form: 'the source of' }],
       common_errors: [
@@ -1613,7 +1622,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: ['results in', 'resulted in', 'resulting in'], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: ['导致', '造成了'], cluster_id: 'cl-cause',
       nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
-      collocations: { nouns: ['delays', 'higher costs', 'missed deadlines'] },
+      collocations: { paired_nouns: ['delays', 'higher costs', 'missed deadlines'] },
       syntax: { fixed_preposition: 'in', patterns: ['S(因) + result in + NP(果)'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'result into', correct_form: 'result in', rule_hint: '固定介词用 in：result in + 结果', type: 'preposition' },
@@ -1625,7 +1634,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: ['results from', 'resulted from', 'resulting from'], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: ['起因于', '出自'], cluster_id: 'cl-source',
       nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
-      collocations: { nouns: ['unclear instructions', 'poor planning', 'a lack of data'] },
+      collocations: { paired_nouns: ['unclear instructions', 'poor planning', 'a lack of data'] },
       syntax: { fixed_preposition: 'from', patterns: ['S(果) + result from + NP(因)'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'result from the fact', correct_form: 'result from + NP', rule_hint: 'result from 接名词（原因），不接 the fact 从句', type: 'collocation' }
@@ -1636,7 +1645,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: ['contributes to', 'contributed to', 'contributing to'], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: ['促成', '有助于'],
       nuance: { intensity: 'neutral', sentiment: 'positive', domain: 'academic', formality: 'formal' },
-      collocations: { nouns: ['rising costs', 'the success', 'a positive climate'] },
+      collocations: { paired_nouns: ['rising costs', 'the success', 'a positive climate'] },
       syntax: { fixed_preposition: 'to', patterns: ['S(部分因) + contribute to + NP(果)'], passivization_tendency: 'occasional' },
       transformations: [{ type: 'nominalization', equivalent_form: 'a contribution to' }],
       common_errors: [
@@ -1648,7 +1657,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: ['gave rise to', 'given rise to'], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: ['引发'], cluster_id: 'cl-cause',
       nuance: { intensity: 'neutral', sentiment: 'sudden_negative', domain: 'academic', formality: 'highly_academic' },
-      collocations: { nouns: ['debate', 'concern', 'tension', 'confusion'] },
+      collocations: { paired_nouns: ['debate', 'concern', 'tension', 'confusion'] },
       syntax: { fixed_preposition: 'to', patterns: ['S(因) + give rise to + NP(果)'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'give rise', correct_form: 'give rise to', rule_hint: 'raise 单独可及物；短语须完整：give rise to + 结果', type: 'collocation' }
@@ -1659,7 +1668,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: [], pos: 'verb',
       function_groups: ['归因与因果'], chinese_triggers: [],
       nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'highly_academic' },
-      collocations: { nouns: ['the decline', 'the improvement', 'the gap'] },
+      collocations: { paired_nouns: ['the decline', 'the improvement', 'the gap'] },
       syntax: { fixed_preposition: 'to', patterns: ['S + attribute A(果) to B(因)'], passivization_tendency: 'frequent' },
       transformations: [{ type: 'nominalization', equivalent_form: 'the attribution of A to B' }],
       common_errors: [
@@ -1683,7 +1692,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       inflections: [], pos: 'phrase_block',
       function_groups: ['归因与因果'], chinese_triggers: ['由于'],
       nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'highly_academic' },
-      collocations: { nouns: ['heavy rain', 'technical faults', 'budget cuts'] },
+      collocations: { paired_nouns: ['heavy rain', 'technical faults', 'budget cuts'] },
       syntax: { fixed_preposition: '', patterns: ['owing to + NP(因)'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'owing to', correct_form: 'owing to the fact that', rule_hint: 'owing to 只接名词短语；接从句须用 the fact that', type: 'collocation' }
@@ -1692,9 +1701,9 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       status: 'draft', en: 'because of (formal)', zh: '由于（书面，多在句首）' },
     { id: 'vb-009', chunk_form: 'significantly',
       inflections: [], pos: 'adverb',
-      function_groups: ['程度与聚焦'], chinese_triggers: ['显著地', '明显地'], cluster_id: 'cl-degree-strong',
+      function_groups: ['数量与程度'], chinese_triggers: ['显著地', '明显地'], cluster_id: 'cl-degree-strong',
       nuance: { intensity: 'strong', sentiment: 'neutral', domain: 'general', formality: 'formal' },
-      collocations: { adjectives: ['higher', 'lower', 'different'], verbs: [] },
+      collocations: { paired_adjectives: ['higher', 'lower', 'different'] },
       syntax: { patterns: ['significantly + 比较级 / 动词'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'increase significant', correct_form: 'increase significantly', rule_hint: '修饰动词/比较级用副词 significantly（-ly）', type: 'pos' }
@@ -1703,23 +1712,116 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       status: 'reviewed', en: 'by an amount that matters', zh: '显著地（常与数字/差值连用）' },
     { id: 'vb-010', chunk_form: 'considerably',
       inflections: [], pos: 'adverb',
-      function_groups: ['程度与聚焦'], chinese_triggers: ['大幅', '相当大'], cluster_id: 'cl-degree-strong',
+      function_groups: ['数量与程度'], chinese_triggers: ['大幅', '相当大'], cluster_id: 'cl-degree-strong',
       nuance: { intensity: 'strong', sentiment: 'neutral', domain: 'general', formality: 'formal' },
-      collocations: { adjectives: ['cheaper', 'larger', 'more demanding'] },
+      collocations: { paired_adjectives: ['cheaper', 'larger', 'more demanding'] },
       syntax: { patterns: ['considerably + 比较级'], passivization_tendency: 'rare' },
       common_errors: [
         { incorrect_form: 'fell considerable', correct_form: 'fell considerably', rule_hint: '修饰动词/比较级用副词 considerably（-ly）', type: 'pos' }
       ],
       ielts_suitability: 'core', original_examples: ['Journeys became considerably cheaper after the bridge opened.'],
-      status: 'reviewed', en: 'by a large amount', zh: '大幅地、可观地' }
+      status: 'reviewed', en: 'by a large amount', zh: '大幅地、可观地' },
+    { id: 'vb-011', chunk_form: 'carry out',
+      inflections: ['carries out', 'carried out', 'carrying out'], pos: 'phrasal_verb',
+      function_groups: ['转述与立场'], chinese_triggers: ['开展', '执行'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
+      collocations: { paired_nouns: ['research', 'a study', 'an experiment', 'a survey'] },
+      syntax: { fixed_preposition: '', patterns: ['carry out + 研究类宾语（可被动：be carried out）'], passivization_tendency: 'frequent' },
+      transformations: [{ type: 'phrasal_to_formal', equivalent_form: 'conduct' }],
+      common_errors: [
+        { incorrect_form: 'carry out researches', correct_form: 'carry out research', rule_hint: 'research 不可数：carry out research / research studies', type: 'uncountable' }
+      ],
+      ielts_suitability: 'core', original_examples: ['Researchers carried out a series of experiments over two years.'],
+      status: 'reviewed', en: 'to perform; to complete', zh: '开展、执行（研究类宾语）' },
+    { id: 'vb-012', chunk_form: 'in excess of',
+      inflections: [], pos: 'phrase_block',
+      function_groups: ['数量与程度'], chinese_triggers: ['超过', '多于'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'highly_academic' },
+      collocations: { paired_nouns: ['the limit', 'the recommended level', 'previous estimates'] },
+      syntax: { fixed_preposition: 'of', patterns: ['in excess of + 数量（= more than）'], passivization_tendency: 'rare' },
+      common_errors: [
+        { incorrect_form: 'in excess than', correct_form: 'in excess of', rule_hint: '固定搭配 in excess of + 数量（超过……）', type: 'preposition' }
+      ],
+      ielts_suitability: 'optional', original_examples: ['The budget rose in excess of 20 per cent.'],
+      status: 'reviewed', en: 'more than (a number)', zh: '超过（数量，书面）' },
+    { id: 'vb-013', chunk_form: 'shed light on',
+      inflections: ['sheds light on', 'shedding light on'], pos: 'phrasal_verb',
+      function_groups: ['隐喻与修辞'], chinese_triggers: ['阐明', '揭示', '有助于理解'],
+      nuance: { intensity: 'neutral', sentiment: 'positive', domain: 'academic', formality: 'formal', is_metaphorical: true },
+      collocations: { paired_nouns: ['the issue', 'the debate', 'the causes', 'this question'] },
+      syntax: { fixed_preposition: 'on', patterns: ['S + shed light on + NP'], passivization_tendency: 'rare' },
+      common_errors: [
+        { incorrect_form: 'shed light in', correct_form: 'shed light on', rule_hint: '固定介词用 on：shed light on + 问题', type: 'preposition' }
+      ],
+      ielts_suitability: 'optional', original_examples: ['The findings shed light on the causes of youth unemployment.'],
+      status: 'reviewed', en: 'to make something easier to understand', zh: '阐明、揭示（隐喻：照亮）' },
+    { id: 'vb-014', chunk_form: 'debate',
+      inflections: ['debates'], pos: 'noun',
+      function_groups: ['转述与立场'], chinese_triggers: ['辩论', '争论', '争议'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'social_science', formality: 'formal' },
+      collocations: { paired_adjectives: ['heated', 'ongoing', 'fierce', 'public'], paired_verbs: ['engage in', 'spark', 'fuel'] },
+      syntax: { fixed_preposition: 'over/about', patterns: ['a debate over/about + NP；one of the debates'], passivization_tendency: 'rare' },
+      common_errors: [
+        { incorrect_form: 'one of the debate was', correct_form: 'one of the debates was', rule_hint: 'one of + 复数名词 + 单数动词', type: 'subject_verb_agreement' }
+      ],
+      ielts_suitability: 'core', original_examples: ['The rule sparked a heated debate over campus safety.'],
+      status: 'reviewed', en: 'a discussion about a subject', zh: '辩论、争论（可数）' },
+    { id: 'vb-015', chunk_form: 'evidence',
+      inflections: [], pos: 'noun',
+      function_groups: ['评价与强调'], chinese_triggers: ['证据'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
+      collocations: { paired_adjectives: ['compelling', 'empirical', 'growing'], paired_verbs: ['provide', 'examine', 'cite'] },
+      syntax: { fixed_preposition: 'for/of', patterns: ['evidence for/of + NP；不可数：much / a great deal of evidence'], passivization_tendency: 'occasional' },
+      common_errors: [
+        { incorrect_form: 'evidences', correct_form: 'evidence / pieces of evidence', rule_hint: 'evidence 不可数：不说 evidences，量化用 pieces of evidence', type: 'uncountable' },
+        { incorrect_form: 'evidences show', correct_form: 'evidence shows', rule_hint: 'evidence 不可数 → 动词用单数', type: 'subject_verb_agreement' }
+      ],
+      ielts_suitability: 'core', original_examples: ['There is growing evidence for this view.'],
+      status: 'reviewed', en: 'facts that prove something', zh: '证据（不可数）' },
+    { id: 'vb-016', chunk_form: 'work out',
+      inflections: ['works out', 'worked out', 'working out'], pos: 'phrasal_verb',
+      function_groups: ['评价与强调'], chinese_triggers: [],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'general', formality: 'informal_spoken' },
+      collocations: { paired_nouns: ['a solution', 'the details', 'a plan'] },
+      syntax: { fixed_preposition: '', patterns: ['work out + NP（口语）'], passivization_tendency: 'rare' },
+      transformations: [{ type: 'phrasal_to_formal', equivalent_form: 'devise' }],
+      common_errors: [
+        { incorrect_form: 'work out', correct_form: 'devise / develop', rule_hint: '口语短语动词，正式写作建议换 devise / develop', type: 'register_trap' },
+        { incorrect_form: 'work out a solution', correct_form: 'devise / develop a solution', rule_hint: '口语短语动词，正式写作建议换 devise / develop', type: 'register_trap' }
+      ],
+      ielts_suitability: 'discouraged', original_examples: ['We finally worked out a compromise.'],
+      status: 'reviewed', en: 'to find the answer to', zh: '想出、解决（口语）' },
+    { id: 'vb-017', chunk_form: 'put forward',
+      inflections: ['puts forward', 'putting forward'], pos: 'phrasal_verb',
+      function_groups: ['转述与立场'], chinese_triggers: ['提出'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
+      collocations: { paired_nouns: ['an argument', 'a proposal', 'a view', 'a theory'] },
+      syntax: { fixed_preposition: '', patterns: ['S + put forward + NP(观点/提议)'], passivization_tendency: 'occasional' },
+      transformations: [{ type: 'phrasal_to_formal', equivalent_form: 'present' }],
+      common_errors: [
+        { incorrect_form: 'put forward to an argument', correct_form: 'put forward an argument', rule_hint: 'put forward 直接及物：put forward + 观点，不加 to', type: 'collocation' }
+      ],
+      ielts_suitability: 'optional', original_examples: ['The committee put forward a new proposal.'],
+      status: 'reviewed', en: 'to suggest an idea for discussion', zh: '提出（观点、提议）' },
+    { id: 'vb-018', chunk_form: 'undergo',
+      inflections: ['undergoes', 'underwent', 'undergone', 'undergoing'], pos: 'verb',
+      function_groups: ['变化与趋势'], chinese_triggers: ['经历', '经受'],
+      nuance: { intensity: 'neutral', sentiment: 'neutral', domain: 'academic', formality: 'formal' },
+      collocations: { paired_nouns: ['significant changes', 'a major transformation', 'rapid development'] },
+      syntax: { fixed_preposition: '', patterns: ['S + undergo + NP(变化类)'], passivization_tendency: 'occasional' },
+      common_errors: [
+        { incorrect_form: 'undergo to changes', correct_form: 'undergo changes', rule_hint: 'undergo 及物不带介词：undergo + 变化类宾语', type: 'preposition' }
+      ],
+      ielts_suitability: 'core', original_examples: ['The industry has undergone significant changes since 2010.'],
+      status: 'reviewed', en: 'to experience a change', zh: '经历、经受（变化）' }
   ];
 
   /* ---- v2→v1 适配层：新维度喂给旧引擎（索引/digest/or/评判零改动） ---- */
   var V2_INT = { neutral: 2, strong: 3, extreme: 3 };
-  var V2_FRM = { informal: 'n', formal: 'sf', highly_academic: 'f' };
+  var V2_FRM = { informal_spoken: 'n', neutral: 'n', formal: 'sf', highly_academic: 'f' }; /* 四级语体（规格 §1） */
   function acadV2ToV1(e) {
     var nv = e.nuance || {}, sy = e.syntax || {}, cl = e.collocations || {};
-    var co = [].concat(cl.nouns || [], cl.adverbs || [], cl.adjectives || []);
+    var co = [].concat(cl.paired_nouns || [], cl.paired_adjectives || [], cl.paired_verbs || [], cl.adverbs || []); /* 双侧搭配并展 */
     var o = {
       w: e.chunk_form,
       g: (e.function_groups || [])[0] || '未分组',
@@ -1728,9 +1830,9 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       en: e.en, zh: e.zh,
       reg: V2_FRM[nv.formality || 'formal'],
       str: V2_INT[nv.intensity || 'neutral'],
-      col: (sy.fixed_preposition || e.pos === 'phrase_block') ? 'fix' : 'free',
+      col: (sy.fixed_preposition || e.pos === 'phrase_block' || e.pos === 'phrasal_verb') ? 'fix' : 'free', /* 短语动词整块 */
       eq: [], /* 等价一律由同义簇规则生成，禁手写 */
-      st: e.status,
+      st: e.ielts_suitability === 'discouraged' ? 'draft' : e.status, /* discouraged：不进索引/词表/摘要，数据保留备查 */
       ex: (e.original_examples || [])[0]
     };
     if (co.length) o.co = co;
@@ -1744,7 +1846,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
   (function () {
     var SUP = { 'stem from': 1, 'result in': 1, 'result from': 1, 'contribute to': 1,
       'give rise to': 1, 'attribute A to B': 1, 'be attributed to': 1, 'owing to': 1,
-      'significantly': 1, 'considerably': 1 };
+      'significantly': 1, 'considerably': 1, 'carry out': 1 };
     ACAD.forEach(function (e) { if (SUP[e.w]) e.st = 'draft'; });
     ACAD_V2.forEach(function (e2) {
       var v1 = acadV2ToV1(e2);
@@ -1758,10 +1860,10 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
 
   /* ---- 同义簇 → 自动 or 等价 / 程度辨析（规则见模块头） ---- */
   (function () {
-    var FR = { informal: 0, formal: 1, highly_academic: 2 };
+    var FR = { informal_spoken: 0, neutral: 1, formal: 2, highly_academic: 3 }; /* 四级标尺：跨 2 级不成 or */
     var groups = {};
     ACAD_V2.forEach(function (e2) {
-      if (e2.status !== 'reviewed' || !e2.cluster_id) return;
+      if (e2.status !== 'reviewed' || e2.ielts_suitability === 'discouraged' || !e2.cluster_id) return;
       (groups[e2.cluster_id] = groups[e2.cluster_id] || []).push(e2);
     });
     Object.keys(groups).forEach(function (cid) {
@@ -1782,7 +1884,8 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     });
   })();
 
-  /* ---- 纠错微提示索引：错误形式 → 一行 rule_hint（不泄练习答案） ---- */
+  /* ---- 纠错微提示索引：错误形式 → 一行 rule_hint（不泄练习答案）；
+     discouraged 词条的 register_trap 也走这里（词条本身不进词块索引，仅提示语体替换） ---- */
   var BONUS_ERR_BY = {};
   ACAD_V2.forEach(function (e2) {
     if (e2.status !== 'reviewed') return;
@@ -1793,23 +1896,35 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
   function bonusTriggerDict() {
     var out = [];
     ACAD_V2.forEach(function (e2) {
-      if (e2.status !== 'reviewed') return;
+      if (e2.status !== 'reviewed' || e2.ielts_suitability === 'discouraged') return;
       if (!e2.chinese_triggers || !e2.chinese_triggers.length) return;
       if (/\b[AB]\b/.test(e2.chunk_form)) return; /* 带槽位助记的句式块不进本地词表 */
       out.push({ zh: e2.chinese_triggers.slice(), en: e2.chunk_form, t: 'bonus' });
     });
     return out;
   }
+  var BONUS_ERR_PREFIX = { preposition: '搭配微提示', collocation: '搭配微提示', pos: '搭配微提示',
+    uncountable: '语法微提示', subject_verb_agreement: '语法微提示', register_trap: '语体微提示' };
   function bonusCheckText(s) {
-    var c = BONUS_ERR_BY[lexNorm(String(s || ''))];
-    return c ? '搭配微提示 · ' + c.rule_hint : null;
+    var n = lexNorm(String(s || ''));
+    var c = BONUS_ERR_BY[n]; /* 整串优先 */
+    if (!c) { /* 整串不中 → 逐词扫描（捕捉 the evidences 这类带冠词的输入） */
+      var ws = n.split(' ');
+      for (var i = 0; i < ws.length; i++) if (BONUS_ERR_BY[ws[i]]) { c = BONUS_ERR_BY[ws[i]]; break; }
+    }
+    return c ? (BONUS_ERR_PREFIX[c.type] || '搭配微提示') + ' · ' + c.rule_hint : null;
   }
   function bonusBlockTip(b) {
     var e = ACAD_BY[lexNorm(String(b && b.en || ''))];
     if (!e) return '';
     var REG = { n: '通用', sf: '书面', f: '正式' };
+    var DOM = { medical: '医学', physics: '物理', social_science: '社科' };
+    var v2 = e.v2 || {}, nv = v2.nuance || {};
     var bits = [e.g || '', REG[e.reg || 'n'], '强度' + (e.str || 2)];
+    if (nv.is_metaphorical) bits.push('隐喻');
+    if (DOM[nv.domain]) bits.push(DOM[nv.domain]);
     if (e.co && e.co.length) bits.push('常搭 ' + e.co.slice(0, 3).join(' / '));
+    if (v2.transformations && v2.transformations.length) bits.push('可换 ' + v2.transformations.map(function (t) { return t.equivalent_form; }).join(' / '));
     if (e.d) bits.push(e.d);
     return ' title="' + esc(bits.join(' · ')) + '"';
   }
@@ -1845,9 +1960,9 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     ACAD_REL_BY[lexNorm(r.a) + '|' + lexNorm(r.b)] = r;
     ACAD_REL_BY[lexNorm(r.b) + '|' + lexNorm(r.a)] = r;
   });
-  /* [v2 模块挂点] 屈折形式并入匹配索引：stems from 等指向同一词条（reviewed 专属） */
+  /* [v2 模块挂点] 屈折形式并入匹配索引：stems from 等指向同一词条（reviewed 专属；discouraged 不进） */
   ACAD_V2.forEach(function (e2) {
-    if (e2.status !== 'reviewed' || !e2.inflections) return;
+    if (e2.status !== 'reviewed' || e2.ielts_suitability === 'discouraged' || !e2.inflections) return;
     var v1 = ACAD_V2_ADAPTED_BY_ID[e2.id];
     e2.inflections.forEach(function (f) {
       var k = lexNorm(f);
@@ -2583,7 +2698,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
     puncRefFromText: puncRefFromText, stripPuncNodes: stripPuncNodes, ingestTree: ingestTree,
     ACAD: ACAD, ACAD_BY: ACAD_BY, ACAD_EQ: ACAD_EQ, ACAD_REL_BY: ACAD_REL_BY,
-    ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText
+    ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText, bonusBlockTip: bonusBlockTip
   };
 
   /* ================= 拼装与评判 ================= */
