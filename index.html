@@ -901,7 +901,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
     { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
     { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
-    { key: 'part',  name: '配件',   en: 'Parts',  hint: '零散词兜底 · 可自建词块', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true, punct: true }
+    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true, punct: true }
   ];
   var zonesEl = document.getElementById('zones');
   zonesEl.innerHTML = ZONES.map(function (z) {
@@ -1394,14 +1394,15 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       { zh: ['买得起', '吃得起'], en: 'afford to buy', t: 'bonus' },
       { zh: ['选择'], en: 'healthier choices', t: 'topic' },
       { zh: ['健康饮食'], en: 'healthy eating', t: 'topic' },
-      { zh: ['应该'], en: 'should', t: 'bonus' },
-      { zh: ['因为', '由于'], en: 'because', t: 'bonus' },
-      { zh: ['因此', '所以'], en: 'therefore', t: 'bonus' },
-      { zh: ['然而', '但是'], en: 'however', t: 'bonus' },
-      { zh: ['不仅'], en: 'not only', t: 'bonus' },
-      { zh: ['而且'], en: 'but also', t: 'bonus' },
-      { zh: ['更多'], en: 'more', t: 'bonus' },
-      { zh: ['能够', '可以'], en: 'can', t: 'bonus' },
+      /* [配件栏逻辑] 功能词（语法胶水）归配件，不占加分词栏 */
+      { zh: ['应该'], en: 'should', t: 'part' },
+      { zh: ['因为', '由于'], en: 'because', t: 'part' },
+      { zh: ['因此', '所以'], en: 'therefore', t: 'part' },
+      { zh: ['然而', '但是'], en: 'however', t: 'part' },
+      { zh: ['不仅'], en: 'not only', t: 'part' },
+      { zh: ['而且'], en: 'but also', t: 'part' },
+      { zh: ['更多'], en: 'more', t: 'part' },
+      { zh: ['能够', '可以'], en: 'can', t: 'part' },
       { zh: ['让', '使'], en: 'make', t: 'bonus' },
       { zh: ['降低', '减少'], en: 'lower', t: 'bonus' },
       { zh: ['引导'], en: 'guide people towards', t: 'bonus' },
@@ -1409,22 +1410,21 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       { zh: ['有效'], en: 'an effective way to', t: 'bonus' },
       { zh: ['我认为', '我觉得'], en: 'I believe that', t: 'bonus' }
     ].concat(bonusTriggerDict()); /* [v2 模块接口] 加分词·语境词块的中文触发词 */
-    var masked = zh, hits = [];
+    /* [配件栏逻辑] 命中按中文出现位置成块（不再按词典序）；等长占位替换，位置索引不漂移 */
+    var masked = zh, occ = [];
     D.map(function (e, i) {
       return { e: e, i: i, len: Math.max.apply(null, e.zh.map(function (k) { return k.length; })) };
     }).sort(function (a, b) { return b.len - a.len; }).forEach(function (o) {
-      var n = 0;
       o.e.zh.forEach(function (k) {
-        var parts = masked.split(k);
-        if (parts.length > 1) { n += parts.length - 1; masked = parts.join('▇'); }
+        var p;
+        while ((p = masked.indexOf(k)) >= 0) {
+          occ.push({ e: o.e, at: p });
+          masked = masked.slice(0, p) + Array(k.length + 1).join('▇') + masked.slice(p + k.length);
+        }
       });
-      if (n > 0) hits.push({ e: o.e, count: n, i: o.i });
     });
-    hits.sort(function (a, b) { return a.i - b.i; });
-    var tree = [];
-    hits.forEach(function (h) {
-      for (var k = 0; k < h.count; k++) tree.push({ t: h.e.t, en: h.e.en });
-    });
+    occ.sort(function (a, b) { return a.at - b.at; });
+    var tree = occ.map(function (o) { return { t: o.e.t, en: o.e.en }; });
     return { sentence: tree.map(function (nd) { return nd.en; }).join(' ') + '.', tree: tree };
   }
 
@@ -1849,6 +1849,17 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     }).join('\n');
   }
 
+  /* ---- [配件栏逻辑] 功能词兜底表：整块恰为功能词且未命中词库 → 一律归配件
+     （其他栏位收编不了的零散功能词不丢给用户手补；命中词库的优先归加分词） ---- */
+  var GLUE_WORDS = ('a an the this that these those it its they them their he him his she her we us our you your i me my' +
+    ' is am are was were be been being do does did done doing have has had having will would shall should can could may might must' +
+    ' of to in on at by for with about into over under from as and or but if so than then not no nor' +
+    ' all any both each few more most other some such only same very too also there when where why how' +
+    ' while whereas although though because therefore however thus hence').split(' ');
+  var GLUE_BY = {};
+  GLUE_WORDS.forEach(function (w) { GLUE_BY[w] = 1; });
+  ['not only', 'but also', 'so that', 'in order to'].forEach(function (w) { GLUE_BY[w] = 1; });
+
   /* ---- 拆分落地的词库规则：or 过滤 → 固定搭配合并 → 自由词拆分 → 归栏 ---- */
   function applyLexRules(tree, sentence) {
     function isLeaf(n) { return !!n && !n.or && n.t && n.en && n.t !== 'skel'; }
@@ -1909,6 +1920,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
         if (!isLeaf(nd)) { res.push(nd); return; }
         var nn = lexNorm(nd.en);
         if (ACAD_BY[nn]) { nd.t = 'bonus'; res.push(nd); return; }
+        if (GLUE_BY[nn]) { nd.t = 'part'; res.push(nd); return; } /* [配件栏逻辑] 功能词兜底：其他栏位收编不了的进配件 */
         var ws = String(nd.en).match(/[A-Za-z0-9'’-]+/g) || [];
         var at = -1;
         for (var q = 0; q < ws.length; q++) {
@@ -2449,7 +2461,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
         '{"t":"skel","parts":["文本",{"slot":"clause|noun|verb"},…],"fills":[[节点,…],…]} 骨架：跨话题高复用句型模板；parts 里的 {"slot":…} 是空位（clause=从句位，noun=名词短语位，verb=动词短语位）；fills[i] 是第 i 个空位里的节点序列，可以再嵌套骨架\n' +
         '{"t":"topic","en":"短语"} 话题料：只适用于本题的词汇短语\n' +
         '{"t":"bonus","en":"短语"} 加分词：跨话题通用的学术词与固定搭配\n' +
-        '{"t":"part","en":"词"} 配件兜底：仅当零散词确实无处安放（例外情况，尽量少用）\n' +
+        '{"t":"part","en":"词"} 配件：零散功能词的固定归属——冠词、助动词、be 动词、介词、代词、并列连词、不定式 to、从句引导词等不被骨架或实义词块收编的词，一律单独成 part 块（常态用法，不是例外）\n' +
         '{"or":[节点,节点]} 等价二选一：两个选项意思等价、语法互换、空位一致；仅当确实存在多种合法用法时使用（如 some people / many people、小品词位置可变的短语动词），不要为了凑数量而生成\n' +
         '{"t":"punc","ch":",","role":"sep","opt":true} 句级标点单独成块：ch 是标点字符（, . ; : ? ! — ( ) “ ”），role 取 sep（分隔）/end（句末）/open（成对开）/close（成对闭）/dash（破折）；省略 opt 表示必需，"opt":true 表示语法上可省略（如短状语后的逗号）\n' +
         '{"t":"wrap","open":"(","close":")","fills":[[节点,…]]} 成对标点包裹：插入语或引用整体放进一对括号/引号，fills[0] 是括号内的节点序列（括号本身不再另给 punc 块）\n' +
@@ -2457,8 +2469,8 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
         '1. 每个块的文字必须是这句英文里逐字出现的连续片段，保留句中实际形态（如 subsidising、taxing），禁止改写为原形或同义词；\n' +
         '2. 全部块按语序展开（骨架空位由 fills 内容替代）后逐词重组整句：不丢词、不多词；词内标点随词走（见规则9），句级标点单独成 punc 块或 wrap 块；\n' +
         '3. 对举/转折/引述结构优先做成骨架（While some…, others… / Not only…but also… / Some people argue that ___ 等）；连接词 while、whereas、but、therefore 与引述表达 some people argue that、it is often claimed that 必须写进骨架的固定文字，不单独成块；\n' +
-        '4. 归类顺序（上级能处理的不进下级）：① 引述/立场类固定成分写进骨架固定文字；② 冠词、限定词、助动词、零散介词并入相邻短语块；③ 实在无处可放才用 part；\n' +
-        '5. 以常用短语/搭配为一块（动词+介词、动宾搭配、介词短语），不拆散、不出现孤立介词；\n' +
+        '4. 归类顺序（上级能处理的不进下级）：① 引述/对举/立场类固定句型（含其连接词）写进骨架固定文字；② 实义短语与搭配按规则5、6整体成块（topic/bonus）；③ 其余零散功能词（冠词、限定词、助动词、be、介词、代词、并列连词、不定式 to、从句引导词 that/which 等）不得并入相邻块、不得藏进骨架固定文字，一律单独成 part 块；\n' +
+        '5. 实义搭配整体成块（动宾搭配、名词短语、介词短语），搭配内部不拆散、不拆出孤立介词；但搭配之外独立存在的功能词不并入搭配块，单独成 part；\n' +
         '6. 词库固定/半固定搭配必须整体成一块（如 specially designed、(in)directly linked to、pose a threat to、a considerable number of、due to、tend to）；自由程度副词（relatively、considerably、especially、largely 等）单独成块，不与相邻词合并；\n' +
         '7. or 二选一只限词库标注 ≡ 的等价对（relatively/comparatively、especially/particularly、largely/mostly、mainly/primarily、conduct/carry out）；反义、程度不同或易混的词（somewhat/considerably、specially/especially、directly/indirectly、result in/result from、prove/indicate）一律不得生成 or；\n' +
         '8. 归栏：命中词库词条的块一律 bonus；其他跨话题学术搭配也入 bonus；连接词与立场句型入 skel 固定文字；仅本题适用的词入 topic；\n' +
@@ -2540,7 +2552,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     matchSVOC: matchSVOC, patchPart: patchPart, pruneExtras: pruneExtras,
     nodeFromJSON: nodeFromJSON, stripFills: stripFills, formKey: formKey,
     visibleWords: visibleWords, checkBackbone: checkBackbone, scanParts: scanParts,
-    mechanicalSplit: mechanicalSplit,
+    mechanicalSplit: mechanicalSplit, localBlocks: localBlocks,
     applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
     punctToks: punctToks, joinToks: joinToks, canonText: canonText,
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
