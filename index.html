@@ -1,0 +1,3213 @@
+<meta charset="utf-8">
+<!-- 公开版：不含 API Key，自动运行本地规则模式（词块生成用内置词典，全部功能可用） -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>英语写作工作台</title>
+<style>
+/* 视觉范式：Apple Human Interface Guidelines
+   —— 系统字体栈（SF Pro / PingFang SC）、iOS 语义色、扁平控件（按压缩放而非 3D 硬阴影）、
+      分组背景 + 白卡片 + 发丝线分隔、半透明毛玻璃顶栏、聚焦环 */
+
+:root {
+  color-scheme: light;
+  --bg: #f2f2f7;              /* systemGroupedBackground */
+  --panel: #ffffff;
+  --panel-soft: #f2f2f7;      /* 卡片内输入区 / 侧栏 */
+  --ink: #1c1c1e;             /* label */
+  --ink-soft: rgba(60, 60, 67, .6);   /* secondaryLabel */
+  --line: rgba(60, 60, 67, .14);      /* 发丝线 */
+  --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .05);
+  --bar: rgba(255, 255, 255, .8);
+
+  --purple-block: #af52de;    /* systemPurple */
+  --purple-edge: #8e34bd;
+  --purple-zone: rgba(175, 82, 222, .08);
+  --purple-zone-line: rgba(175, 82, 222, .26);
+
+  --pattern-block: #ff9500;   /* systemOrange */
+  --pattern-edge: #c77700;
+  --pattern-zone: rgba(255, 149, 0, .09);
+  --pattern-zone-line: rgba(255, 149, 0, .3);
+
+  --prep-block: #007aff;      /* systemBlue */
+  --prep-edge: #0062cc;
+  --prep-zone: rgba(0, 122, 255, .08);
+  --prep-zone-line: rgba(0, 122, 255, .26);
+
+  --part-block: #6e6e73;      /* systemGray（加深保证白字可读） */
+  --part-edge: #545458;
+  --part-zone: rgba(120, 120, 128, .09);
+  --part-zone-line: rgba(120, 120, 128, .24);
+
+  --done-bg: #34c759;         /* systemGreen */
+  --done-edge: #248a3d;
+  --done-soft: rgba(52, 199, 89, .14);
+
+  --para-bg: rgba(120, 120, 128, .08);          /* tertiarySystemFill */
+  --chip-bg: rgba(120, 120, 128, .12);
+  --para-ink: rgba(60, 60, 67, .55);
+  --para-ink-strong: rgba(60, 60, 67, .85);
+
+  --err: #ff3b30;             /* systemRed */
+  --blue: #007aff;
+  --blue-edge: #0062cc;
+  --ring-blue: rgba(0, 122, 255, .25);
+  --ring-purple: rgba(175, 82, 222, .2);
+  --pulse: rgba(175, 82, 222, .35);
+  --scroll-thumb: rgba(120, 120, 128, .35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #000000;            /* systemGroupedBackground (dark) */
+    --panel: #1c1c1e;
+    --panel-soft: #2c2c2e;
+    --ink: #f2f2f7;
+    --ink-soft: rgba(235, 235, 245, .6);
+    --line: rgba(84, 84, 88, .5);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+    --bar: rgba(28, 28, 30, .8);
+
+    --purple-block: #bf5af2;
+    --purple-edge: #d0a0f7;
+    --purple-zone: rgba(191, 90, 242, .14);
+    --purple-zone-line: rgba(191, 90, 242, .35);
+
+    --pattern-block: #ff9f0a;
+    --pattern-edge: #ffc02e;
+    --pattern-zone: rgba(255, 159, 10, .13);
+    --pattern-zone-line: rgba(255, 159, 10, .35);
+
+    --prep-block: #0a84ff;
+    --prep-edge: #409cff;
+    --prep-zone: rgba(10, 132, 255, .15);
+    --prep-zone-line: rgba(10, 132, 255, .35);
+
+    --part-block: #98989d;
+    --part-edge: #b7b7bc;
+    --part-zone: rgba(152, 152, 157, .15);
+    --part-zone-line: rgba(152, 152, 157, .32);
+
+    --done-bg: #30d158;
+    --done-edge: #30d158;
+    --done-soft: rgba(48, 209, 88, .18);
+
+    --para-bg: rgba(120, 120, 128, .18);
+    --chip-bg: rgba(120, 120, 128, .28);
+    --para-ink: rgba(235, 235, 245, .55);
+    --para-ink-strong: rgba(235, 235, 245, .85);
+
+    --err: #ff453a;
+    --ring-blue: rgba(10, 132, 255, .35);
+    --ring-purple: rgba(191, 90, 242, .3);
+    --pulse: rgba(191, 90, 242, .4);
+    --scroll-thumb: rgba(235, 235, 245, .3);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --panel: #1c1c1e;
+  --panel-soft: #2c2c2e;
+  --ink: #f2f2f7;
+  --ink-soft: rgba(235, 235, 245, .6);
+  --line: rgba(84, 84, 88, .5);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+  --bar: rgba(28, 28, 30, .8);
+
+  --purple-block: #bf5af2;
+  --purple-edge: #d0a0f7;
+  --purple-zone: rgba(191, 90, 242, .14);
+  --purple-zone-line: rgba(191, 90, 242, .35);
+
+  --pattern-block: #ff9f0a;
+  --pattern-edge: #ffc02e;
+  --pattern-zone: rgba(255, 159, 10, .13);
+  --pattern-zone-line: rgba(255, 159, 10, .35);
+
+  --prep-block: #0a84ff;
+  --prep-edge: #409cff;
+  --prep-zone: rgba(10, 132, 255, .15);
+  --prep-zone-line: rgba(10, 132, 255, .35);
+
+  --part-block: #98989d;
+  --part-edge: #b7b7bc;
+  --part-zone: rgba(152, 152, 157, .15);
+  --part-zone-line: rgba(152, 152, 157, .32);
+
+  --done-bg: #30d158;
+  --done-edge: #30d158;
+  --done-soft: rgba(48, 209, 88, .18);
+
+  --para-bg: rgba(120, 120, 128, .18);
+  --chip-bg: rgba(120, 120, 128, .28);
+  --para-ink: rgba(235, 235, 245, .55);
+  --para-ink-strong: rgba(235, 235, 245, .85);
+
+  --err: #ff453a;
+  --ring-blue: rgba(10, 132, 255, .35);
+  --ring-purple: rgba(191, 90, 242, .3);
+  --pulse: rgba(191, 90, 242, .4);
+  --scroll-thumb: rgba(235, 235, 245, .3);
+}
+
+* { box-sizing: border-box; }
+h1, h2, p { margin: 0; }
+button { font: inherit; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.app { height: 100vh; height: 100dvh; min-height: 540px; display: flex; flex-direction: column; }
+
+/* ---------- 顶栏（毛玻璃导航条） ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px;
+  background: var(--bar);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.logo { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(160deg, var(--purple-block), var(--pattern-block)); }
+.app-name { display: flex; align-items: baseline; gap: 8px; }
+.app-name h1 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.app-name .sub { font-size: 11px; font-weight: 500; color: var(--ink-soft); }
+
+/* ---------- 主体双栏 ---------- */
+.main { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+
+/* ---------- 左：观点库（侧栏） ---------- */
+.db { min-height: 0; display: flex; flex-direction: column; background: var(--panel-soft); border-right: 1px solid var(--line); }
+.db-head { padding: 14px 16px 10px; flex: none; }
+.db-title-row { display: flex; align-items: baseline; gap: 8px; }
+.db-title-row h2 { font-size: 14px; font-weight: 700; }
+.db-title-row .en { font-size: 11px; font-weight: 500; color: var(--ink-soft); }
+.badge { margin-left: auto; font-size: 10px; font-weight: 600; color: var(--ink-soft); border: 1px solid var(--line); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.db-desc { margin-top: 5px; font-size: 11px; color: var(--ink-soft); font-weight: 400; }
+.db-list { flex: 1; min-height: 0; overflow: auto; padding: 2px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; flex: none; cursor: grab; transition: border-color .15s ease, transform .12s ease; }
+.card:hover { border-color: var(--purple-zone-line); }
+.card:active { cursor: grabbing; transform: scale(.99); }
+.card .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--ink-soft); margin-bottom: 5px; }
+.tag i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-arg { background: #af52de; }
+.dot-data { background: #007aff; }
+.dot-case { background: #ff9500; }
+.dot-conc { background: #30b0c7; }
+.card .en { font-size: 12.5px; font-weight: 600; line-height: 1.5; }
+.card .zh { font-size: 11.5px; color: var(--ink-soft); font-weight: 400; margin-top: 3px; line-height: 1.55; }
+
+/* ---------- 右：Workshop ---------- */
+.shop { min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 16px; }
+
+/* ---------- 题目 ---------- */
+.q-panel { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 11px 16px 12px; }
+.q-top { display: flex; align-items: baseline; gap: 10px; }
+.q-eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-soft); }
+.q-restart { margin-left: auto; font-size: 10.5px; font-weight: 500; color: var(--ink-soft); background: none; border: none; cursor: pointer; padding: 0; }
+.q-restart:hover { color: var(--err); }
+.q-text { font-size: 13px; line-height: 1.65; font-weight: 400; margin-top: 4px; }
+
+/* ---------- 四段结构条 ---------- */
+.paras { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.para {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 6px 9px; border-radius: 12px;
+  background: var(--para-bg); border: 1px solid transparent;
+  transition: background-color .2s ease, border-color .2s ease;
+  text-align: center; cursor: pointer;
+}
+.para:hover { filter: brightness(1.02); }
+.para .p-tag { font-size: 12.5px; font-weight: 700; color: var(--para-ink-strong); }
+.para .p-sub { font-size: 10px; font-weight: 500; color: var(--para-ink); }
+.para .p-count { font-size: 10.5px; font-weight: 600; color: var(--para-ink); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.para.done { background: var(--done-soft); border-color: rgba(52, 199, 89, .35); cursor: default; }
+.para.done .p-tag, .para.done .p-count { color: var(--done-edge); }
+.para.done .p-sub { color: var(--done-edge); opacity: .75; }
+.para.done .schip { background: var(--done-soft); border-color: transparent; color: var(--done-edge); }
+.para.cur { background: var(--purple-zone); border-color: var(--purple-zone-line); }
+.para.cur .p-tag { color: var(--purple-block); }
+.schips { display: flex; gap: 4px; margin-top: 4px; }
+.schip {
+  min-width: 20px; height: 18px; padding: 0 4px;
+  border-radius: 6px; font-size: 9.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--para-ink-strong); border: 1px solid transparent; background: var(--chip-bg);
+  font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.schip.lock { opacity: .4; cursor: not-allowed; }
+.schip.cur { background: var(--purple-block); border-color: var(--purple-block); color: #fff; animation: schipPulse 1.6s ease-in-out infinite; }
+.schip.done { background: var(--done-bg); border-color: var(--done-bg); color: #fff; animation: none; }
+@keyframes schipPulse { 0%, 100% { box-shadow: 0 0 0 0 var(--pulse); } 50% { box-shadow: 0 0 0 3px var(--pulse); } }
+
+/* ---------- 当前句工作台 ---------- */
+.stage { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px 13px; box-shadow: var(--shadow); }
+.stage-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.stage-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--purple-block); }
+.stage-note { font-size: 11px; font-weight: 400; color: var(--ink-soft); }
+.stage-step { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+.zh-box {
+  border: 1.5px solid transparent; border-radius: 10px; background: var(--panel-soft);
+  padding: 7px 12px; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.zh-box.over { border-color: var(--purple-block); box-shadow: 0 0 0 3px var(--ring-purple); }
+.zh-row { display: flex; align-items: center; gap: 10px; }
+.zh-edit {
+  flex: 1; min-width: 0; min-height: 30px; outline: none;
+  font-size: 14px; font-weight: 400; line-height: 1.9; word-break: break-word;
+}
+.zh-edit:empty::before { content: attr(data-placeholder); color: var(--ink-soft); opacity: .7; }
+.zh-edit.sugg { color: var(--ink-soft); font-style: italic; }
+.go-btn {
+  appearance: none; border: none; background: var(--blue); color: #fff;
+  font-size: 12.5px; font-weight: 600; padding: 6px 16px; border-radius: 9px;
+  cursor: pointer; white-space: nowrap; flex: none;
+  transition: transform .1s ease, filter .1s ease, opacity .1s ease;
+}
+.go-btn:active { transform: scale(.97); filter: brightness(.88); }
+.go-btn:disabled { opacity: .4; cursor: wait; transform: none; filter: none; }
+.go-btn.ghost { background: transparent; color: var(--ink-soft); border: 1.5px dashed var(--line); }
+.accept-btn {
+  appearance: none; border: none; background: var(--done-bg); color: #fff;
+  font-size: 12.5px; font-weight: 600; padding: 6px 16px; border-radius: 9px;
+  cursor: pointer; white-space: nowrap; flex: none;
+  transition: transform .1s ease, filter .1s ease;
+}
+.accept-btn:active { transform: scale(.97); filter: brightness(.88); }
+.zh-edit .strike { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--err); opacity: .65; }
+.zh-hint { font-size: 11.5px; font-weight: 500; color: var(--ink-soft); margin-top: 3px; min-height: 15px; line-height: 1.4; }
+.zh-hint.err { color: var(--err); }
+.zh-hint.ok { color: var(--done-edge); }
+
+.asm-box { position: relative; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); padding: 8px 12px; margin-top: 8px; }
+.asm-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 36px; }
+.asm-empty { font-size: 11.5px; font-weight: 400; color: var(--ink-soft); opacity: .85; }
+.tchip {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px 5px; border-radius: 9px;
+  font-weight: 600; font-size: 13px; line-height: 1.4; color: #fff;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  white-space: nowrap;
+  transition: filter .1s ease, transform .1s ease;
+}
+.tc-p { background: var(--purple-block); }
+.tc-o { background: var(--pattern-block); }
+.tc-x { background: var(--prep-block); }
+.tc-c { background: var(--part-block); }
+.tchip:hover { filter: brightness(1.06); }
+.tchip:active { transform: scale(.97); }
+.tchip.ok { animation: chipPop .5s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes chipPop { 0% { transform: scale(.7); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+/* or 块与骨架空位 */
+.tchip.skel, .tchip.or { white-space: normal; }
+.or-opt { padding: 2px 8px; border-radius: 7px; cursor: pointer; }
+.or-opt:hover { background: rgba(255, 255, 255, .15); }
+.or-opt.sel { background: rgba(255, 255, 255, .25); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .65); }
+.or-opt.dim { opacity: .4; }
+.or-sep { font-size: 10.5px; font-weight: 600; font-style: italic; opacity: .85; margin: 0 3px; }
+.asm-slot {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  min-width: 46px; min-height: 26px; padding: 2px 6px; vertical-align: middle;
+  border: 1.5px dashed rgba(255, 255, 255, .5); border-radius: 7px;
+}
+.asm-slot.over { background: rgba(255, 255, 255, .2); border-color: #fff; }
+.asm-slot.inert { min-width: 28px; min-height: 18px; border-style: dotted; opacity: .5; }
+.asm-slot.empty:not(.inert) { min-width: 80px; min-height: 40px; align-items: center; justify-content: center; }
+.asm-slot.empty:not(.inert)::after { content: attr(data-tip); font-size: 10.5px; font-weight: 600; color: rgba(255, 255, 255, .85); white-space: nowrap; }
+.asm-slot .tchip { font-size: 12px; padding: 2px 9px 3px; }
+.sk-txt { white-space: pre-wrap; }
+/* ---------- 拖放与点选填充 ---------- */
+.block, .tchip, .asm-slot { touch-action: pan-y; } /* 触屏纵向仍可滚动，横向/长按进入拖拽 */
+.asm-slot.fill-cur { border-style: solid; border-color: #fff; background: rgba(255, 255, 255, .18); }
+body.dnd-active { user-select: none; -webkit-user-select: none; }
+body.dnd-active .asm-slot:not(.inert) { border-color: rgba(255, 255, 255, .8); background: rgba(255, 255, 255, .08); }
+body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
+.asm-slot.dnd-snap { border-style: solid; border-color: #fff; background: rgba(255, 255, 255, .24); }
+.asm-slot.dnd-deep .asm-slot:not(.inert) { border-color: #fff; transform: scale(1.08); }
+.zone.dnd-remove { border-color: var(--err); }
+.ww-drag-ghost { position: fixed; z-index: 99999; pointer-events: none; opacity: .92; filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .28)); transform: scale(1.05) rotate(1deg); }
+.ww-drag-ghost.hide { display: none; }
+.pghost { opacity: .45 !important; pointer-events: none; cursor: default; }
+.pghost.tail { opacity: .28 !important; }
+.pghost.block { box-shadow: none; }
+.asm-slot .pghost.block { font-size: 12px; padding: 2px 9px 3px; border-radius: 9px; }
+.block.dnd-src, .tchip.dnd-src { opacity: .25; }
+.asm-foot { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.asm-hint { flex: 1; min-width: 0; font-size: 11.5px; font-weight: 500; color: var(--ink-soft); min-height: 15px; line-height: 1.5; }
+.asm-hint.err { color: var(--err); }
+.asm-hint.ok { color: var(--done-edge); }
+.asm-go {
+  appearance: none; border: none; background: var(--done-bg); color: #fff;
+  font-size: 12.5px; font-weight: 600; padding: 6px 18px; border-radius: 9px;
+  cursor: pointer; white-space: nowrap; flex: none;
+  transition: transform .1s ease, filter .1s ease, opacity .1s ease;
+}
+.asm-go:active { transform: scale(.97); filter: brightness(.88); }
+.asm-go:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
+.asm-reset { position: absolute; top: 5px; right: 9px; font-size: 10.5px; font-weight: 500; color: var(--ink-soft); background: none; border: none; cursor: pointer; padding: 1px 2px; }
+.asm-reset:hover { color: var(--err); }
+
+/* ---------- 词区（四栏） ---------- */
+.zones { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.zone { border-radius: 14px; border: 1px solid; padding: 10px 14px 12px; flex: none; }
+.zone-purple { background: var(--purple-zone); border-color: var(--purple-zone-line); }
+.zone-pattern { background: var(--pattern-zone); border-color: var(--pattern-zone-line); }
+.zone-prep { background: var(--prep-zone); border-color: var(--prep-zone-line); }
+.zone-part { background: var(--part-zone); border-color: var(--part-zone-line); }
+.zone-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+.chip { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.chip-purple { background: var(--purple-block); }
+.chip-pattern { background: var(--pattern-block); }
+.chip-prep { background: var(--prep-block); }
+.chip-part { background: var(--part-block); }
+.zone-title { font-size: 13px; font-weight: 700; }
+.zone-title .en { font-size: 10.5px; font-weight: 500; color: var(--ink-soft); margin-left: 6px; }
+.zone-count { font-size: 11px; font-weight: 600; padding: 1px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.zone-purple .zone-count { background: rgba(175, 82, 222, .12); color: var(--purple-edge); }
+.zone-pattern .zone-count { background: rgba(255, 149, 0, .16); color: var(--pattern-edge); }
+.zone-prep .zone-count { background: rgba(0, 122, 255, .12); color: var(--prep-edge); }
+.zone-part .zone-count { background: rgba(120, 120, 128, .14); color: var(--part-edge); }
+.zone-hint { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--ink-soft); }
+.blocks { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 14px 10px; min-height: 48px; }
+
+.block {
+  appearance: none; border: none; display: inline-flex; align-items: center;
+  padding: 7px 15px 8px; border-radius: 11px; cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  transition: transform .08s ease, filter .08s ease, opacity .08s ease;
+}
+.block:active { transform: scale(.96); filter: brightness(.9); }
+.pblock { background: var(--purple-block); }
+.oblock { background: var(--pattern-block); }
+.xblock { background: var(--prep-block); }
+.cblock { background: var(--part-block); }
+.block:hover { filter: brightness(1.05); }
+.block:focus-visible { outline: 3px solid var(--ring-blue); outline-offset: 2px; }
+.b-en { color: #fff; font-weight: 600; font-size: 14px; line-height: 1.25; }
+.b-ct { color: rgba(255, 255, 255, .92); font-weight: 700; font-size: 11px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.block.used { opacity: .32; filter: grayscale(.55); pointer-events: none; }
+.b-slot { display: inline-block; min-width: 30px; height: 11px; vertical-align: baseline; margin: 0 4px; border-bottom: 2px dashed rgba(255, 255, 255, .7); border-radius: 2px; }
+.b-or { color: rgba(255, 255, 255, .9); font-size: 10.5px; font-weight: 600; font-style: italic; margin: 0 6px; }
+.zone-empty { font-size: 11.5px; font-weight: 400; color: var(--ink-soft); align-self: center; padding: 4px 2px; }
+
+/* 配件自建输入行（iOS 文本框样式） */
+.part-add { display: flex; gap: 6px; margin-bottom: 9px; }
+.part-add input {
+  flex: 1; min-width: 0; appearance: none; outline: none;
+  background: var(--panel); color: var(--ink);
+  border: 1.5px solid var(--line); border-radius: 9px;
+  padding: 5px 10px; font: inherit; font-size: 12.5px; font-weight: 400;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.part-add input::placeholder { color: var(--ink-soft); opacity: .75; font-weight: 400; }
+.part-add input:focus { border-color: var(--blue); box-shadow: 0 0 0 3.5px var(--ring-blue); }
+.part-add button {
+  appearance: none; border: none; background: var(--part-block); color: #fff;
+  font-size: 13px; font-weight: 600; padding: 5px 13px; border-radius: 9px;
+  cursor: pointer; white-space: nowrap; flex: none;
+  transition: transform .1s ease, filter .1s ease;
+}
+.part-add button:active { transform: scale(.96); filter: brightness(.9); }
+
+/* ---------- 标点条（配件栏内，取之不尽的用户标点来源） ---------- */
+.punct-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 9px; }
+.pb-label { font-size: 10.5px; font-weight: 600; color: var(--ink-soft); margin-right: 2px; }
+.pb-sym {
+  appearance: none; border: 1.5px solid var(--line); background: var(--panel); color: var(--ink);
+  font: inherit; font-size: 13.5px; font-weight: 600; line-height: 1;
+  min-width: 30px; padding: 5px 7px 6px; border-radius: 8px; cursor: pointer;
+  transition: transform .08s ease, filter .08s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.pb-sym:hover { border-color: var(--part-edge); filter: brightness(1.04); }
+.pb-sym:active { transform: scale(.92); }
+.pb-sym:focus-visible { outline: 3px solid var(--ring-blue); outline-offset: 2px; }
+.pb-toggle {
+  appearance: none; border: none; background: rgba(120, 120, 128, .12); color: var(--ink-soft);
+  font: inherit; font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  cursor: pointer; margin-left: auto; white-space: nowrap;
+  transition: filter .1s ease, transform .1s ease;
+}
+.pb-toggle:hover { filter: brightness(1.05); }
+.pb-toggle:active { transform: scale(.96); }
+/* 标点积木：系统生成与用户自加（虚线边区分） */
+.b-pn { color: #fff; font-weight: 700; font-size: 15px; min-width: 10px; text-align: center; }
+.b-pn.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .75); }
+.tchip.pn { padding: 3px 10px 4px; font-size: 14px; font-weight: 700; background: var(--part-block); }
+.tchip.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .8); }
+
+/* ---------- 拼装条间隙：标点插入光标与出错淡标记 ---------- */
+.gap { display: inline-flex; width: 5px; height: 24px; border-radius: 3px; cursor: text; flex: none; }
+.gap.caret { background: var(--blue); box-shadow: 0 0 0 2.5px var(--ring-blue); animation: caretBlink 1.1s steps(1) infinite; }
+.gap.mark { background: var(--err); opacity: .38; box-shadow: 0 0 0 2px rgba(255, 69, 58, .18); }
+@keyframes caretBlink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: .25; } }
+
+/* ---------- 细滚动条 ---------- */
+.db-list::-webkit-scrollbar, .zones::-webkit-scrollbar { width: 8px; }
+.db-list::-webkit-scrollbar-thumb, .zones::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
+.db-list, .zones { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) transparent; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100dvh; }
+  .main { grid-template-columns: 1fr; }
+  .db { border-right: none; border-bottom: 1px solid var(--line); max-height: 32vh; }
+  .zones { overflow: visible; }
+  .paras { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .block, .tchip { transition: none; }
+  .schip.cur, .tchip.ok { animation: none; }
+  .gap.caret { animation: none; }
+}
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <div class="logo" aria-hidden="true"></div>
+    <div class="app-name">
+      <h1>英语写作工作台</h1>
+      <span class="sub">English Writing Workshop</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- 左：观点库（前置对话积累的素材，可拖入中文输入框） -->
+    <aside class="db">
+      <div class="db-head">
+        <div class="db-title-row">
+          <h2>观点库</h2>
+          <span class="en">Database</span>
+          <span class="badge">拖入中文框 / 点击填入</span>
+        </div>
+        <p class="db-desc">前置对话沉淀的论点与论据</p>
+      </div>
+      <div class="db-list" id="dbList">
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-arg"></i>论点 · 补贴</span>
+          <p class="en">Subsidies lower the price of fresh produce, making a balanced diet affordable for everyone.</p>
+          <p class="zh">补贴降低新鲜农产品的价格，让所有人都吃得起均衡饮食。</p>
+        </div>
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-data"></i>论据 · 补贴</span>
+          <p class="en">For low-income families, price is the biggest barrier to healthy eating.</p>
+          <p class="zh">对低收入家庭而言，价格是健康饮食的最大障碍。</p>
+        </div>
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-arg"></i>论点 · 征税</span>
+          <p class="en">A tax on sugary drinks and junk food raises their price and directly discourages over-consumption.</p>
+          <p class="zh">对含糖饮料和垃圾食品征税抬高价格，直接抑制过度消费。</p>
+        </div>
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-data"></i>论据 · 征税</span>
+          <p class="en">After the UK introduced its sugar tax, manufacturers cut the sugar content of drinks significantly.</p>
+          <p class="zh">英国开征糖税后，饮料厂商显著降低了产品含糖量。</p>
+        </div>
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-case"></i>事例</span>
+          <p class="en">Hungary's junk-food tax funds free school meals and public health programmes.</p>
+          <p class="zh">匈牙利的垃圾食品税资助了免费校餐和公共健康项目。</p>
+        </div>
+        <div class="card" draggable="true">
+          <span class="tag"><i class="dot-conc"></i>让步</span>
+          <p class="en">Admittedly, food taxes can burden the poor, but they ultimately guide healthier choices.</p>
+          <p class="zh">诚然食品税会加重穷人负担，但最终会引导更健康的选择。</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右：Workshop -->
+    <section class="shop">
+      <div class="q-panel">
+        <div class="q-top">
+          <div class="q-eyebrow">IELTS Writing Task 2 · 当前话题</div>
+          <button type="button" class="q-restart" id="restartBtn" title="清空全部进度，从第一句重新开始">重新开始</button>
+        </div>
+        <p class="q-text" id="qText">Some people think the government should subsidise fruits and vegetables to make healthy food more affordable. Others argue that the government should tax unhealthy food instead. Discuss both views and give your opinion.</p>
+      </div>
+
+      <div class="paras" id="paras"></div>
+
+      <div class="stage">
+        <div class="stage-top">
+          <span class="stage-eyebrow" id="stageEyebrow"></span>
+          <span class="stage-note" id="stageNote"></span>
+          <span class="stage-step" id="stageStep"></span>
+        </div>
+        <div class="zh-box" id="zhBox">
+          <div class="zh-row">
+            <div class="zh-edit" id="zhEdit" contenteditable="true" role="textbox" aria-label="中文输入" data-placeholder="用一句中文描述这句话要表达什么（可从左侧数据库拖入）" spellcheck="false"></div>
+            <button type="button" class="go-btn" id="goBtn">校验 →</button>
+            <button type="button" class="accept-btn" id="acceptBtn" hidden>接受修改</button>
+          </div>
+          <div class="zh-hint" id="zhHint"></div>
+        </div>
+        <div class="asm-box" id="asmBox">
+          <button type="button" class="asm-reset" id="asmReset" title="清空本句已拼的词块" hidden>重置</button>
+          <div class="asm-strip" id="asmStrip"></div>
+          <div class="asm-foot">
+            <div class="asm-hint" id="asmHint"></div>
+            <button type="button" class="asm-go" id="asmGo" hidden>确认</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="zones" id="zones"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ================= 模型接入（仅本地自用） =================
+     ⚠️ 本文件内含真实 API Key，只在本地电脑上打开使用；
+     严禁上传到 yasi.bertrammmmm.top 等任何公开服务器，严禁分享给别人。
+     请求失败自动回退本地规则，页面任何情况下都可用。 */
+  var AI_CONFIG = {
+    key: '',  // 公开版不配置 Key：自动回退本地规则模式
+    base: 'https://api.deepseek.com/chat/completions',
+    proxy: '',               // 留空 = 浏览器直连 DeepSeek（已验证支持跨域）
+    model: 'deepseek-flash'  // 轻量快速；要更强可改 'deepseek-v4-pro'
+  };
+
+  function MODEL_ON() { return !!(AI_CONFIG.key && AI_CONFIG.key.trim()); }
+
+  function askModel(messages, opts) {
+    opts = opts || {};
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 30000) : null;
+    return fetch(AI_CONFIG.proxy || AI_CONFIG.base, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AI_CONFIG.key },
+      signal: ctrl ? ctrl.signal : undefined,
+      body: JSON.stringify({
+        model: AI_CONFIG.model,
+        messages: messages,
+        temperature: opts.temperature != null ? opts.temperature : 0.3,
+        reasoning_effort: opts.noThink ? 'none' : 'low',
+        /* deepseek-flash 是推理模型：reasoning 也计入 max_tokens，预算太小会把正文挤空（返回空内容） */
+        max_tokens: opts.maxTokens || 8192
+      })
+    }).then(function (res) {
+      if (timer) clearTimeout(timer);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      var c = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!c) throw new Error('empty');
+      return c;
+    }).catch(function (e) {
+      if (timer) clearTimeout(timer);
+      throw e;
+    });
+  }
+
+  function parseJSON(text) {
+    if (!text) return null;
+    var s = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+    var a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a === -1 || b <= a) return null;
+    try { return JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* ================= 可配置的全文结构 =================
+     调整段落/句子只需增删下面的数据：每段 sentences 数组里
+     role = 这一句的职能，note = 这一句要写什么（用于 AI 校验与建议）。 */
+  var ESSAY_PLAN = [
+    { title: '第一段', sub: '开头 · 表明立场', tag: '立场', sentences: [
+      { role: '背景', note: '改写题目背景：政府该补贴健康食品还是向不健康食品征税' },
+      { role: '双方', note: '概括两种对立观点' },
+      { role: '立场', note: '亮明自己的立场' }
+    ] },
+    { title: '第二段', sub: '正面论述 · 补贴', tag: '补贴', sentences: [
+      { role: '段首句', note: '本段总论点：补贴的核心理由' },
+      { role: '分论点1', note: '分论点一及其论据' },
+      { role: '分论点2', note: '分论点二及其论据' },
+      { role: '分论点3', note: '分论点三及其论据' }
+    ] },
+    { title: '第三段', sub: '反面论述 · 征税', tag: '征税', sentences: [
+      { role: '段首句', note: '本段总论点：征税的核心理由' },
+      { role: '分论点1', note: '分论点一及其论据' },
+      { role: '分论点2', note: '分论点二及其论据' },
+      { role: '分论点3', note: '分论点三及其论据' }
+    ] },
+    { title: '第四段', sub: '结尾 · 结论与建议', tag: '结论', sentences: [
+      { role: '总结', note: '综合两方观点，重申立场' },
+      { role: '建议', note: '给出措施或建议' }
+    ] }
+  ];
+
+  var FLAT = [];
+  var FI = {}; // (pi*100+si) → 扁平下标
+  ESSAY_PLAN.forEach(function (p, pi) {
+    p.sentences.forEach(function (s, si) {
+      FI[pi * 100 + si] = FLAT.length;
+      FLAT.push({ pi: pi, si: si, p: p, s: s, label: p.title + ' s' + (si + 1) });
+    });
+  });
+
+  /* ================= 状态 ================= */
+  var KEY = 'yasi-workshop-v4';
+  var S = { cur: 0, items: FLAT.map(function () {
+    return { zh: '', sugg: '', confirmed: false, strikeParts: null, answer: '', blocks: [], seq: [], order: [], done: false, altOk: false };
+  }) };
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ v: 4, cur: S.cur, puncSys: S.puncSys !== false, items: S.items })); } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var j = JSON.parse(raw);
+      if (!j || j.v !== 4 || !Array.isArray(j.items) || j.items.length !== FLAT.length) return;
+      S = { cur: j.cur || 0, puncSys: j.puncSys !== false, items: j.items };
+    } catch (e) {}
+  }
+
+  /* ================= DOM ================= */
+  var parasEl = document.getElementById('paras');
+  var stageEyebrow = document.getElementById('stageEyebrow');
+  var stageNote = document.getElementById('stageNote');
+  var stageStep = document.getElementById('stageStep');
+  var zhBox = document.getElementById('zhBox');
+  var zhEdit = document.getElementById('zhEdit');
+  var zhHint = document.getElementById('zhHint');
+  var goBtn = document.getElementById('goBtn');
+  var asmStrip = document.getElementById('asmStrip');
+  var asmHint = document.getElementById('asmHint');
+  var asmReset = document.getElementById('asmReset');
+  var asmGo = document.getElementById('asmGo');
+  var asmBox = document.getElementById('asmBox');
+  var restartBtn = document.getElementById('restartBtn');
+  var QTEXT = (document.getElementById('qText').textContent || '').trim();
+  /* ================= 标点规则表（渲染/评判都读这里，不写死在代码里） =================
+     before/after: 1=前/后有空格，0=无；tip: 同一处反复出错时的微型提示（只讲这类位置，不给答案） */
+  var PUNCT = {
+    strip: [',', '.', ';', ':', '?', '!', '—', '(', ')', '“', '”'],
+    rule: {
+      ',': { role: 'sep',   before: 0, after: 1, tip: '并列分句之间常需逗号加连词；状语提前时逗号收尾' },
+      '.': { role: 'end',   before: 0, after: 1, tip: '完整句子用句号收尾' },
+      ';': { role: 'sep',   before: 0, after: 1, tip: '分号连接两个关系紧密的独立分句' },
+      ':': { role: 'sep',   before: 0, after: 1, tip: '冒号引出解释、列举或说明' },
+      '?': { role: 'end',   before: 0, after: 1, tip: '疑问句句末用问号' },
+      '!': { role: 'end',   before: 0, after: 1, tip: '感叹语气句末用叹号（学术写作少用）' },
+      '—': { role: 'dash',  before: 1, after: 1, tip: '破折号两侧留空格，用于补充说明' },
+      '(': { role: 'open',  before: 1, after: 0, tip: '括号插入语：开括号前有空格、后无' },
+      ')': { role: 'close', before: 0, after: 1, tip: '括号插入语：闭括号前无空格、后有' },
+      '“': { role: 'open',  before: 1, after: 0, tip: '引号前有空格、后无' },
+      '”': { role: 'close', before: 0, after: 1, tip: '引号前无空格、后有' }
+    }
+  };
+
+  /* ================= 可配置栏目（改名称/配色/顺序在这里） =================
+     key: 积木类型；zone/chip/blk/tc: 配色类名；cnt: 计数元素后缀 */
+  var ZONES = [
+    { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
+    { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
+    { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
+    { key: 'part',  name: '配件',   en: 'Parts',  hint: '零散词兜底 · 可自建词块', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true, punct: true }
+  ];
+  var zonesEl = document.getElementById('zones');
+  zonesEl.innerHTML = ZONES.map(function (z) {
+    return '<div class="zone ' + z.zone + '" id="zone-' + z.key + '">' +
+      '<div class="zone-head">' +
+      '<span class="chip ' + z.chip + '" aria-hidden="true"></span>' +
+      '<span class="zone-title">' + z.name + '<span class="en">' + z.en + '</span></span>' +
+      '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
+      '<span class="zone-hint">' + z.hint + '</span>' +
+      '</div>' +
+      (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="缺什么词？输入后回车，生成配件块" maxlength="40" spellcheck="false" aria-label="自建配件词"><button type="button" id="partAdd" title="生成配件块">＋</button></div>' : '') +
+      (z.punct ? '<div class="punct-bar" id="punctBar"><span class="pb-label">标点</span>' +
+        PUNCT.strip.map(function (c) {
+          return '<button type="button" class="pb-sym" data-ch="' + esc(c) + '" title="点击/拖入 · 生成标点积木">' + esc(c) + '</button>';
+        }).join('') +
+        '<button type="button" class="pb-toggle" id="puncToggle" title="系统是否自动生成必需标点积木"></button></div>' : '') +
+      '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
+  }).join('');
+  var ZONE_BOX = {}, ZONE_CNT = {}, ZONE_DIV = {}, FORM_CLS = {}, TC_CLS = {}, ZKEYS = [];
+  ZONES.forEach(function (z) {
+    ZONE_BOX[z.key] = document.getElementById('blocks-' + z.key);
+    ZONE_CNT[z.key] = document.getElementById('cnt-' + z.key);
+    ZONE_DIV[z.key] = document.getElementById('zone-' + z.key);
+    FORM_CLS[z.key] = z.blk;
+    TC_CLS[z.key] = z.tc;
+    ZKEYS.push(z.key);
+  });
+  var acceptBtn = document.getElementById('acceptBtn');
+
+  /* ---------- 配件自建：输入任意英文词/短语 → 生成可点击放置的配件块 ---------- */
+  var partInput = document.getElementById('partInput');
+  var partAddBtn = document.getElementById('partAdd');
+  function addCustomPart() {
+    var it = cur();
+    var raw = partInput.value.replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!raw) return;
+    if (!it.blocks.length) { setAsmHint('先确认中文生成词块，再自建配件', 'err'); return; }
+    if (!/[A-Za-z0-9]/.test(raw)) { setAsmHint('配件请输入英文单词或短语', 'err'); return; }
+    /* 同形态（忽略大小写）合并计数 */
+    var k = formKey({ t: 'part', en: raw }), idx = -1;
+    for (var i = 0; i < it.blocks.length; i++) {
+      if (formKey(it.blocks[i]) === k) { idx = i; break; }
+    }
+    if (idx < 0) { idx = it.blocks.length; it.blocks.push({ t: 'part', en: raw, count: 0 }); }
+    it.blocks[idx].count++;
+    save();
+    renderZones();
+    partInput.value = '';
+    partInput.focus();
+  }
+  partAddBtn.addEventListener('click', addCustomPart);
+  partInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomPart(); }
+  });
+
+  function cur() { return S.items[S.cur]; }
+
+  function allDone() {
+    return S.items.every(function (it) { return it.done; });
+  }
+  function unlocked(i) {
+    for (var j = 0; j < i; j++) if (!S.items[j].done) return false;
+    return true;
+  }
+  function paraWords(pi) {
+    var w = 0;
+    FLAT.forEach(function (f, i) {
+      if (f.pi === pi && S.items[i].done && S.items[i].answer) {
+        w += (S.items[i].answer.match(/[A-Za-z0-9'’-]+/g) || []).length;
+      }
+    });
+    return w;
+  }
+  function totalWords() {
+    var w = 0;
+    ESSAY_PLAN.forEach(function (_, pi) { w += paraWords(pi); });
+    return w;
+  }
+
+  /* ================= 渲染 ================= */
+  function renderParas() {
+    var html = '';
+    ESSAY_PLAN.forEach(function (p, pi) {
+      var chips = '', doneAll = true, hasCur = false;
+      p.sentences.forEach(function (s, si) {
+        var i = FI[pi * 100 + si];
+        var it = S.items[i];
+        var cls = it.done ? 'done' : (i === S.cur ? 'cur' : (unlocked(i) ? '' : 'lock'));
+        if (!it.done) doneAll = false;
+        if (i === S.cur) hasCur = true;
+        chips += '<span class="schip ' + cls + '" data-i="' + i + '" title="' + esc('s' + (si + 1) + ' ' + s.role + '：' + s.note) + '">s' + (si + 1) + '</span>';
+      });
+      html += '<div class="para' + (doneAll ? ' done' : (hasCur ? ' cur' : '')) + '" data-p="' + pi + '">' +
+        '<span class="p-tag">' + p.title + '</span>' +
+        '<span class="p-sub">' + p.sub + '</span>' +
+        '<span class="schips">' + chips + '</span>' +
+        '<span class="p-count">' + paraWords(pi) + ' 词</span></div>';
+    });
+    parasEl.innerHTML = html;
+  }
+
+  function normTok(t) { return String(t).replace(/\s+/g, ' ').trim().toLowerCase(); }
+
+  /* ---------- 积木形态工具：骨架带空位，or 块二选一，标点整块 ---------- */
+  function formZone(b) {
+    if (b.or) return formZone(b.or[0]);
+    if (b.wrap) return 'part';
+    return b.t === 'punc' ? 'part' : b.t;
+  }
+  function formSlots(b) {
+    if (b.or) return formSlots(b.or[0]);
+    if (b.t === 'skel') return b.parts.filter(function (p) { return typeof p !== 'string'; });
+    return [];
+  }
+  function formKey(b) {
+    if (b.or) return 'or\x02' + b.or.map(formKey).join('\x03');
+    if (b.t === 'punc') return 'punc\x02' + b.ch + '\x02' + (b.src || 'sys');
+    if (b.t === 'skel' || b.wrap) return 'skel\x02' + b.parts.map(function (p) {
+      return typeof p === 'string' ? normTok(p) : '\x01' + p.slot;
+    }).join('\x03');
+    return b.t + '\x02' + normTok(b.en);
+  }
+  function stripFills(n) {
+    var o = {};
+    if (n.or) { o.or = n.or.map(stripFills); return o; }
+    if (n.t === 'punc') { o.t = 'punc'; o.ch = n.ch; o.role = n.role || (PUNCT.rule[n.ch] || {}).role || ''; o.opt = !!n.opt; o.src = n.src || 'sys'; return o; }
+    if (n.t === 'skel') { o.t = 'skel'; o.parts = n.parts; if (n.wrap) o.wrap = true; return o; }
+    o.t = n.t; o.en = n.en; return o;
+  }
+  function nodeTextHTML(n) {
+    if (n.t === 'punc') return esc(n.ch);
+    if (n.t === 'skel') return n.parts.map(function (p) {
+      return typeof p === 'string' ? esc(p) : '<i class="b-slot"></i>';
+    }).join('');
+    return esc(n.en);
+  }
+  function formHTML(b) {
+    if (b.or) return b.or.map(function (o) {
+      return '<span class="b-en">' + nodeTextHTML(o) + '</span>';
+    }).join('<span class="b-or">or</span>');
+    if (b.t === 'punc') return '<span class="b-pn' + (b.src === 'user' ? ' upn' : '') + '">' + esc(b.ch) + '</span>';
+    return '<span class="b-en">' + nodeTextHTML(b) + '</span>';
+  }
+  function entryName(b) {
+    if (b.or) return entryName(b.or[0]);
+    if (b.t === 'punc') return b.ch;
+    if (b.t === 'skel') {
+      var s = b.parts.join('').replace(/\s+/g, ' ').trim();
+      return s.length > 14 ? s.slice(0, 14) + '…' : s;
+    }
+    return b.en;
+  }
+  function usedCount(list, bi) {
+    var n = 0;
+    (list || []).forEach(function (e) {
+      if (e.id === bi) n++;
+      e.fills.forEach(function (fl) { n += usedCount(fl, bi); });
+    });
+    return n;
+  }
+  function nodeCount(list) {
+    var n = 0;
+    (list || []).forEach(function (e) {
+      n++;
+      e.fills.forEach(function (fl) { n += nodeCount(fl); });
+    });
+    return n;
+  }
+  function treeEq(a, b) {
+    if (!Array.isArray(a) || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id !== b[i].id) return false;
+      if (a[i].fills.length !== b[i].fills.length) return false;
+      for (var k = 0; k < a[i].fills.length; k++) {
+        if (!treeEq(a[i].fills[k], b[i].fills[k])) return false;
+      }
+    }
+    return true;
+  }
+  function ensureFills(ent) {
+    var n = formSlots(cur().blocks[ent.id]).length;
+    while (ent.fills.length < n) ent.fills.push([]);
+    ent.fills.length = n;
+    return ent;
+  }
+
+  function renderZones() {
+    var it = cur();
+    ZONES.forEach(function (z) {
+      var box = ZONE_BOX[z.key];
+      if (!it.blocks.length) {
+        if (z.hideEmpty) { ZONE_DIV[z.key].style.display = 'none'; return; }
+        ZONE_DIV[z.key].style.display = '';
+        box.innerHTML = '<div class="zone-empty">' + (allDone() ? '全文完成' : '确认中文后生成本句积木') + '</div>';
+        ZONE_CNT[z.key].textContent = 0;
+        return;
+      }
+      var remTotal = 0, html = '', anyForm = false;
+      it.blocks.forEach(function (b, bi) {
+        if (b.t === 'punc' && b.src === 'user') return; /* 用户标点不占缺口，来源只有标点条 */
+        if (formZone(b) !== z.key) return;
+        anyForm = true;
+        var rem = b.count - usedCount(it.order, bi);
+        remTotal += rem;
+        var badge = rem > 1 ? '<span class="b-ct">×' + rem + '</span>' : '';
+        html += '<button type="button" class="block ' + FORM_CLS[z.key] + (rem <= 0 ? ' used' : '') + '"' +
+          (rem <= 0 ? ' disabled' : '') + ' data-bi="' + bi + '">' +
+          formHTML(b) + badge + '</button>';
+      });
+      ZONE_CNT[z.key].textContent = remTotal;
+      box.innerHTML = anyForm ? html : '<div class="zone-empty">本句无</div>';
+      /* 配件栏带自建输入与标点条：句子进入拼装阶段就显示（即使暂无配件块） */
+      if (z.hideEmpty) ZONE_DIV[z.key].style.display = (anyForm || (z.input && it.blocks.length)) ? '' : 'none';
+    });
+    var pt = document.getElementById('puncToggle');
+    if (pt) pt.textContent = '系统标点：' + (S.puncSys !== false ? '开' : '关');
+  }
+
+  /* ---------- 拼装区：树状渲染（骨架空位可嵌套） ---------- */
+  function slotHTML(e, path, active, k) {
+    if (!active) return '<span class="asm-slot inert"></span>';
+    var fills = e.fills[k] || [];
+    var inner = fills.map(function (fe, fi) { return entryHTML(fe, path.concat([k, fi])); }).join('');
+    var fs = formSlots(cur().blocks[e.id]);
+    var tip = '空位 · ' + (KLABEL[fs[k] && fs[k].slot] || '内容');
+    var pad = 2 + Math.min(path.length, 3) * 2; /* 嵌套越深内边距越大，内层空位不被挤扁 */
+    return '<span class="asm-slot' + (fills.length ? '' : ' empty') + '" data-tip="' + tip + '" style="padding:' + pad + 'px 6px" data-slotpath="' + path.join(',') + '.' + k + '">' + inner + '</span>';
+  }
+  function entryHTML(e, path) {
+    var b = cur().blocks[e.id];
+    var p = path.join(',');
+    var doneCls = cur().done ? ' ok' : '';
+    if (b.or) {
+      var opts = b.or.map(function (o, side) {
+        var si = 0;
+        var inner = o.t === 'skel'
+          ? o.parts.map(function (part) {
+              if (typeof part === 'string') return esc(part);
+              return slotHTML(e, path, e.pick === side, si++);
+            }).join('')
+          : esc(o.en);
+        var oc = e.pick == null ? '' : (e.pick === side ? ' sel' : ' dim');
+        return '<span class="or-opt' + oc + '" data-side="' + side + '">' + inner + '</span>';
+      }).join('<span class="or-sep">or</span>');
+      return '<span class="tchip ' + TC_CLS[formZone(b)] + ' or' + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" data-pick="' + (e.pick == null ? '' : e.pick) + '">' + opts + '</span>';
+    }
+    if (b.t === 'punc') {
+      return '<span class="tchip pn' + (b.src === 'user' ? ' upn' : '') + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + esc(b.ch) + '</span>';
+    }
+    if (b.t === 'skel') {
+      var si = 0;
+      var inner = b.parts.map(function (part) {
+        if (typeof part === 'string') return '<span class="sk-txt">' + esc(part) + '</span>';
+        return slotHTML(e, path, true, si++);
+      }).join('');
+      return '<span class="tchip ' + TC_CLS[formZone(b)] + ' skel' + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + inner + '</span>';
+    }
+    return '<span class="tchip ' + TC_CLS[b.t] + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + esc(b.en) + '</span>';
+  }
+  /* 确认键状态：有积木且未完成时可见；随时可点 */
+  function updateAsmGo() {
+    var it = cur();
+    var show = !!it.blocks.length && !it.done;
+    asmGo.hidden = !show;
+    if (!show) return;
+    asmGo.disabled = false;
+    asmGo.textContent = '确认';
+  }
+  function renderStrip() {
+    var it = cur();
+    asmReset.hidden = !it.order.length;
+    updateAsmGo();
+    if (!it.blocks.length) {
+      asmStrip.innerHTML = '<span class="asm-empty">' + (it.done ? '本句已完成' : '确认中文后开始拼装') + '</span>';
+      return;
+    }
+    if (!it.order.length) {
+      asmStrip.innerHTML = '<span class="asm-empty">点击或拖入词块，按正确语序拼出这句 · 骨架空位拖入积木</span>';
+      return;
+    }
+    asmStrip.innerHTML = it.order.map(function (e, i) {
+      return '<span class="gap" data-i="' + i + '"></span>' + entryHTML(e, [i]);
+    }).join('') + '<span class="gap" data-i="' + it.order.length + '"></span>';
+    if (caretAt > it.order.length) caretAt = -1;
+    markGap();
+    if (fillSlotPath) { /* 点选填充的高亮跨重渲染保持 */
+      var fsEl = asmStrip.querySelector('.asm-slot[data-slotpath="' + fillSlotPath + '"]');
+      if (fsEl) fsEl.classList.add('fill-cur'); else fillSlotPath = '';
+    }
+  }
+
+  function setZhHint(text, cls) {
+    zhHint.textContent = text || '';
+    zhHint.className = 'zh-hint' + (cls ? ' ' + cls : '');
+  }
+  function setAsmHint(text, cls) {
+    asmHint.textContent = text || '';
+    asmHint.className = 'asm-hint' + (cls ? ' ' + cls : '');
+  }
+
+  function renderWorkbench() {
+    var f = FLAT[S.cur], it = cur();
+    stageEyebrow.textContent = f.label + ' · ' + f.s.role;
+    stageNote.textContent = f.s.note;
+    stageStep.textContent = (S.cur + 1) + ' / ' + FLAT.length;
+    var inStrike = !it.confirmed && !!it.strikeParts;
+    acceptBtn.hidden = !inStrike;
+    goBtn.textContent = it.confirmed ? '修改中文' : (it.blocks.length ? '重新校验' : '校验 →');
+    goBtn.classList.toggle('ghost', !!it.confirmed);
+    zhEdit.contentEditable = it.confirmed ? 'false' : 'true';
+    zhEdit.textContent = it.confirmed ? it.zh : (it.zh || it.sugg);
+    zhEdit.classList.toggle('sugg', !it.confirmed && !it.zh && !!it.sugg);
+    if (allDone()) {
+      setZhHint('全文完成 · 共 ' + totalWords() + ' 词', 'ok');
+      setAsmHint('✓ 全部句子已拼装正确', 'ok');
+    } else if (it.done) {
+      setZhHint('已完成 · 可点「修改中文」重来，或直接改词序', '');
+      setAsmHint('✓ 本句正确 · 可继续调整', 'ok');
+    } else if (inStrike) {
+      zhEdit.innerHTML = it.strikeParts.map(function (p) {
+        return p.ok ? esc(p.text) : '<span class="strike">' + esc(p.text) + '</span>';
+      }).join('');
+      setZhHint('已划掉偏离部分 · 接受或继续编辑', '');
+      setAsmHint('');
+    } else if (it.confirmed) {
+      setZhHint('✓ 已确认', 'ok');
+      setAsmHint(!it.blocks.length ? '' : (nodeCount(it.order) < nodeCount(it.seq)
+        ? '剩余 ' + (nodeCount(it.seq) - nodeCount(it.order)) + ' 块'
+        : '全部放入 · 点「确认」检查'));
+    } else if (!it.blocks.length) {
+      setZhHint(it.sugg ? '数据库建议已填入 · 可修改后校验' : (MODEL_ON() ? '' : '本地规则模式 · 直接输入中文即可'));
+      setAsmHint('');
+    } else {
+      setZhHint('中文已修改 · 需重新校验', '');
+      setAsmHint(nodeCount(it.order) < nodeCount(it.seq)
+        ? '剩余 ' + (nodeCount(it.seq) - nodeCount(it.order)) + ' 块 · 可随时点「确认」'
+        : '全部放入 · 可点「确认」检查');
+    }
+  }
+
+  function renderAll() {
+    renderParas();
+    renderWorkbench();
+    renderZones();
+    renderStrip();
+  }
+
+  /* ================= 建议与校验 ================= */
+  function dbDigest() {
+    var out = [];
+    document.querySelectorAll('#dbList .card').forEach(function (c) {
+      var tag = c.querySelector('.tag').textContent.trim();
+      var zh = c.querySelector('.zh').textContent.trim();
+      out.push(tag + '：' + zh);
+    });
+    return out.join('\n');
+  }
+
+  function localSuggest(f) {
+    var tag = f.p.tag, hit = '';
+    document.querySelectorAll('#dbList .card').forEach(function (c) {
+      if (!hit && c.querySelector('.tag').textContent.indexOf(tag) > -1) hit = c.querySelector('.zh').textContent.trim();
+    });
+    if (hit) return hit;
+    if (f.pi === 0) return '政府应该补贴蔬果还是对不健康食品征税，人们看法不一，我支持后者。';
+    if (f.pi === 3) return '总的来说，征税比补贴更能引导健康饮食，政府同时应宣传均衡饮食。';
+    return '围绕「' + f.s.note + '」用一句中文表达。';
+  }
+
+  function suggest() {
+    var f = FLAT[S.cur], at = S.cur;
+    if (!MODEL_ON()) { cur().sugg = localSuggest(f); renderWorkbench(); return; }
+    setZhHint('建议生成中…');
+    var msg = '雅思题目：' + QTEXT + '\n用户观点库素材：\n' + dbDigest() + '\n' +
+      '当前要写：' + f.label + '（' + f.p.sub + '），本句职能：' + f.s.role + '，要点：' + f.s.note + '。' +
+      '参考素材与要点，用一句中文（15～35字）写出这一句该表达的内容。只输出这句中文，不要任何解释。';
+    askModel([{ role: 'user', content: msg }], { temperature: 0.5 })
+      .then(function (out) {
+        if (S.cur !== at) return;
+        var t = out.trim().split('\n')[0].slice(0, 60);
+        cur().sugg = t || localSuggest(f);
+        if (!cur().zh) renderWorkbench(); else setZhHint('');
+        save();
+      })
+      .catch(function () {
+        if (S.cur !== at) return;
+        cur().sugg = localSuggest(f);
+        if (!cur().zh) renderWorkbench(); else setZhHint('');
+      });
+  }
+
+  function goValidate() {
+    if (goBtn.disabled) return;
+    var it = cur(), f = FLAT[S.cur];
+    /* 已确认状态：按钮 = 解锁修改中文 */
+    if (it.confirmed) {
+      it.confirmed = false;
+      save();
+      zhEdit.contentEditable = 'true';
+      goBtn.classList.remove('ghost');
+      goBtn.textContent = '重新校验';
+      setZhHint('已解锁 · 修改后重新校验', '');
+      zhEdit.focus();
+      return;
+    }
+    var text = zhEdit.textContent.replace(/\s+/g, ' ').trim();
+    if (!text) { setZhHint('先写一句中文', 'err'); return; }
+    it.zh = text;
+    it.sugg = '';
+    zhEdit.classList.remove('sugg');
+    save();
+    var at = S.cur;
+    var confirmZh = function (finalText) {
+      it.zh = finalText;
+      it.confirmed = true;
+      it.strikeParts = null;
+      save();
+      renderWorkbench();
+      buildBlocks();
+    };
+    var showParts = function (parts) {
+      it.strikeParts = parts;
+      save();
+      zhEdit.innerHTML = parts.map(function (p) {
+        return p.ok ? esc(p.text) : '<span class="strike">' + esc(p.text) + '</span>';
+      }).join('');
+      acceptBtn.hidden = false;
+      setZhHint('已划掉偏离部分 · 接受或继续编辑', '');
+    };
+    var fail = function (issue) { setZhHint(issue || '不符合本句要点，请修改', 'err'); };
+    var handle = function (j) {
+      if (j && Array.isArray(j.parts)) {
+        var flat = j.parts.map(function (p) { return (p && p.text) || ''; }).join('').replace(/\s+/g, ' ').trim();
+        if (flat === text) {
+          if (j.parts.some(function (p) { return !p.ok; })) showParts(j.parts);
+          else confirmZh(text);
+        } else {
+          confirmZh(text); /* 片段拼接与原文不符：当作整句通过 */
+        }
+        return;
+      }
+      if (j && j.issue) { fail(j.issue); return; }
+      confirmZh(text);
+    };
+    if (!MODEL_ON()) {
+      if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail('过短或不是中文');
+      return;
+    }
+    goBtn.disabled = true;
+    acceptBtn.hidden = true;
+    setZhHint('校验中…');
+    var msg = '雅思题目：' + QTEXT + '\n全文结构：' + ESSAY_PLAN.map(function (p) { return p.title + p.sub; }).join('；') + '\n' +
+      '本句位置：' + f.label + '（' + f.p.sub + '），职能：' + f.s.role + '，要点：' + f.s.note + '。用户中文：«' + text + '»\n' +
+      '判断这句中文是否切题、是否符合该句职能要点，并标出偏离部分。只输出 JSON，三种形式之一：\n' +
+      '{"clean":true} —— 完全符合\n' +
+      '{"parts":[{"text":"…","ok":true},{"text":"…","ok":false}]} —— 部分偏离：把用户原句切成连续片段，偏离的标 ok:false，符合的标 ok:true；所有 text 按顺序逐字拼接必须完全等于用户原句\n' +
+      '{"issue":"一句话中文问题，15字内"} —— 整句偏离';
+    askModel([{ role: 'user', content: msg }], { temperature: 0.1 })
+      .then(function (out) {
+        goBtn.disabled = false;
+        if (S.cur !== at) return;
+        handle(parseJSON(out));
+      })
+      .catch(function () {
+        goBtn.disabled = false;
+        if (S.cur !== at) return;
+        if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail('过短或不是中文');
+      });
+  }
+
+  /* ================= 词块生成（标准答案不展示） ================= */
+  function localBlocks(zh) {
+    var D = [
+      { zh: ['政府'], en: 'the government', t: 'topic' },
+      { zh: ['补贴', '资助'], en: 'subsidies', t: 'topic' },
+      { zh: ['水果和蔬菜', '蔬果'], en: 'fruits and vegetables', t: 'topic' },
+      { zh: ['健康食品'], en: 'healthy food', t: 'topic' },
+      { zh: ['垃圾食品'], en: 'junk food', t: 'topic' },
+      { zh: ['含糖饮料'], en: 'sugary drinks', t: 'topic' },
+      { zh: ['征税', '收税'], en: 'a tax on', t: 'topic' },
+      { zh: ['价格'], en: 'the price of', t: 'topic' },
+      { zh: ['低收入家庭'], en: 'low-income families', t: 'topic' },
+      { zh: ['均衡饮食'], en: 'a balanced diet', t: 'topic' },
+      { zh: ['公共健康'], en: 'public health', t: 'topic' },
+      { zh: ['肥胖'], en: 'obesity', t: 'topic' },
+      { zh: ['人们', '消费者'], en: 'people', t: 'topic' },
+      { zh: ['买得起', '吃得起'], en: 'afford to buy', t: 'bonus' },
+      { zh: ['选择'], en: 'healthier choices', t: 'topic' },
+      { zh: ['健康饮食'], en: 'healthy eating', t: 'topic' },
+      { zh: ['应该'], en: 'should', t: 'bonus' },
+      { zh: ['因为', '由于'], en: 'because', t: 'bonus' },
+      { zh: ['因此', '所以'], en: 'therefore', t: 'bonus' },
+      { zh: ['然而', '但是'], en: 'however', t: 'bonus' },
+      { zh: ['不仅'], en: 'not only', t: 'bonus' },
+      { zh: ['而且'], en: 'but also', t: 'bonus' },
+      { zh: ['更多'], en: 'more', t: 'bonus' },
+      { zh: ['能够', '可以'], en: 'can', t: 'bonus' },
+      { zh: ['让', '使'], en: 'make', t: 'bonus' },
+      { zh: ['降低', '减少'], en: 'lower', t: 'bonus' },
+      { zh: ['引导'], en: 'guide people towards', t: 'bonus' },
+      { zh: ['重要'], en: 'plays a crucial role in', t: 'bonus' },
+      { zh: ['有效'], en: 'an effective way to', t: 'bonus' },
+      { zh: ['我认为', '我觉得'], en: 'I believe that', t: 'bonus' }
+    ];
+    var masked = zh, hits = [];
+    D.map(function (e, i) {
+      return { e: e, i: i, len: Math.max.apply(null, e.zh.map(function (k) { return k.length; })) };
+    }).sort(function (a, b) { return b.len - a.len; }).forEach(function (o) {
+      var n = 0;
+      o.e.zh.forEach(function (k) {
+        var parts = masked.split(k);
+        if (parts.length > 1) { n += parts.length - 1; masked = parts.join('▇'); }
+      });
+      if (n > 0) hits.push({ e: o.e, count: n, i: o.i });
+    });
+    hits.sort(function (a, b) { return a.i - b.i; });
+    var tree = [];
+    hits.forEach(function (h) {
+      for (var k = 0; k < h.count; k++) tree.push({ t: h.e.t, en: h.e.en });
+    });
+    return { sentence: tree.map(function (nd) { return nd.en; }).join(' ') + '.', tree: tree };
+  }
+
+  /* ================= 学术词库（加分词栏） =================
+     编排逻辑借鉴《Academic Vocabulary in Use》的"按用途分组"思路；
+     词条、释义、例句全部原创，未录入教材原文；词表参照公开学术词表。
+     字段：w 词形（可含 (可省) 成分）｜g 功能组｜p 词性与句中位置｜d 槽位模式
+          en/zh 一行双语释义｜reg 语体 n=中性 sf=半正式 f=正式（缺省 n）
+          str 语气强度 1低 2中 3高（缺省 2）｜col 组合自由度 free/semi/fix（缺省 free）
+          eq 等价变体（仅可互换的才生成 or 块）｜co 典型搭配｜pa 惯用句式
+          dom 学科域（缺省通用）｜st 状态 draft→validated→reviewed（缺省=已审核上线）
+     生产流程：AI 起草(draft) → 开放语料核频率/搭配/句式(validated) → 人工审核(reviewed)；
+     提示词与 or 生成只消化 reviewed 词条。选错统计见控制台 lexStats()。 */
+  var ACAD = [
+    /* —— 程度与聚焦 —— */
+    { w: 'relatively', g: '程度与聚焦', p: 'adv 修饰形容词/副词', d: '[relatively] + adj', en: 'to a moderate degree when compared', zh: '相当地、较为（弱化断言）', str: 1, col: 'free', eq: ['comparatively'], co: ['relatively small', 'relatively low', 'relatively recent'], ex: 'The relatively small sample limits the scope of the findings.' },
+    { w: 'comparatively', g: '程度与聚焦', p: 'adv 修饰形容词/副词', d: '[comparatively] + adj', en: 'measured against something else', zh: '相较而言（与 relatively 同义同级）', str: 1, col: 'free', eq: ['relatively'], ex: 'Housing was comparatively affordable in the 1990s.' },
+    { w: 'considerably', g: '程度与聚焦', p: 'adv 修饰比较级/动词', d: '[considerably] + 比较级', en: 'by a large amount', zh: '大幅地、可观地', str: 3, col: 'free', co: ['considerably higher', 'considerably larger'], ex: 'Tuition fees have risen considerably over the past decade.' },
+    { w: 'somewhat', g: '程度与聚焦', p: 'adv 修饰形容词', d: '[somewhat] + adj', en: 'to a small degree', zh: '略微、有几分', str: 1, col: 'free', co: ['somewhat limited', 'somewhat surprising'], pa: ['多与评价性形容词连用'], ex: 'The findings were somewhat surprising given earlier studies.' },
+    { w: 'significantly', g: '程度与聚焦', p: 'adv 修饰比较级/动词', en: 'by an amount that matters', zh: '显著地', str: 3, col: 'free', pa: ['常与数字或统计差值连用'], ex: 'Test scores improved significantly after the programme.' },
+    { w: 'substantially', g: '程度与聚焦', p: 'adv 修饰动词/比较级', en: 'by a large degree', zh: '大幅度地', str: 3, col: 'free', ex: 'The population of the region grew substantially within a decade.' },
+    { w: 'slightly', g: '程度与聚焦', p: 'adv 修饰动词/比较级', en: 'by a small amount', zh: '轻微地、稍许', str: 1, col: 'free', ex: 'Output fell slightly in the second quarter.' },
+    { w: 'markedly', g: '程度与聚焦', p: 'adv 修饰动词/比较级', en: 'in a way that is easy to notice', zh: '显著地（书面）', reg: 'sf', str: 3, col: 'free', ex: 'Waiting times dropped markedly after the reform.' },
+    { w: 'highly', g: '程度与聚焦', p: 'adv 修饰形容词', d: '[highly] + adj', en: 'very much; to a high level', zh: '高度地（强化形容词）', str: 3, col: 'semi', co: ['highly effective', 'highly likely', 'highly relevant'], ex: 'The scheme proved highly effective in rural areas.' },
+    { w: 'extremely', g: '程度与聚焦', p: 'adv 修饰形容词/副词', en: 'to a very great degree', zh: '极其、非常', str: 3, col: 'free', pa: ['口语中也常用'], ex: 'The training schedule was extremely demanding.' },
+    { w: 'largely', g: '程度与聚焦', p: 'adv 修饰动词/分词', en: 'mostly; chiefly', zh: '在很大程度上、大体上', col: 'free', eq: ['mostly'], ex: 'The issue has been largely ignored by policymakers.' },
+    { w: 'mostly', g: '程度与聚焦', p: 'adv 修饰动词/表语', en: 'mainly; in most cases', zh: '多数地、主要地', col: 'free', eq: ['largely'], ex: 'The respondents were mostly undergraduates.' },
+    { w: 'mainly', g: '程度与聚焦', p: 'adv 修饰动词/介词短语', en: 'chiefly; for the most part', zh: '主要地', col: 'free', eq: ['primarily'], ex: 'The fund targets mainly rural clinics.' },
+    { w: 'primarily', g: '程度与聚焦', p: 'adv 修饰动词/表语', en: 'first and foremost', zh: '首要地、主要地（书面）', reg: 'sf', col: 'free', eq: ['mainly'], ex: 'The journal publishes primarily empirical studies.' },
+    { w: 'especially', g: '程度与聚焦', p: 'adv 聚焦形容词/介词短语', en: 'more than usually', zh: '尤其、特别地', col: 'free', eq: ['particularly'], pa: ['常见于否定：not especially difficult'], ex: 'Large lectures are not especially difficult to manage.' },
+    { w: 'particularly', g: '程度与聚焦', p: 'adv 聚焦形容词/介词短语', en: 'more than usually', zh: '尤其、特别地', col: 'free', eq: ['especially'], ex: 'The results matter particularly for urban schools.' },
+    { w: 'specially', g: '程度与聚焦', p: 'adv 修饰动词（目的）', d: 'be [specially] + done + for', en: 'for one particular purpose', zh: '特意地、专门地（表目的）', reg: 'sf', col: 'semi', co: ['specially designed', 'specially built'], ex: 'The app was specially designed for beginner writers.' },
+    { w: 'specially designed', g: '程度与聚焦', p: 'adv + 过去分词固定搭配', d: 'be [specially designed] for/to', en: 'made for one particular purpose', zh: '专门设计的', reg: 'sf', col: 'fix', ex: 'The course was specially designed for nurses.' },
+    { w: 'far', g: '程度与聚焦', p: 'adv 加强比较级', d: '[far] + 比较级', en: 'much (used before comparatives)', zh: '……得多（加强比较级）', str: 3, col: 'semi', pa: ['far more / far less + adj'], ex: 'Commuting is far more tiring than remote work.' },
+    /* —— 转述与立场（含限制与保留） —— */
+    { w: 'indicate', g: '转述与立场', p: 'v S+indicate+that/名词', d: '[indicate] that + 从句', en: 'to show that something is likely', zh: '表明、显示（中性）', str: 2, col: 'semi', ex: 'The survey indicates that most residents back the scheme.' },
+    { w: 'suggest', g: '转述与立场', p: 'v S+suggest+that/名词', en: 'to point to a possibility', zh: '表明（弱断言）、暗示', str: 1, col: 'free', ex: 'The findings suggest that sleep quality affects recall.' },
+    { w: 'demonstrate', g: '转述与立场', p: 'v S+demonstrate+that', en: 'to show clearly with evidence', zh: '（以证据）证明、展示', reg: 'f', str: 3, col: 'free', ex: 'The trial demonstrates that the method is reliable.' },
+    { w: 'reveal', g: '转述与立场', p: 'v S+reveal+that/名词', en: 'to make something known', zh: '揭示、显示', str: 2, col: 'free', ex: 'The data reveal a clear regional pattern.' },
+    { w: 'show', g: '转述与立场', p: 'v S+show+that/名词', en: 'to make clear; to present', zh: '表明、展示（中性）', str: 2, col: 'free', ex: 'Figure 2 shows the trend in exports.' },
+    { w: 'prove', g: '转述与立场', p: 'v S+prove+that', en: 'to show beyond doubt', zh: '证明（最强断言）', reg: 'f', str: 3, col: 'free', ex: 'The audit proves that the funds were misused.' },
+    { w: 'argue', g: '转述与立场', p: 'v S+argue+that', en: 'to give reasons for a view', zh: '论辩说、主张', col: 'free', ex: 'Critics argue that the levy is unfair.' },
+    { w: 'claim', g: '转述与立场', p: 'v S+claim+that', en: 'to state without proof', zh: '声称（未必属实）', col: 'free', ex: 'The authors claim that the gains are lasting.' },
+    { w: 'maintain', g: '转述与立场', p: 'v S+maintain+that', en: 'to keep asserting a view', zh: '坚持认为、主张', reg: 'f', col: 'free', ex: 'Officials maintain that the water is safe to drink.' },
+    { w: 'emphasise', g: '转述与立场', p: 'v S+emphasise+名词/that', en: 'to give special importance to', zh: '强调', col: 'free', ex: 'The report emphasises the need for early checks.' },
+    { w: 'highlight', g: '转述与立场', p: 'v S+highlight+名词', en: 'to draw attention to', zh: '突出、着重指出', col: 'free', ex: 'The study highlights three main risks.' },
+    { w: 'note', g: '转述与立场', p: 'v S+note+that', en: 'to mention; to observe', zh: '指出、提到', col: 'free', ex: 'Several scholars note that the evidence is thin.' },
+    { w: 'according to', g: '转述与立场', p: '介词短语（句首/句中）', d: '[according to] + 研究/机构/作者', en: 'as stated by', zh: '根据（转述来源）', col: 'fix', ex: 'According to the review, cases fell by a third.' },
+    { w: 'tend to', g: '转述与立场', p: 'v 半助动词', d: '[tend to] + 动词原形', en: 'to be likely to do', zh: '往往、倾向于', col: 'semi', ex: 'Older learners tend to prefer structured tasks.' },
+    { w: 'appear to', g: '转述与立场', p: 'v 半助动词', d: '[appear to] + 动词原形', en: 'to seem to', zh: '看来、似乎（弱断言）', col: 'semi', ex: 'The two measures appear to be unrelated.' },
+    { w: 'be likely to', g: '转述与立场', p: '半固定谓语', d: '[be likely to] + 动词原形', en: 'probable', zh: '很可能', col: 'semi', ex: 'Rents are likely to rise again this winter.' },
+    { w: 'carry out', g: '转述与立场', p: 'v + 研究类宾语', d: '[carry out] + research/a study', en: 'to perform; to complete', zh: '开展、执行（研究类宾语）', pa: ['学术常用短语动词，不禁用'], col: 'semi', co: ['carry out research', 'carry out a study'], ex: 'The team carried out forty interviews.' },
+    { w: 'conduct', g: '转述与立场', p: 'v + 研究类宾语', en: 'to organise and carry out', zh: '开展、实施（研究）', reg: 'sf', col: 'free', eq: ['carry out'], ex: 'Researchers conducted interviews in two cities.' },
+    { w: 'examine', g: '转述与立场', p: 'v S+examine+名词', en: 'to look at closely', zh: '考察、研究', col: 'free', ex: 'This paper examines the link between diet and mood.' },
+    { w: 'identify', g: '转述与立场', p: 'v S+identify+名词', en: 'to find out exactly', zh: '识别、发现', col: 'free', ex: 'The review identified several gaps in support.' },
+    /* —— 归因与因果 —— */
+    { w: 'directly', g: '归因与因果', p: 'adv 修饰动词', en: 'without anything in between', zh: '直接地', col: 'free', ex: 'The grant directly benefits small farms.' },
+    { w: 'indirectly', g: '归因与因果', p: 'adv 修饰动词', en: 'through something else first', zh: '间接地', col: 'free', ex: 'The tax indirectly raised shop prices.' },
+    { w: '(in)directly linked to', g: '归因与因果', p: '固定表语搭配', d: 'be [(in)directly linked] to + 名词', en: 'connected with', zh: '与……直接/间接相关', reg: 'sf', col: 'fix', ex: 'Heart disease is directly linked to poor diet.' },
+    { w: 'attribute A to B', g: '归因与因果', p: 'v 双宾搭配', d: '[attribute] 结果 [to] 原因', en: 'to say something is caused by', zh: '把……归因于……', reg: 'f', col: 'fix', ex: 'Scientists attribute the decline to habitat loss.' },
+    { w: 'be attributed to', g: '归因与因果', p: '被动固定搭配', en: 'to be said to be caused by', zh: '被归因于', reg: 'f', col: 'fix', ex: 'The recovery is largely attributed to export demand.' },
+    { w: 'be associated with', g: '归因与因果', p: '被动半固定搭配', en: 'connected in a general way', zh: '与……相关联', col: 'semi', ex: 'Poor sleep is associated with weaker focus.' },
+    { w: 'result in', g: '归因与因果', p: 'v+介词（前因后果）', d: '[result in] + 结果', en: 'to cause something to happen', zh: '导致', col: 'fix', ex: 'The shortage resulted in longer queues.' },
+    { w: 'result from', g: '归因与因果', p: 'v+介词（前果后因）', d: '[result from] + 原因', en: 'to happen because of', zh: '源于', col: 'fix', ex: 'Many delays result from vague contracts.' },
+    { w: 'lead to', g: '归因与因果', p: 'v+介词', d: '[lead to] + 结果', en: 'to cause', zh: '导致、引起', col: 'fix', ex: 'Chronic stress can lead to absenteeism.' },
+    { w: 'contribute to', g: '归因与因果', p: 'v+介词（部分成因）', en: 'to help bring about', zh: '促成（部分原因）', str: 2, col: 'fix', ex: 'Several factors contribute to rising costs.' },
+    { w: 'cause', g: '归因与因果', p: 'v S+cause+名词', en: 'to make something happen', zh: '造成、引起（直接因果）', str: 3, col: 'free', ex: 'Deforestation causes soil erosion.' },
+    { w: 'due to', g: '归因与因果', p: '介词短语', d: '[due to] + 名词', en: 'because of', zh: '由于', col: 'fix', ex: 'The rise is due to higher fuel prices.' },
+    { w: 'owing to', g: '归因与因果', p: '介词短语（句首常见）', d: '[owing to] + 名词', en: 'because of', zh: '由于（书面）', reg: 'f', col: 'fix', ex: 'Flights were cancelled owing to fog.' },
+    { w: 'stem from', g: '归因与因果', p: 'v+介词（前果后因）', en: 'to come from', zh: '源自、起因于', reg: 'f', col: 'fix', ex: 'Many disputes stem from unclear wording.' },
+    { w: 'give rise to', g: '归因与因果', p: 'v+名词固定搭配', en: 'to cause (formal)', zh: '引发、引起', reg: 'f', col: 'fix', ex: 'The reform gave rise to heated debate.' },
+    { w: 'pose a threat to', g: '归因与因果', p: 'v+名词固定搭配', d: '[pose a threat] to + 对象', en: 'to be a danger to', zh: '对……构成威胁', reg: 'sf', col: 'fix', ex: 'Sea-level rise poses a threat to coastal towns.' },
+    { w: 'be responsible for', g: '归因与因果', p: '半固定表语', en: 'having the duty; being the cause', zh: '对……负责；是……的原因', col: 'fix', ex: 'Contractors are responsible for site safety.' },
+    /* —— 变化与趋势 —— */
+    { w: 'a considerable number of', g: '变化与趋势', p: '数量限定短语', d: '[a considerable number of] + 复数名词', en: 'a large amount (countable)', zh: '为数众多的（升级 a lot of）', reg: 'sf', col: 'fix', ex: 'A considerable number of tenants face eviction.' },
+    { w: 'a substantial proportion of', g: '变化与趋势', p: '比例限定短语', en: 'a large share of', zh: '相当大比例的', reg: 'f', col: 'fix', ex: 'A substantial proportion of respondents disagreed.' },
+    { w: 'a significant increase in', g: '变化与趋势', p: '名词短语固定搭配', en: 'a large rise in', zh: '……的显著增长', col: 'fix', ex: 'There was a significant increase in online sales.' },
+    { w: 'increase', g: '变化与趋势', p: 'v/n 升变化', en: 'to become larger', zh: '增加、上升', col: 'free', ex: 'Energy output increased for a third year.' },
+    { w: 'rise', g: '变化与趋势', p: 'v/n 升变化', co: ['a sharp rise in', 'a steady rise in'], en: 'to go up', zh: '上升、增长', col: 'free', ex: 'Rents rose by nine per cent.' },
+    { w: 'decline', g: '变化与趋势', p: 'v/n 降变化', en: 'to go down steadily', zh: '下降、减少（书面）', reg: 'sf', col: 'free', ex: 'Enrolment declined steadily after 2015.' },
+    { w: 'grow', g: '变化与趋势', p: 'v 升变化', en: 'to become bigger', zh: '增长、发展', col: 'free', ex: 'The sector grew rapidly in the 2010s.' },
+    { w: 'fall', g: '变化与趋势', p: 'v 降变化', en: 'to go down', zh: '下降', col: 'free', ex: 'Imports fell sharply last quarter.' },
+    { w: 'drop', g: '变化与趋势', p: 'v 降变化', en: 'to decrease quickly', zh: '下降（口语也常用）', col: 'free', ex: 'Attendance dropped in the winter months.' },
+    { w: 'remain', g: '变化与趋势', p: '系动词 + 表语', d: '[remain] + adj', en: 'to stay in a state', zh: '保持（某种状态）', col: 'semi', co: ['remain stable', 'remain low', 'remain high'], ex: 'Prices remained stable throughout the year.' },
+    { w: 'stabilise', g: '变化与趋势', p: 'v 趋稳', en: 'to become steady', zh: '趋于稳定', reg: 'f', col: 'free', dom: ['社科', '理工'], ex: 'The currency stabilised after the intervention.' },
+    { w: 'fluctuate', g: '变化与趋势', p: 'v 波动', en: 'to rise and fall unevenly', zh: '波动、起伏', reg: 'f', col: 'free', dom: ['社科', '理工'], ex: 'Grain prices fluctuated between 2010 and 2016.' },
+    { w: 'steadily', g: '变化与趋势', p: 'adv 修饰变化动词', en: 'in a regular, even way', zh: '稳步地', col: 'free', ex: 'Support for the scheme grew steadily.' },
+    { w: 'sharply', g: '变化与趋势', p: 'adv 修饰变化动词', en: 'suddenly and by a large amount', zh: '急剧地', str: 3, col: 'free', ex: 'Retail sales fell sharply in March.' },
+    { w: 'gradually', g: '变化与趋势', p: 'adv 修饰变化动词', en: 'slowly, step by step', zh: '逐渐地', str: 1, col: 'free', ex: 'Trust in the brand recovered gradually.' },
+    { w: 'dramatically', g: '变化与趋势', p: 'adv 修饰变化动词', en: 'suddenly and greatly', zh: '大幅地、急剧地', str: 3, col: 'free', ex: 'Costs fell dramatically after the merger.' },
+    { w: 'upward trend', g: '变化与趋势', p: '名词短语', d: 'a clear [upward trend] in', en: 'a general movement upwards', zh: '上升趋势', col: 'fix', ex: 'The data show a clear upward trend.' }
+  ];
+  /* 词条间关系：仅用于翻译选词参考、评判提示与 or 过滤（反义/易混/程度差不得成 or）；
+     note 只说区别，不判对错、不泄答案 */
+  var ACAD_REL = [
+    { a: 'specially', b: 'especially', t: 'cf', note: 'specially 与 especially 意思不同：specially＝特意、专门地（表目的）；especially＝尤其、特别地' },
+    { a: 'somewhat', b: 'considerably', t: 'deg', note: 'somewhat 与 considerably 程度不同：somewhat＝略微；considerably＝大幅' },
+    { a: 'significantly', b: 'slightly', t: 'deg', note: 'significantly 与 slightly 程度相反：显著 vs 略微' },
+    { a: 'directly', b: 'indirectly', t: 'ant', note: 'directly 与 indirectly 方向相反：直接地 / 间接地' },
+    { a: 'prove', b: 'indicate', t: 'deg', note: 'prove 与 indicate 断言强度不同：prove＝证明（最强）；indicate＝表明（中性）' },
+    { a: 'demonstrate', b: 'indicate', t: 'deg', note: 'demonstrate 与 indicate 断言强度不同：demonstrate＝（以证据）证明；indicate＝表明（中性）' },
+    { a: 'result in', b: 'result from', t: 'ant', note: 'result in 与 result from 方向相反：result in＝导致（前因后果）；result from＝源于（前果后因）' },
+    { a: 'claim', b: 'argue', t: 'cf', note: 'claim 与 argue 不同：claim＝声称（未必属实）；argue＝论辩（给出理由）' },
+    { a: 'sharply', b: 'gradually', t: 'ant', note: 'sharply 与 gradually 相反：急剧地 / 逐渐地' },
+    { a: 'remain', b: 'increase', t: 'ant', note: 'remain 与 increase 相反：保持不变 / 增长' }
+  ];
+
+  /* ---- 词库索引 ---- */
+  function lexOK(e) { return !e.st || e.st === 'reviewed'; }
+  function lexNorm(s) { return String(s).toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  /* 展开 (in)directly 型可选成分 → 全部实际形式 */
+  function lexVariants(w) {
+    var s = String(w), m = s.match(/\(([^)]+)\)/);
+    if (!m) return [s];
+    return [s.replace(/\([^)]+\)/, ''), s.replace(/\([^)]+\)/, m[1])];
+  }
+  var ACAD_BY = {}, ACAD_FIX = {}, ACAD_FREE = {}, ACAD_EQ = {}, ACAD_REL_BY = {};
+  ACAD.forEach(function (e) {
+    if (!lexOK(e)) return;
+    lexVariants(e.w).forEach(function (v) {
+      var k = lexNorm(v);
+      ACAD_BY[k] = e;
+      if ((e.col === 'fix' || e.col === 'semi') && k) ACAD_FIX[k] = e;
+      if (e.col === 'free' && k && k.indexOf(' ') < 0) ACAD_FREE[k] = e;
+    });
+    (e.eq || []).forEach(function (q) {
+      lexVariants(e.w).forEach(function (a) {
+        lexVariants(q).forEach(function (b) {
+          ACAD_EQ[lexNorm(a) + '|' + lexNorm(b)] = true;
+          ACAD_EQ[lexNorm(b) + '|' + lexNorm(a)] = true;
+        });
+      });
+    });
+  });
+  ACAD_REL.forEach(function (r) {
+    ACAD_REL_BY[lexNorm(r.a) + '|' + lexNorm(r.b)] = r;
+    ACAD_REL_BY[lexNorm(r.b) + '|' + lexNorm(r.a)] = r;
+  });
+
+  /* ---- 提示词摘要（只消化 reviewed）---- */
+  function acadDigest(mode) {
+    var REG = { n: '中性', sf: '半正式', f: '正式' }, COL = { free: '单独成块', semi: '整块', fix: '整块' };
+    return ACAD.filter(lexOK).map(function (e) {
+      if (mode === 'tr') {
+        return e.w + '｜' + (e.d || e.p) + '｜' + REG[e.reg || 'n'] + '·强度' + (e.str || 2) +
+          (e.eq ? '｜≡' + e.eq.join('/') : '') + (e.pa && e.pa.length ? '｜' + e.pa.join('；') : '');
+      }
+      return lexVariants(e.w).join('/') + '（' + e.g + '）｜' + COL[e.col || 'free'] +
+        (e.eq ? '｜≡' + e.eq.join('/') : '');
+    }).join('\n');
+  }
+
+  /* ---- 拆分落地的词库规则：or 过滤 → 固定搭配合并 → 自由词拆分 → 归栏 ---- */
+  function applyLexRules(tree, sentence) {
+    function isLeaf(n) { return !!n && !n.or && n.t && n.en && n.t !== 'skel'; }
+    function inSentence(node, bag) {
+      var b = {}; for (var k in bag) b[k] = bag[k];
+      wordsOf(node.en).forEach(function (w) { b[w] = (b[w] || 0) - 1; });
+      return Object.keys(b).every(function (w) { return b[w] >= 0; });
+    }
+    function walk(list) {
+      var out = [], i, n;
+      for (i = 0; i < list.length; i++) {
+        n = list[i];
+        /* or 折叠：反义/易混/程度差不是等价对 → 折叠为句中实际出现的那个 */
+        if (n && n.or && n.or.length === 2 && n.or[0].en && n.or[1].en) {
+          var ka = lexNorm(n.or[0].en), kb = lexNorm(n.or[1].en);
+          if (ACAD_REL_BY[ka + '|' + kb] && !ACAD_EQ[ka + '|' + kb]) {
+            var bag = {};
+            wordsOf(sentence).forEach(function (w) { bag[w] = (bag[w] || 0) + 1; });
+            n = inSentence(n.or[1], bag) && !inSentence(n.or[0], bag) ? n.or[1] : n.or[0];
+          }
+        }
+        if (!isLeaf(n)) {
+          if (n && n.or) n.or.forEach(function (o) { if (o.t === 'skel') o.fills = o.fills.map(walk); });
+          else if (n && n.t === 'skel') n.fills = n.fills.map(walk);
+          out.push(n);
+          continue;
+        }
+        out.push(n);
+      }
+      /* 相邻叶子合并为词库固定/半固定搭配：先试整块拼接，再试「固定搭配为拼接前缀」
+         （如 [directly][linked to diet] → [directly linked to][diet]），词序不变。
+         整块合并可继续链式；前缀合并的头部已是完整词条，直接前进，防止自我重复 */
+      for (i = 0; i < out.length - 1;) {
+        var a = out[i], b = out[i + 1];
+        var step = 0;
+        if (isLeaf(a) && isLeaf(b)) {
+          var jw = (a.en + ' ' + b.en).replace(/\s+/g, ' ').split(' ');
+          if (ACAD_FIX[lexNorm(jw.join(' '))]) {
+            out.splice(i, 2, { t: 'bonus', en: jw.join(' ') });
+            step = 1;
+          } else {
+            for (var L = jw.length - 1; L >= 2; L--) { /* 前缀取 ≥2 词，至少留 1 词给后块 */
+              if (ACAD_FIX[lexNorm(jw.slice(0, L).join(' '))]) {
+                out.splice(i, 2, { t: 'bonus', en: jw.slice(0, L).join(' ') }, { t: b.t, en: jw.slice(L).join(' ') });
+                step = 2; break;
+              }
+            }
+          }
+        }
+        if (step === 1) continue;      /* 合成的新块还可能与右邻再合并 */
+        if (step === 2) { i++; continue; } /* 头部已定型，检查 [后块][右邻] */
+        i++;
+      }
+      /* 自由程度词独立成块；整块恰为词条时只归栏不拆；
+         前缀须为空或≥2词（避免拆出孤立的冠词/连词块），后缀≥1词即可（relatively + 形容词是最常见切法） */
+      var res = [];
+      out.forEach(function (nd) {
+        if (!isLeaf(nd)) { res.push(nd); return; }
+        var nn = lexNorm(nd.en);
+        if (ACAD_BY[nn]) { nd.t = 'bonus'; res.push(nd); return; }
+        var ws = String(nd.en).match(/[A-Za-z0-9'’-]+/g) || [];
+        var at = -1;
+        for (var q = 0; q < ws.length; q++) {
+          if (ACAD_FREE[lexNorm(ws[q])]) {
+            var pre = q;
+            if (pre === 0 || pre >= 2) { at = q; break; }
+          }
+        }
+        if (at < 0) { res.push(nd); return; }
+        if (at > 0) res.push({ t: nd.t, en: ws.slice(0, at).join(' ') });
+        res.push({ t: 'bonus', en: ws[at] });
+        if (at < ws.length - 1) res.push({ t: nd.t, en: ws.slice(at + 1).join(' ') });
+      });
+      return res;
+    }
+    return walk(tree);
+  }
+
+  /* ---- 译句断言强度守恒：中文「表明/说明/显示」不得升级为 prove/demonstrate（除非中文明说「证明」）---- */
+  function lexStrengthGuard(zh, en) {
+    if (!en || /证明/.test(zh) || !/表明|说明|显示|意味着|提示|指出/.test(zh)) return en;
+    var map = { prove: 'indicate', proves: 'indicates', proved: 'indicated', proving: 'indicating',
+      demonstrate: 'show', demonstrates: 'shows', demonstrated: 'showed', demonstrating: 'showing' };
+    return en.replace(/\b[A-Za-z]+\b/g, function (w) {
+      var rep = map[w.toLowerCase()];
+      if (!rep) return w;
+      return /^[A-Z]/.test(w) ? rep.charAt(0).toUpperCase() + rep.slice(1) : rep;
+    });
+  }
+
+  /* ---- 评判的词库级提示：用户词 vs 答案词命中易混/程度差/反义 → 一句话辨析 ---- */
+  var LEX_LOG_KEY = 'yasi-lexerr';
+  function logLexErr(k) {
+    try {
+      var c = JSON.parse(localStorage.getItem(LEX_LOG_KEY) || '{}');
+      c[k] = (c[k] || 0) + 1;
+      localStorage.setItem(LEX_LOG_KEY, JSON.stringify(c));
+    } catch (e) {}
+  }
+  function lexHint() {
+    var it = cur();
+    if (!it.answer) return '';
+    var ans = wordsOf(it.answer), usr = wordsOf(orderText(it.order));
+    var onlyUsr = [], onlyAns = [];
+    usr.forEach(function (w) { if (ans.indexOf(w) < 0 && onlyUsr.indexOf(w) < 0) onlyUsr.push(w); });
+    ans.forEach(function (w) { if (usr.indexOf(w) < 0 && onlyAns.indexOf(w) < 0) onlyAns.push(w); });
+    var hit = null;
+    onlyUsr.forEach(function (w) {
+      onlyAns.forEach(function (v) { if (!hit) { var r = ACAD_REL_BY[w + '|' + v]; if (r) hit = r; } });
+    });
+    if (!hit) return '';
+    logLexErr(hit.a + '|' + hit.b);
+    return hit.note;
+  }
+  window.lexStats = function () {
+    var c = {};
+    try { c = JSON.parse(localStorage.getItem(LEX_LOG_KEY) || '{}'); } catch (e) {}
+    return Object.keys(c).map(function (k) { return { pair: k, errs: c[k] }; })
+      .sort(function (x, y) { return y.errs - x.errs; });
+  };
+  /* 学生句中出现的学术词条 → 用法摘要（供 AI 微提示参考） */
+  function lexCtxOf(text) {
+    var ws = wordsOf(text), seen = {}, rows = [];
+    ACAD.forEach(function (e) {
+      if (!lexOK(e) || seen[e.w]) return;
+      var hit = lexVariants(e.w).some(function (f) {
+        return f.toLowerCase().split(' ').every(function (x) { return ws.indexOf(x) > -1; });
+      });
+      if (!hit) return;
+      seen[e.w] = 1;
+      rows.push(e.w + '＝' + (e.d || e.p) + (e.pa && e.pa.length ? '（' + e.pa.join('；') + '）' : '') +
+        (e.co && e.co.length ? '（常搭 ' + e.co.join('、') + '）' : ''));
+    });
+    return rows.join('；');
+  }
+
+  /* ================= 标点文本层：切分 · 规则拼接 · 逐字校验 =================
+     词内标点（数字千分位/小数、缩写点）在切分时保持为整体，不被当句级标点 */
+  function punctToks(s) {
+    return String(s).match(/\d+(?:[.,]\d+)+|(?:[A-Za-z]\.){2,}|[“”;:?!—(),]|\.|[^“”;:?!—(),.]+/g) || [];
+  }
+  function joinToks(toks) {
+    var out = '';
+    for (var i = 0; i < toks.length; i++) {
+      var t = toks[i], r = PUNCT.rule[t];
+      var prev = toks[i - 1] || '';
+      if (!r) { /* 普通词：先去首尾空格，间距完全交给规则；前一 token 若是“后不空格”类开符号（( “），紧贴 */
+        t = String(t).replace(/^ +| +$/g, '');
+        if (!t) continue;
+        var pr = PUNCT.rule[prev];
+        if (out && !(pr && pr.after === 0) && out.slice(-1) !== ' ') out += ' ';
+        out += t;
+        continue;
+      }
+      var nxt = toks[i + 1] || '';
+      var tight = /^\d[\d.,]*$/.test(prev) && /^\d/.test(nxt); /* 词内数字标点：不拆间距 */
+      if (tight) { out += t; continue; }
+      if (r.before) { if (out && out.slice(-1) !== ' ') out += ' '; }
+      else { while (out.slice(-1) === ' ') out = out.slice(0, -1); }
+      out += t;
+      if (r.after && nxt) out += ' ';
+    }
+    return out.replace(/\s+/g, ' ').trim();
+  }
+  function canonText(s) { return joinToks(punctToks(s)); }
+
+  /* 积木树/拼装树 → 标点感知文本（空位由内容替代，or 取已选项） */
+  function tokensOfTree(list, getBlock, toks) {
+    (list || []).forEach(function (e) {
+      var b = getBlock ? getBlock(e.id) : e;
+      var o = b.or ? b.or[e.pick == null ? 0 : e.pick] : b;
+      if (o.t === 'punc') { toks.push(o.ch); return; }
+      if (o.t === 'skel') {
+        var si = 0;
+        o.parts.forEach(function (p) {
+          if (typeof p === 'string') { punctToks(p).forEach(function (x) { toks.push(x); }); }
+          else { tokensOfTree(e.fills[si] || [], getBlock, toks); si++; }
+        });
+        return;
+      }
+      if (o.en) punctToks(o.en).forEach(function (x) { toks.push(x); });
+    });
+    return toks;
+  }
+  /* 完整划分校验（含标点）：全部块按间距规则拼接后与标准答案逐字一致 */
+  function verifyText(tree, anchor) {
+    var got = joinToks(tokensOfTree(tree, null, [])), want = canonText(anchor);
+    return { ok: got === want, got: got, want: want };
+  }
+
+  /* 标点扁平扫描：词块、骨架固定文字里的句级标点都会露出来；带前后词上下文与顶层位置 */
+  function puncScan(list, getBlock) {
+    var flat = [];
+    function pushTok(tk, top) {
+      if (PUNCT.rule[tk]) flat.push({ p: { ch: tk, role: PUNCT.rule[tk].role, opt: false }, top: top });
+      else wordsOf(tk).forEach(function (w) { flat.push({ w: w, top: top }); });
+    }
+    function walkEntry(e, top) {
+      var b = getBlock ? getBlock(e.id) : e;
+      var o = b.or ? b.or[e.pick == null ? 0 : e.pick] : b;
+      if (o.t === 'punc') { flat.push({ p: { ch: o.ch, role: o.role || (PUNCT.rule[o.ch] || {}).role || '', opt: !!o.opt }, top: top }); return; }
+      if (o.t === 'skel') {
+        var si = 0;
+        o.parts.forEach(function (p) {
+          if (typeof p === 'string') punctToks(p).forEach(function (tk) { pushTok(tk, top); });
+          else { ((e.fills && e.fills[si]) || []).forEach(function (c) { walkEntry(c, top); }); si++; }
+        });
+        return;
+      }
+      if (o.en) punctToks(o.en).forEach(function (tk) { pushTok(tk, top); });
+    }
+    (list || []).forEach(function (e, ti) { walkEntry(e, ti); });
+    flat.forEach(function (f, i) { /* 前后词上下文（各取最近一词） */
+      if (!f.p) return;
+      var b = null, a = null;
+      for (var q = i - 1; q >= 0; q--) { if (flat[q].w) { b = flat[q].w; break; } }
+      for (var q2 = i + 1; q2 < flat.length; q2++) { if (flat[q2].w) { a = flat[q2].w; break; } }
+      f.p.before = b || ''; f.p.after = a || '';
+    });
+    return flat;
+  }
+  /* 答案文本 → 标点参照（评判基准）：before=前一词，after=后一词 */
+  function puncRefFromText(s) {
+    var toks = punctToks(s), ref = [];
+    toks.forEach(function (tk, i) {
+      if (!PUNCT.rule[tk]) return;
+      var b = null, a = null;
+      for (var q = i - 1; q >= 0; q--) { if (!PUNCT.rule[toks[q]]) { b = toks[q]; break; } }
+      for (var q2 = i + 1; q2 < toks.length; q2++) { if (!PUNCT.rule[toks[q2]]) { a = toks[q2]; break; } }
+      var bw = wordsOf(b || ''), aw = wordsOf(a || '');
+      ref.push({ ch: tk, before: bw.length ? bw[bw.length - 1] : '', after: aw.length ? aw[0] : '', opt: false });
+    });
+    return ref;
+  }
+  /* 从树中移除标点节点（可选标点总是移除；系统生成关闭时全部移除），返回移除清单 */
+  function stripPuncNodes(tree, keepRequired) {
+    var removed = [];
+    (function walk(lst) {
+      for (var i = 0; i < lst.length;) {
+        var n = lst[i];
+        if (n && n.t === 'punc' && (!keepRequired || n.opt)) { removed.push(n); lst.splice(i, 1); continue; }
+        if (n && n.or) n.or.forEach(function (o) { if (o.t === 'skel') walk(o.fills); });
+        else if (n && n.t === 'skel') walk(n.fills);
+        i++;
+      }
+    })(tree);
+    return removed;
+  }
+
+  /* JSON 节点 → 积木节点（容错：slot 类型归一，or 折叠为单块） */
+  function countSlots(parts) {
+    return parts.filter(function (p) { return typeof p !== 'string'; }).length;
+  }
+  function nodeFromJSON(n) {
+    if (!n) return null;
+    if (Array.isArray(n.or) && n.or.length === 2) {
+      var a = nodeFromJSON(n.or[0]), b = nodeFromJSON(n.or[1]);
+      return a && b ? { or: [a, b] } : (a || b);
+    }
+    if (n.t === 'skel' && Array.isArray(n.parts)) {
+      var parts = n.parts.map(function (p) {
+        return typeof p === 'string' ? p : { slot: p && (p.slot === 'noun' || p.slot === 'verb') ? p.slot : 'clause' };
+      });
+      var fills = Array.isArray(n.fills) ? n.fills.map(function (fl) {
+        return (fl || []).map(nodeFromJSON).filter(Boolean);
+      }) : [];
+      while (fills.length < countSlots(parts)) fills.push([]);
+      return { t: 'skel', parts: parts, fills: fills };
+    }
+    if (n.t === 'punc' && PUNCT.rule[n.ch]) {
+      return { t: 'punc', ch: n.ch, role: PUNCT.rule[n.ch].role || '', opt: !!n.opt, src: 'sys' };
+    }
+    if (n.t === 'wrap' && PUNCT.rule[n.open] && PUNCT.rule[n.close] && PUNCT.rule[n.open].role === 'open' && PUNCT.rule[n.close].role === 'close') {
+      /* 成对标点 → 包裹骨架：( ___ ) / “ ___ ”，内芯一整个空位 */
+      var wf = Array.isArray(n.fills) && Array.isArray(n.fills[0]) ? n.fills[0].map(nodeFromJSON).filter(Boolean) : [];
+      return { t: 'skel', wrap: true, parts: [n.open, { slot: 'noun' }, n.close], fills: [wf] };
+    }
+    if ((n.t === 'topic' || n.t === 'bonus' || n.t === 'part') && typeof n.en === 'string' && n.en.trim()) {
+      return { t: n.t, en: n.en.trim() };
+    }
+    return null;
+  }
+
+  /* 积木树入库：同形态合并计数（骨架按模板、or 按双选项、短语按词形） */
+  function ingestTree(list, it, seen) {
+    return (list || []).map(function (n) {
+      var k = formKey(n);
+      if (!(k in seen)) {
+        seen[k] = it.blocks.length;
+        var f = stripFills(n);
+        f.count = 0;
+        it.blocks.push(f);
+      }
+      var id = seen[k];
+      it.blocks[id].count++;
+      var e = { id: id, pick: null, fills: [] };
+      formSlots(n).forEach(function (_, s) {
+        e.fills.push(ingestTree((n.fills && n.fills[s]) || [], it, seen));
+      });
+      return e;
+    });
+  }
+
+  /* ---------- 还原完整性校验：拼回去逐词比对，绝不静默丢词 ---------- */
+  function wordsOf(s) { return (String(s).toLowerCase().match(/[a-z0-9'’-]+/g) || []); }
+  /* 按表层语序收集词元：骨架的固定文字与空位内容交错展开（不是先文字后空位）；
+     每个词带 (node, wi) 引用，供修剪多余词时定位 */
+  function collectTokens(list, topIdx, out) {
+    (list || []).forEach(function (n) {
+      var o = n.or ? n.or[0] : n;
+      var wi = 0;
+      if (o.t === 'skel') {
+        var si = 0;
+        o.parts.forEach(function (p) {
+          if (typeof p === 'string') {
+            wordsOf(p).forEach(function (w) { out.push({ w: w, top: topIdx, node: n, wi: wi++ }); });
+          } else {
+            collectTokens((o.fills && o.fills[si]) || [], topIdx, out);
+            si++;
+          }
+        });
+      } else if (o.en) {
+        wordsOf(o.en).forEach(function (w) { out.push({ w: w, top: topIdx, node: n, wi: wi++ }); });
+      }
+    });
+  }
+  /* 词级 LCS 对齐（双向）：答案里未匹配的连续段 = 遗漏段（at = 应插入的顶层位置）；
+     积木里未匹配的词 = 多余词（词形不符/改写），二者都必须为零才算完整划分 */
+  function verifySplit(tree, sentence) {
+    var ans = wordsOf(sentence);
+    var toks = [];
+    tree.forEach(function (n, i) { collectTokens([n], i, toks); });
+    var m = ans.length, n2 = toks.length;
+    var dp = [];
+    for (var i = 0; i <= m; i++) { dp.push(new Array(n2 + 1).fill(0)); }
+    for (var i = m - 1; i >= 0; i--) {
+      for (var j = n2 - 1; j >= 0; j--) {
+        dp[i][j] = ans[i] === toks[j].w ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    var runs = [], extras = [], cur = null, lastTop = -1, i = 0, j = 0;
+    while (i < m && j < n2) {
+      if (ans[i] === toks[j].w) {
+        lastTop = toks[j].top;
+        if (cur) { runs.push(cur); cur = null; }
+        i++; j++;
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        if (!cur) cur = { words: [], at: lastTop + 1 };
+        cur.words.push(ans[i]); i++;
+      } else {
+        if (cur) { runs.push(cur); cur = null; }
+        extras.push(toks[j]);
+        j++;
+      }
+    }
+    for (; i < m; i++) {
+      if (!cur) cur = { words: [], at: lastTop + 1 };
+      cur.words.push(ans[i]);
+    }
+    if (cur) runs.push(cur);
+    for (; j < n2; j++) extras.push(toks[j]);
+    var missing = [];
+    runs.forEach(function (r) { missing.push.apply(missing, r.words); });
+    return { missing: missing, runs: runs, extras: extras };
+  }
+
+  /* 兜底监控：落入配件栏的词记后台日志（含成分类型），控制台 partStats() 查统计 */
+  var PART_LOG_KEY = 'yasi-parts-log';
+  function logPart(words, role) {
+    try {
+      var log = JSON.parse(localStorage.getItem(PART_LOG_KEY) || '[]');
+      words.forEach(function (w) { log.push({ w: w, r: role || '', s: FLAT[S.cur].label, t: Date.now() }); });
+      if (log.length > 2000) log = log.slice(-2000);
+      localStorage.setItem(PART_LOG_KEY, JSON.stringify(log));
+    } catch (e) {}
+  }
+  window.partStats = function () {
+    var log = [];
+    try { log = JSON.parse(localStorage.getItem(PART_LOG_KEY) || '[]'); } catch (e) {}
+    var c = {}, roles = {};
+    log.forEach(function (e) {
+      c[e.w] = (c[e.w] || 0) + 1;
+      var r = e.r || '兜底';
+      roles[e.w] = roles[e.w] || {};
+      roles[e.w][r] = (roles[e.w][r] || 0) + 1;
+    });
+    return Object.keys(c).sort(function (a, b) { return c[b] - c[a]; }).map(function (k) {
+      var rs = Object.keys(roles[k]).map(function (r) { return r + roles[k][r]; }).join('/');
+      return k + ' ×' + c[k] + '（' + rs + '）';
+    });
+  };
+  function scanParts(list, out) {
+    (list || []).forEach(function (n) {
+      if (n.t === 'part' && n.en) out.push(n.en);
+      (n.or ? n.or : [n]).forEach(function (o) {
+        if (o.t === 'skel' && o.fills) o.fills.forEach(function (fl) { scanParts(fl, out); });
+      });
+    });
+  }
+  /* 主谓宾成分 → 日志标签 */
+  var ROLE_LABEL = { subj: '主语', pred: '谓语', obj: '宾语', comp: '补语' };
+  /* 遗漏词落在哪个主干成分的跨度里 */
+  function matchSVOC(words, clauses) {
+    if (!clauses) return null;
+    for (var c = 0; c < clauses.length; c++) {
+      var cl = clauses[c];
+      if (!cl) continue;
+      for (var key in ROLE_LABEL) {
+        var span = cl[key];
+        if (typeof span !== 'string' || !span.trim()) continue;
+        var sw = wordsOf(span);
+        if (!sw.length) continue;
+        var hit = words.every(function (w) { return sw.indexOf(w) > -1; });
+        if (hit) return { label: ROLE_LABEL[key], span: span, sw: sw };
+      }
+    }
+    return null;
+  }
+  /* 仍有遗漏：按原位插入顶层进配件；主干成分整体缺失时用完整表达，并记录成分类型 */
+  function patchPart(tree, v, clauses) {
+    var off = 0;
+    v.runs.forEach(function (r) {
+      var m = matchSVOC(r.words, clauses);
+      var whole = m && m.sw.length === r.words.length && m.sw.join('\u0001') === r.words.join('\u0001');
+      var en = whole ? m.span.trim() : r.words.join(' ');
+      var at = Math.min(Math.max(r.at, 0) + off, tree.length);
+      tree.splice(at, 0, { t: 'part', en: en });
+      off++;
+      logPart(r.words, m ? m.label : '');
+    });
+  }
+
+  /* 修剪：删除句中没有的多余词（块文字必须是句中字面形态）；or 块含多余词时塌缩为选项0再剪 */
+  function delWord(s, wi) {
+    var ch = String(s).split(/([A-Za-z0-9'’-]+)/);
+    var seen = 0;
+    for (var i = 1; i < ch.length; i += 2) {
+      if (seen++ === wi) {
+        if (i + 1 < ch.length) ch.splice(i, 2);
+        else ch.splice(i - 1, 2);
+        return ch.join('');
+      }
+    }
+    return s;
+  }
+  function pruneExtras(tree, v) {
+    (v.extras || []).forEach(function (t) {
+      if (t.node) t.node._ex = (t.node._ex || []).concat(t.wi);
+    });
+    function pruneList(list) {
+      var out = [];
+      (list || []).forEach(function (n) {
+        if (n._ex && n.or) { n.or[0]._ex = (n.or[0]._ex || []).concat(n._ex); delete n._ex; n = n.or[0]; }
+        if (n._ex) {
+          if (n.t === 'skel') {
+            var cnt = 0;
+            n.parts = n.parts.map(function (p) {
+              if (typeof p !== 'string') return p;
+              var here = wordsOf(p).length, mine = [];
+              (n._ex || []).forEach(function (wi) { if (wi >= cnt && wi < cnt + here) mine.push(wi - cnt); });
+              cnt += here;
+              mine.sort(function (a, b) { return b - a; }).forEach(function (lw) { p = delWord(p, lw); });
+              return p;
+            });
+          } else {
+            (n._ex || []).slice().sort(function (a, b) { return b - a; }).forEach(function (wi) { n.en = delWord(n.en, wi); });
+          }
+          delete n._ex;
+        }
+        if (n.or) { n.or[0].fills = (n.or[0].fills || []).map(pruneList); out.push(n); return; }
+        if (n.t === 'skel') { n.fills = (n.fills || []).map(pruneList); out.push(n); return; }
+        if (n.t === 'punc') { out.push(n); return; } /* 标点块无词，不参与修剪 */
+        if (wordsOf(n.en).length) out.push(n); /* 修剪后为空的块整块删除 */
+      });
+      return out;
+    }
+    return pruneList(tree);
+  }
+
+  /* 界面上实际可见的积木文字（骨架固定文字 + 各块文字，or 含两个选项） */
+  function visibleWords(tree) {
+    var toks = [];
+    (function walk(list) {
+      (list || []).forEach(function (n) {
+        (n.or ? n.or : [n]).forEach(function (o) {
+          if (o.t === 'skel') {
+            o.parts.forEach(function (p) {
+              if (typeof p === 'string') wordsOf(p).forEach(function (w) { toks.push(w); });
+            });
+          } else if (o.en) wordsOf(o.en).forEach(function (w) { toks.push(w); });
+        });
+        var fills = n.or ? (n.or[0].fills || []) : (n.fills || []);
+        fills.forEach(function (fl) { walk(fl); });
+      });
+    })(tree);
+    return toks;
+  }
+  /* 主干可见性终检：每个 ok 分句的主语/谓语必须落在可见积木文字里（仅记后台日志） */
+  function checkBackbone(tree, answer, clauses) {
+    if (!Array.isArray(clauses)) return;
+    var vis = visibleWords(tree), ans = wordsOf(answer);
+    clauses.forEach(function (cl) {
+      if (!cl || (cl.type || 'ok') !== 'ok') return;
+      ['subj', 'pred'].forEach(function (key) {
+        var sw = wordsOf(cl[key] || '');
+        if (!sw.length) return;
+        if (!sw.every(function (w) { return ans.indexOf(w) > -1; })) return; /* 跨度非句中原文，不强判 */
+        var miss = sw.filter(function (w) { return vis.indexOf(w) === -1; });
+        if (miss.length) logPart(miss, ROLE_LABEL[key]);
+      });
+    });
+  }
+
+  /* 极端兜底：拆分反复失败时按词机械切分（保证划分完整、可拼装），全部入配件 */
+  function mechanicalSplit(sentence) {
+    var ws = String(sentence).match(/[A-Za-z0-9'’-]+/g) || [];
+    return ws.map(function (w) { return { t: 'part', en: w }; });
+  }
+
+  /* 两段式生成：① 译句（答案锚定，模型拆分无权改写）② 对给定句子拆分。
+     每段失败都明确重试，不再静默回退词典词表 */
+  function buildBlocks(retryNote, tries, anchor, clauses) {
+    var it = cur(), at = S.cur, zh = it.zh;
+    tries = tries || 0;
+    var finalize = function (tree, answer) {
+      /* 标点参照以答案为准；树上标 opt 的位置在参照里标记为可容忍 */
+      var refP = puncRefFromText(answer);
+      puncScan(tree, null).forEach(function (f) {
+        if (!f.p || !f.p.opt) return;
+        refP.forEach(function (rp) {
+          if (!rp.opt && rp.ch === f.p.ch && rp.before === f.p.before && rp.after === f.p.after) rp.opt = true;
+        });
+      });
+      it.puncRef = refP;
+      stripPuncNodes(tree, S.puncSys !== false); /* 可选标点总是剥离；系统生成关闭时全部剥离 */
+      it.blocks = [];
+      var seq = ingestTree(tree, it, {});
+      it.answer = answer;
+      it.seq = seq;
+      it.order = [];
+      it.done = false;
+      it.altOk = false;
+      it.puncMiss = 0;
+      save();
+      setZhHint('✓ 已确认 · 词块已生成', 'ok');
+      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块');
+      renderZones();
+      renderStrip();
+    };
+    /* 拆分结果落地：双向词级校验 → 带清单重切（最多2次）→ 修剪多余 → 补入缺失 → 主干可见性终检 */
+    var landSplit = function (j) {
+      if (S.cur !== at) return;
+      var tree = (j && Array.isArray(j.tree)) ? j.tree.map(nodeFromJSON).filter(Boolean) : [];
+      if (!tree.length) {
+        if (tries < 2) { buildBlocks('上次没有返回有效的积木 JSON，请重新输出。', tries + 1, anchor, clauses); return; }
+        if (anchor) {
+          try { console.warn('[ww] 拆分反复失败，按词机械切分兜底'); } catch (e) {}
+          finalize(mechanicalSplit(anchor), anchor);
+          return;
+        }
+        var loc = localBlocks(zh);
+        try { console.warn('[ww] 全部生成失败，回退本地词典'); } catch (e) {}
+        finalize(loc.tree, loc.sentence);
+        return;
+      }
+      tree = applyLexRules(tree, anchor); /* 词库规则先行：or 过滤 → 固定搭配合并 → 自由词拆分 → 归栏 */
+      var pv = verifyText(tree, anchor); /* 含标点的逐字完整划分 */
+      if (!pv.ok && tries < 2) {
+        buildBlocks('上次结果展开后与句子逐字不符：得到 «' + pv.got + '»，应为 «' + pv.want + '»。句级标点（, . ; : ? ! — ( ) “ ”）必须单独成 punc 块或 wrap 块；词内标点（don’t、well-known、1,000、e.g.）必须留在词块文字里；既不重复也不遗漏。', tries + 1, anchor, clauses);
+        return;
+      }
+      var v = verifySplit(tree, anchor);
+      if ((v.missing.length || v.extras.length) && tries < 2) {
+        var notes = [];
+        if (v.missing.length) notes.push('上次拆分遗漏了这些词：' + v.missing.join(' '));
+        if (v.extras.length) notes.push('上次出现了句子里没有的词：' + v.extras.map(function (t) { return t.w; }).join(' ') + '；块的文字必须是句中逐字出现的连续片段（保留实际形态）');
+        buildBlocks(notes.join('；'), tries + 1, anchor, clauses);
+        return;
+      }
+      if (v.extras.length) tree = pruneExtras(tree, v);
+      var modelParts = [];
+      scanParts(tree, modelParts);
+      modelParts.forEach(function (en) { logPart(wordsOf(en), ''); });
+      var vF = verifySplit(tree, anchor);
+      if (vF.extras.length) { tree = pruneExtras(tree, vF); vF = verifySplit(tree, anchor); }
+      patchPart(tree, vF, clauses);
+      checkBackbone(tree, anchor, clauses);
+      var vEnd = verifySplit(tree, anchor);
+      if (vEnd.missing.length || vEnd.extras.length) {
+        try { console.warn('[ww] 校验未收敛', vEnd.missing, vEnd.extras.map(function (t) { return t.w; })); } catch (e) {}
+      }
+      finalize(tree, anchor);
+    };
+    var doSplit = function () {
+      setZhHint(retryNote ? '重新拆分中…' : '词块生成中…');
+      var msg = '把下面这句英文按短语拆成积木树，用于语序拼装练习。只输出 JSON：{"tree":[节点,…]}\n' +
+        '节点五种：\n' +
+        '{"t":"skel","parts":["文本",{"slot":"clause|noun|verb"},…],"fills":[[节点,…],…]} 骨架：跨话题高复用句型模板；parts 里的 {"slot":…} 是空位（clause=从句位，noun=名词短语位，verb=动词短语位）；fills[i] 是第 i 个空位里的节点序列，可以再嵌套骨架\n' +
+        '{"t":"topic","en":"短语"} 话题料：只适用于本题的词汇短语\n' +
+        '{"t":"bonus","en":"短语"} 加分词：跨话题通用的学术词与固定搭配\n' +
+        '{"t":"part","en":"词"} 配件兜底：仅当零散词确实无处安放（例外情况，尽量少用）\n' +
+        '{"or":[节点,节点]} 等价二选一：两个选项意思等价、语法互换、空位一致；仅当确实存在多种合法用法时使用（如 some people / many people、小品词位置可变的短语动词），不要为了凑数量而生成\n' +
+        '{"t":"punc","ch":",","role":"sep","opt":true} 句级标点单独成块：ch 是标点字符（, . ; : ? ! — ( ) “ ”），role 取 sep（分隔）/end（句末）/open（成对开）/close（成对闭）/dash（破折）；省略 opt 表示必需，"opt":true 表示语法上可省略（如短状语后的逗号）\n' +
+        '{"t":"wrap","open":"(","close":")","fills":[[节点,…]]} 成对标点包裹：插入语或引用整体放进一对括号/引号，fills[0] 是括号内的节点序列（括号本身不再另给 punc 块）\n' +
+        '硬性规则：\n' +
+        '1. 每个块的文字必须是这句英文里逐字出现的连续片段，保留句中实际形态（如 subsidising、taxing），禁止改写为原形或同义词；\n' +
+        '2. 全部块按语序展开（骨架空位由 fills 内容替代）后逐词重组整句：不丢词、不多词；词内标点随词走（见规则9），句级标点单独成 punc 块或 wrap 块；\n' +
+        '3. 对举/转折/引述结构优先做成骨架（While some…, others… / Not only…but also… / Some people argue that ___ 等）；连接词 while、whereas、but、therefore 与引述表达 some people argue that、it is often claimed that 必须写进骨架的固定文字，不单独成块；\n' +
+        '4. 归类顺序（上级能处理的不进下级）：① 引述/立场类固定成分写进骨架固定文字；② 冠词、限定词、助动词、零散介词并入相邻短语块；③ 实在无处可放才用 part；\n' +
+        '5. 以常用短语/搭配为一块（动词+介词、动宾搭配、介词短语），不拆散、不出现孤立介词；\n' +
+        '6. 词库固定/半固定搭配必须整体成一块（如 specially designed、(in)directly linked to、pose a threat to、a considerable number of、due to、tend to）；自由程度副词（relatively、considerably、especially、largely 等）单独成块，不与相邻词合并；\n' +
+        '7. or 二选一只限词库标注 ≡ 的等价对（relatively/comparatively、especially/particularly、largely/mostly、mainly/primarily、conduct/carry out）；反义、程度不同或易混的词（somewhat/considerably、specially/especially、directly/indirectly、result in/result from、prove/indicate）一律不得生成 or；\n' +
+        '8. 归栏：命中词库词条的块一律 bonus；其他跨话题学术搭配也入 bonus；连接词与立场句型入 skel 固定文字；仅本题适用的词入 topic；\n' +
+        '9. 标点归属：词内标点（don’t/well-known 的符号、数字 1,000 与 3.5、缩写 e.g./i.e.）留在词块文字里不拆出；句级标点（, . ; : ? ! — ( ) “ ”）各自单独成 punc 块（成对包裹用 wrap）；骨架固定文字里不得再出现句级标点（不与 punc 块重复）；punc 块不能是第一个节点；\n' +
+        '10. 逐字重建：全部块按语序展开并按英文间距习惯拼接（, . ; : ? ! 前无空格后有空格；( “ 前有空格后无；) ” 前无空格后有；— 两侧有空格）后，必须与英文句子逐字一致，标点也一个不差。\n' +
+        '词库摘要（形式（功能组）｜粒度｜≡等价）：\n' + acadDigest('sp') + '\n' +
+        '英文句子：«' + anchor + '»' +
+        (retryNote ? '\n\n注意：' + retryNote : '');
+      askModel([{ role: 'user', content: msg }], { temperature: 0.2 })
+        .then(function (out) { if (S.cur === at) landSplit(parseJSON(out)); })
+        .catch(function () { if (S.cur === at) landSplit(null); });
+    };
+    /* 主谓宾分析：既做译句结构把关（每个 ok 分句必须有主谓），结果也用于配件补入标注与终检 */
+    var analyze = function (sentence, transTries) {
+      askModel([{ role: 'user', content: '对这句英文做句法主干分析。只输出 JSON：{"clauses":[{"type":"ok","subj":"…","pred":"…","obj":"…","comp":"…"}]}\n每个独立分句（主句、从句、并列分句）分别一项；非谓语短语、省略结构等不完整分句标 "type":"ellipsis"；祈使句标 "type":"imperative"；there be 句标 "type":"therebe"。subj=主语；pred=谓语（含助动词、情态动词）；obj=宾语（不及物动词不写）；comp=表语/补语。字段值必须是句子里逐字出现的连续片段；被动句按语法主语分析；没有的项直接省略字段。\n句子：«' + sentence + '»' }], { temperature: 0.1, maxTokens: 600, noThink: true })
+        .then(function (out) {
+          if (S.cur !== at) return;
+          var cls = (parseJSON(out) || {}).clauses;
+          var bad = Array.isArray(cls) && cls.some(function (c) {
+            return c && (c.type || 'ok') === 'ok' && (!(c.subj || '').trim() || !(c.pred || '').trim());
+          });
+          if (bad && transTries < 1) {
+            doTranslate('上一版英文有分句缺少主语或谓语，请重写完整（中文省略的主语必须补出，如 some people / the government / we）。', transTries + 1);
+            return;
+          }
+          anchor = sentence;
+          clauses = Array.isArray(cls) ? cls : null;
+          doSplit();
+        })
+        .catch(function () {
+          if (S.cur !== at) return;
+          anchor = sentence;
+          clauses = null;
+          doSplit();
+        });
+    };
+    var doTranslate = function (transNote, transTries) {
+      if (S.cur !== at) return;
+      setZhHint('词块生成中…');
+      var msg = '把这句中文写成一句地道的雅思英文（15～28词）。只输出 JSON：{"sentence":"完整英文句子","back_zh":"这句英文的中文回译"}\n' +
+        '要求：忠实原意、表达自然的完整单句（可含从句）；中文常省略主语，英文必须补出明确主语（如 some people / the government / we）；动词形态、时态语态按英文习惯。\n' +
+        '学术化升级（忠实优先，意思与断言强度不变）：\n' +
+        '· 中文口语或笼统表达，在意思不变的前提下优先换用词库中的学术表达（very→highly/considerably、a lot of→a considerable number of 等）；\n' +
+        '· 断言强度不得升级：「表明/说明/显示」= indicate/show 类（强度中），不得用 prove/demonstrate；「非常/大大」按实际程度选 highly/considerably；\n' +
+        '· 短语动词不一律禁用（carry out 在学术写作很常见），以词库语体标注为准；语体与学科域不匹配的词不选。\n' +
+        '学术词库（词形｜槽位｜语体·强度｜≡可互换｜惯用句式）：\n' + acadDigest('tr') + '\n' +
+        '中文：«' + zh + '»' +
+        (transNote ? '\n\n注意：' + transNote : '');
+      askModel([{ role: 'user', content: msg }], { temperature: 0.3 })
+        .then(function (out) {
+          if (S.cur !== at) return;
+          var j = parseJSON(out) || {};
+          var sentence = lexStrengthGuard(zh, (j.sentence || '').trim());
+          if (wordsOf(sentence).length >= 5) {
+            try { console.log('[ww] 回译: ' + (j.back_zh || '')); } catch (e) {}
+            analyze(sentence, transTries || 0);
+            return;
+          }
+          if ((transTries || 0) < 1) { doTranslate('上次没有输出有效句子，请重新输出完整 JSON。', (transTries || 0) + 1); return; }
+          var loc = localBlocks(zh);
+          try { console.warn('[ww] 译句失败，回退本地词典'); } catch (e) {}
+          finalize(loc.tree, loc.sentence);
+        })
+        .catch(function () {
+          if (S.cur !== at) return;
+          var loc = localBlocks(zh);
+          try { console.warn('[ww] 翻译调用失败，回退本地词典'); } catch (e) {}
+          finalize(loc.tree, loc.sentence);
+        });
+    };
+    if (!MODEL_ON()) { var loc0 = localBlocks(zh); finalize(loc0.tree, loc0.sentence); return; }
+    if (anchor) { doSplit(); return; }  /* 重切：复用已锚定的句子与主谓宾分析 */
+    doTranslate('', 0);
+  }
+
+  /* 诊断/测试出口：控制台可调用，不参与界面 */
+  window.__ww = {
+    wordsOf: wordsOf, collectTokens: collectTokens, verifySplit: verifySplit,
+    matchSVOC: matchSVOC, patchPart: patchPart, pruneExtras: pruneExtras,
+    nodeFromJSON: nodeFromJSON, stripFills: stripFills, formKey: formKey,
+    visibleWords: visibleWords, checkBackbone: checkBackbone, scanParts: scanParts,
+    mechanicalSplit: mechanicalSplit,
+    applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
+    punctToks: punctToks, joinToks: joinToks, canonText: canonText,
+    tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
+    puncRefFromText: puncRefFromText, stripPuncNodes: stripPuncNodes, ingestTree: ingestTree,
+    ACAD: ACAD, ACAD_BY: ACAD_BY, ACAD_EQ: ACAD_EQ, ACAD_REL_BY: ACAD_REL_BY
+  };
+
+  /* ================= 拼装与评判 ================= */
+  function commitOrder(justFinished) {
+    var it = cur();
+    if (it.done && !it.altOk && !treeEq(it.order, it.seq)) it.done = false;
+    puncMarkAt = -1; /* 结构已变，旧标记作废（重判会再标） */
+    save();
+    renderStrip();
+    renderZones();
+    renderParas();
+    if (!it.done) {
+      var left = nodeCount(it.seq) - nodeCount(it.order);
+      if (S.puncSys === false) left += puncInSeq(it); /* 系统标点关闭：缺口只数词块 */
+      setAsmHint(left > 0 ? '剩余 ' + left + ' 块 · 可随时点「确认」' : '全部放入 · 自动检查中…');
+      if (left <= 0 && it.order.length && !asmGo.hidden && !asmGo.disabled) asmGo.click(); /* 词块（含系统标点）全放入：自动评判 */
+    }
+  }
+  /* 标准树里的标点块数（系统标点关闭时从缺口里扣除） */
+  function puncInSeq(it) {
+    var n = 0;
+    (function walk(l) {
+      (l || []).forEach(function (e) {
+        if ((it.blocks[e.id] || {}).t === 'punc') n++;
+        (e.fills || []).forEach(walk);
+      });
+    })(it.seq);
+    return n;
+  }
+
+  /* 拼装树展开为文本（供 AI 提示参考） */
+  /* 拼装树 → 文本：走标点切分与间距规则，保证与标准答案可比 */
+  function orderText(list) {
+    return joinToks(tokensOfTree(list || [], function (id) { return cur().blocks[id]; }, []));
+  }
+
+  /* 空位类型 → 提示词（仅供评判，不拦截） */
+  var KLABEL = { clause: '从句', noun: '名词短语', verb: '动词短语' };
+
+  /* 判定为通过：结构一致，或意思+语法等效通过；通过即可进入下一句 */
+  function passSentence(justFinished, via) {
+    var it = cur();
+    it.done = true;
+    it.confirmed = true;
+    save();
+    renderStrip();
+    renderParas();
+    setAsmHint(via === 'equiv' ? '✓ 正确 · 意思与语法均通过' : '✓ 正确', 'ok');
+    Array.prototype.forEach.call(asmStrip.querySelectorAll('.tchip'), function (c) { c.classList.add('ok'); });
+    if (allDone()) {
+      renderWorkbench();
+      return;
+    }
+    var next = S.cur + 1;
+    if (justFinished !== false && next < FLAT.length) {
+      setTimeout(function () { gotoSentence(next); }, 1000);
+    }
+  }
+
+  /* 标点闸门：词块过了才查标点。按 字符+前后词 贪心匹配参照表；
+     缺（必需未放）/多（放了不该放的）都拦下，可选项双向容忍；返回 true = 已拦下 */
+  function puncGate() {
+    var it = cur();
+    if (!it.puncRef) return false; /* 本句未登记标点参照（旧数据）：跳过 */
+    var flat = puncScan(it.order, function (id) { return it.blocks[id]; });
+    var user = flat.filter(function (f) { return f.p; });
+    var ref = it.puncRef;
+    if (!ref.length && !user.length) return false;
+    var refHit = ref.map(function () { return false; }), uHit = user.map(function () { return false; });
+    ref.forEach(function (rp, ri) {
+      for (var ui = 0; ui < user.length; ui++) {
+        if (uHit[ui]) continue;
+        if (user[ui].p.ch === rp.ch && user[ui].p.before === rp.before && user[ui].p.after === rp.after) {
+          refHit[ri] = true; uHit[ui] = true; break;
+        }
+      }
+    });
+    var miss = null, missAt = 0, extra = null;
+    ref.forEach(function (rp, ri) {
+      if (miss || refHit[ri] || rp.opt) return;
+      miss = rp;
+      var wi = -1;
+      flat.forEach(function (f) { if (f.w && f.w === rp.before && f.top > wi) wi = f.top; });
+      missAt = wi + 1; /* 出错点 = 前一词所在块之后 */
+    });
+    user.forEach(function (f, ui) {
+      if (extra || uHit[ui]) return;
+      extra = f;
+    });
+    if (!miss && !extra) return false;
+    var errCh = miss ? miss.ch : extra.p.ch;
+    var at = miss ? missAt : extra.top;
+    it.puncMiss = (it.puncMiss || 0) + 1;
+    puncMarkAt = Math.max(0, Math.min(at, it.order.length));
+    var tip = PUNCT.rule[errCh];
+    setAsmHint(it.puncMiss > 1 && tip ? tip.tip : '标点有误（拼装条上有淡色标记）', 'err');
+    updateAsmGo();
+    renderStrip();
+    save();
+    return true;
+  }
+
+  function judge(justFinished) {
+    var it = cur();
+    if (treeEq(it.order, it.seq)) { if (!puncGate()) passSentence(justFinished); return; }
+    /* 词库级辨析优先：用户词与答案词命中易混/程度差/反义 → 一句话辨析（不判对错、不泄答案） */
+    var lh = lexHint();
+    if (lh && !leaky(lh)) { setAsmHint(lh, 'err'); updateAsmGo(); return; }
+    /* 结构与标准树不同：先做等效评判——拼出的句子语法正确且意思对得上中文，也算通过 */
+    var structHints = function () {
+      updateAsmGo(); /* 检查结束，恢复确认键 */
+      /* 顶层 LCS 对齐：配对的骨架逐空位比对，未配对的 = 需移动 */
+      var m = it.order.length, n = it.seq.length;
+      var dp = [];
+      for (var i = 0; i <= m; i++) { dp.push(new Array(n + 1).fill(0)); }
+      for (var i = m - 1; i >= 0; i--) {
+        for (var j = n - 1; j >= 0; j--) {
+          dp[i][j] = it.order[i].id === it.seq[j].id ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+      var inU = new Array(m).fill(false), pairs = [], i = 0, j = 0;
+      while (i < m && j < n) {
+        if (it.order[i].id === it.seq[j].id) { pairs.push([it.order[i], it.seq[j]]); inU[i] = true; i++; j++; }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+        else j++;
+      }
+      var issues = [];
+      pairs.forEach(function (pr) { cmpFills(pr[0], pr[1], issues); });
+      if (issues.length) {
+        var msgs = issues.slice(0, 3).map(function (s) {
+          return '第' + s.k + '空：' + (s.reorder ? '词序调整' : '此处需要' + (KLABEL[s.kind] || '其他内容'));
+        });
+        setAsmHint(msgs.join(' · '), 'err');
+        return;
+      }
+      var moved = [];
+      it.order.forEach(function (e, pos) { if (!inU[pos]) moved.push(entryName(it.blocks[e.id])); });
+      moved = moved.filter(function (x, k) { return moved.indexOf(x) === k; });
+      if (moved.length && moved.length <= 3) {
+        setAsmHint('词序：调整 ' + moved.slice(0, 3).join('、'), 'err');
+        return;
+      }
+      microHint();
+    };
+    if (!MODEL_ON()) { structHints(); return; }
+    var at = S.cur, assembled = orderText(it.order);
+    setAsmHint('对照中文检查中…');
+    askModel([{ role: 'user', content: '学生在做雅思英文句子拼装练习。这句的中文原意：«' + it.zh + '»\n学生用词块拼出的英文：«' + assembled + '»\n判断两点：1. 这句英文语法是否正确（词形、语序、结构完整）；2. 意思是否与中文原意一致（同义改写可以接受，不要求逐词对应）。\n只输出 JSON：{"ok":true}（两者都满足）或 {"issue":"一句话中文指出问题，20字内"}' }], { temperature: 0.1, maxTokens: 400, noThink: true })
+      .then(function (out) {
+        if (S.cur !== at) return;
+        var j = parseJSON(out);
+        if (j && j.ok) { it.altOk = true; if (!puncGate()) passSentence(justFinished, 'equiv'); return; }
+        var msg = j && j.issue ? String(j.issue).slice(0, 40) : '';
+        if (msg && !leaky(msg)) { setAsmHint(msg, 'err'); updateAsmGo(); return; }
+        structHints();
+      })
+      .catch(function () { if (S.cur === at) structHints(); });
+  }
+
+  /* 比对某骨架各空位：同组积木下钻，不同组报空位类型 */
+  function cmpFills(ue, ae, out) {
+    var slots = formSlots(cur().blocks[ae.id]);
+    for (var k = 0; k < ae.fills.length; k++) {
+      var u = ue.fills[k] || [], a = ae.fills[k] || [];
+      if (treeEq(u, a)) continue;
+      var uIds = u.map(function (x) { return x.id; }).sort().join(',');
+      var aIds = a.map(function (x) { return x.id; }).sort().join(',');
+      if (uIds === aIds) {
+        var deep = [];
+        for (var q = 0; q < a.length; q++) {
+          if (u[q] && u[q].id === a[q].id) cmpFills(u[q], a[q], deep);
+        }
+        if (deep.length) { out.push.apply(out, deep); continue; }
+        out.push({ k: k + 1, kind: slots[k] && slots[k].slot, reorder: true });
+      } else {
+        out.push({ k: k + 1, kind: slots[k] && slots[k].slot });
+      }
+    }
+  }
+
+  /* 泄露检查：提示里不得出现标准答案的连续片段（≥3 块且含话题料） */
+  function leaky(hint) {
+    var toks = [];
+    flatLeaves(cur().seq, toks);
+    var h = ' ' + String(hint).toLowerCase().replace(/\s+/g, ' ') + ' ';
+    for (var len = toks.length; len >= 3; len--) {
+      for (var st = 0; st + len <= toks.length; st++) {
+        var win = toks.slice(st, st + len);
+        if (!win.some(function (w) { return w.topic; })) continue;
+        if (h.indexOf(' ' + win.map(function (w) { return w.txt; }).join(' ') + ' ') > -1) return true;
+      }
+    }
+    return false;
+  }
+  function flatLeaves(list, out) {
+    (list || []).forEach(function (e) {
+      var b = cur().blocks[e.id];
+      (b.or ? b.or : [b]).forEach(function (o) {
+        if (o.t === 'skel') {
+          o.parts.forEach(function (p) {
+            if (typeof p === 'string' && p.trim()) out.push({ txt: normTok(p), topic: false });
+          });
+        } else if (o.en) {
+          out.push({ txt: normTok(o.en), topic: o.t === 'topic' });
+        }
+      });
+      e.fills.forEach(function (fl) { flatLeaves(fl, out); });
+    });
+  }
+
+  function microHint() {
+    var it = cur(), f = FLAT[S.cur];
+    var fallback = '先搭主干（主语+动词+宾语），连接词放在它连接的两部分之间，介词紧随其宾语前。';
+    if (!MODEL_ON()) { setAsmHint(fallback, 'err'); return; }
+    setAsmHint('提示生成中…');
+    var at = S.cur;
+    var assembled = orderText(it.order);
+    var patt = it.blocks.filter(function (b) { return formZone(b) === 'skel'; }).map(function (b) { return entryName(b); }).join(' / ');
+    var msg = '学生在拼一句雅思英文，语序不对。句子要点：' + f.s.note + '。用到的句型词：' + (patt || '一般陈述句') + '。学生当前语序：«' + assembled + '»\n' +
+      '学生句中的学术词用法（提示可参考槽位/惯用句式，但不得泄露正确答案）：' + (lexCtxOf(assembled) || '无') + '\n' +
+      '用中文给一句微型提示（30字内）：说明这类句型的用法或主干顺序，或指出某词的槽位（如「该词修饰形容词」）或惯用句式（如「此词常用于否定句」），可另给一个完全不同主题的英文例句。' +
+      '绝对不能复述正确语序或正确答案。只输出提示文字。';
+    askModel([{ role: 'user', content: msg }], { temperature: 0.4 })
+      .then(function (out) {
+        if (S.cur !== at) return;
+        var t = out.trim().slice(0, 120);
+        setAsmHint(leaky(t) ? fallback : t, 'err');
+      })
+      .catch(function () { if (S.cur === at) setAsmHint(fallback, 'err'); });
+  }
+
+  /* ================= 句子跳转 ================= */
+  function gotoSentence(i) {
+    if (i < 0 || i >= FLAT.length || !unlocked(i)) return;
+    S.cur = i;
+    partInput.value = '';
+    fillSlotPath = '';
+    caretAt = -1; puncMarkAt = -1;
+    save();
+    renderAll();
+    var it = cur();
+    if (!it.done && !it.zh && !it.sugg) suggest();
+  }
+
+  /* ================= 事件 ================= */
+  parasEl.addEventListener('click', function (e) {
+    var chip = e.target.closest('.schip');
+    if (chip) {
+      var i = +chip.dataset.i;
+      if (S.items[i].done || i === S.cur || unlocked(i)) gotoSentence(i);
+      return;
+    }
+    var para = e.target.closest('.para');
+    if (para && !para.classList.contains('done')) {
+      var pi = +para.dataset.p;
+      for (var si = 0; si < ESSAY_PLAN[pi].sentences.length; si++) {
+        var i = FI[pi * 100 + si];
+        if (!S.items[i].done) { if (unlocked(i)) gotoSentence(i); return; }
+      }
+    }
+  });
+
+  goBtn.addEventListener('click', goValidate);
+  acceptBtn.addEventListener('click', function () {
+    var it = cur();
+    if (!it.strikeParts) return;
+    var kept = it.strikeParts.filter(function (p) { return p.ok; })
+      .map(function (p) { return p.text; }).join('').replace(/\s+/g, ' ').trim();
+    if (!kept) { setZhHint('保留部分为空 · 请重写', 'err'); return; }
+    it.strikeParts = null;
+    it.zh = kept;
+    it.confirmed = true;
+    save();
+    acceptBtn.hidden = true;
+    renderWorkbench();
+    buildBlocks();
+  });
+  zhEdit.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); goValidate(); }
+  });
+  zhEdit.addEventListener('input', function () {
+    zhEdit.classList.remove('sugg');
+    if (zhHint.classList.contains('err')) setZhHint('');
+    var it = cur();
+    if (it.strikeParts && !it.confirmed) {
+      it.strikeParts = null;
+      acceptBtn.hidden = true;
+      setZhHint('已编辑 · 重新校验');
+    }
+  });
+  zhEdit.addEventListener('paste', function (e) {
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, t.replace(/\s+/g, ' '));
+  });
+
+  asmReset.addEventListener('click', function () {
+    var it = cur();
+    it.order = [];
+    it.done = false;
+    it.altOk = false;
+    caretAt = -1; puncMarkAt = -1;
+    save();
+    renderStrip();
+    renderZones();
+    renderParas();
+    setAsmHint('已重置 · 重新拼装');
+  });
+
+  /* 确认键：随时可点、按下即检查（不要求用完所有积木）；通过即解锁下一句 */
+  asmGo.addEventListener('click', function () {
+    var it = cur();
+    if (it.done || asmGo.disabled) return;
+    if (!it.order.length) {
+      setAsmHint('先放入词块再确认', 'err');
+      return;
+    }
+    asmGo.disabled = true;
+    asmGo.textContent = '检查中…';
+    judge(true);
+  });
+
+  /* ---------- 拼装交互：不拦截任何放置，错误留给评判环节 ---------- */
+  function resolveEntry(pathStr) {
+    var seg = String(pathStr).split(',').map(Number);
+    var list = cur().order;
+    for (var i = 0; i < seg.length - 1; i += 2) {
+      var e = list[seg[i]];
+      if (!e) return null;
+      list = e.fills[seg[i + 1]] || (e.fills[seg[i + 1]] = []);
+    }
+    return { list: list, idx: seg[seg.length - 1] };
+  }
+  function resolveSlot(slotpath) {
+    var s = String(slotpath);
+    var dot = s.lastIndexOf('.');
+    var loc = resolveEntry(s.slice(0, dot));
+    if (!loc) return null;
+    var k = +s.slice(dot + 1);
+    var ent = loc.list[loc.idx];
+    if (!ent) return null;
+    while (ent.fills.length <= k) ent.fills.push([]);
+    return ent.fills[k];
+  }
+  /* ---------- 拖拽引擎（指针事件）：吸附 · 全空位高亮 · 落前预览 · 点选填充 ----------
+     允许犯错：任何积木可放任何空位；落点取距离最近的可落位（感应范围外扩），
+     松手前只做视觉预览（影子占位），不改状态不改计数；错误留给评判环节。 */
+  var DND = {
+    RADIUS: 34,       // 空位感应范围在视觉范围外再扩的像素
+    STICKY: 1.4,      // 粘滞：当前吸附位要偏离到感应范围 ×1.4 才允许换目标
+    SWITCH_GAIN: .62, // 或新目标比当前近 38% 以上才立即切换（防高亮来回跳）
+    ZONE_NEAR: .6,    // 拖回素材库判定更严：需进入感应范围 ×0.6
+    HOVER_MS: 500,    // 悬停多久后展开该空位内部的子空位
+    LIFT_Y: 28,       // 触屏：积木悬浮在手指上方，避免遮挡
+    EDGE: 26, SCROLL: 14, // 拖到滚动区边缘自动滚动
+    THRESHOLD: 5, HOLD_MS: 320   // 位移阈值；触屏长按时长
+  };
+  var drag = null;         // 按下/拖拽中的状态对象
+  var fillSlotPath = '';   // 点选填充：当前空位的 data-slotpath
+
+  /* ---- 点选填充 ---- */
+  function setFillSlot(el) {
+    var old = fillSlotPath && asmStrip.querySelector('.asm-slot[data-slotpath="' + fillSlotPath + '"]');
+    if (old) old.classList.remove('fill-cur');
+    if (el && el.dataset.slotpath) { fillSlotPath = el.dataset.slotpath; el.classList.add('fill-cur'); }
+    else fillSlotPath = '';
+  }
+  function advanceFillSlot(prevPath) {
+    var anchor = prevPath ? asmStrip.querySelector('.asm-slot[data-slotpath="' + prevPath + '"]') : null;
+    var empt = Array.prototype.filter.call(asmStrip.querySelectorAll('.asm-slot.empty:not(.inert)'), function (s) { return true; });
+    var next = null;
+    for (var i = 0; i < empt.length; i++) {
+      if (!anchor || (anchor.compareDocumentPosition(empt[i]) & 4)) { next = empt[i]; break; } /* 4 = FOLLOWING */
+    }
+    setFillSlot(next);
+  }
+  /* ---- 标点插入：光标位（gap）+ 出错淡标记 ---- */
+  var caretAt = -1;    // 当前插入点（顶层 gap 下标，-1 无）
+  var puncMarkAt = -1; // 标点出错位置的淡标记
+  function markGap() {
+    Array.prototype.forEach.call(asmStrip.querySelectorAll('.gap'), function (g) {
+      var i = +g.dataset.i;
+      g.className = 'gap' + (i === caretAt ? ' caret' : '') + (i === puncMarkAt ? ' mark' : '');
+    });
+  }
+  function setCaret(i) { caretAt = i; markGap(); }
+  /* 标点条 → 用户标点积木（来源唯一，不计缺口、不显示按钮） */
+  function ensureUserPunc(ch) {
+    var it = cur(), bi = -1;
+    it.blocks.forEach(function (b, i) { if (bi < 0 && b.t === 'punc' && b.src === 'user' && b.ch === ch) bi = i; });
+    if (bi < 0) {
+      it.blocks.push({ t: 'punc', ch: ch, role: (PUNCT.rule[ch] || {}).role || '', opt: false, src: 'user', count: 0 });
+      bi = it.blocks.length - 1;
+    }
+    it.blocks[bi].count++;
+    return bi;
+  }
+  function insertPuncAt(bi, idx) {
+    var it = cur();
+    if (!it.order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
+    if (idx < 0 || idx > it.order.length) idx = it.order.length;
+    if (idx === 0) idx = 1; /* 句首不放标点 */
+    it.order.splice(idx, 0, { id: bi, pick: null, fills: [] });
+    puncMarkAt = -1;
+    commitOrder(true);
+  }
+  window.addEventListener('keydown', function (e) {
+    if (drag) return;
+    if (e.key === 'Escape') { if (fillSlotPath) setFillSlot(null); if (caretAt > -1) setCaret(-1); return; }
+    if (caretAt < 0 || !PUNCT.rule[e.key]) return; /* 键盘 ,.;:?!() 直接落光标处 */
+    var tg = e.target && e.target.tagName;
+    if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    insertPuncAt(ensureUserPunc(e.key), caretAt);
+    setCaret(caretAt + 1); /* 插入后光标右移，可连续输入 */
+    e.preventDefault();
+  });
+  document.addEventListener('click', function (e) { /* 点空白处取消当前空位/标点光标 */
+    if (caretAt > -1 && !(e.target.closest && (e.target.closest('.gap') || e.target.closest('#asmStrip') || e.target.closest('.punct-bar')))) setCaret(-1);
+    if (!fillSlotPath || drag) return;
+    if (e.target.closest && (e.target.closest('.asm-slot') || e.target.closest('.block'))) return;
+    setFillSlot(null);
+  });
+
+  /* ---- 目标缓存与吸附 ---- */
+  function distToRect(x, y, r) {
+    var dx = Math.max(r.left - x, 0, x - r.right);
+    var dy = Math.max(r.top - y, 0, y - r.bottom);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function buildTargets() { /* 拖拽开始时一次性计算并缓存，之后只刷新矩形 */
+    var ts = [];
+    Array.prototype.forEach.call(asmStrip.querySelectorAll('.asm-slot'), function (s) {
+      if (s.classList.contains('inert')) return;
+      ts.push({ kind: 'slot', el: s, path: s.dataset.slotpath, r: s.getBoundingClientRect() });
+    });
+    ts.push({ kind: 'strip', el: asmStrip, r: asmStrip.getBoundingClientRect() });
+    Array.prototype.forEach.call(zonesEl.querySelectorAll('.zone'), function (z) {
+      ts.push({ kind: 'zone', el: z, r: z.getBoundingClientRect() });
+    });
+    return ts;
+  }
+  function refreshRects() {
+    if (!drag || !drag.targets) return;
+    drag.targets.forEach(function (t) { t.r = t.el.getBoundingClientRect(); });
+  }
+  function pickTarget(x, y) { /* 最近的感应目标胜出；粘滞防抖（标点块用放大半径） */
+    var rad = drag.rad || DND.RADIUS, best = null;
+    drag.targets.forEach(function (t) {
+      var d = distToRect(x, y, t.r);
+      if (t.kind === 'zone') { if (d > rad * DND.ZONE_NEAR) return; }
+      else if (d > rad) return;
+      if (!best || d < best.d) best = { t: t, d: d };
+    });
+    if (drag.snap) {
+      var cd = distToRect(x, y, drag.snap.r);
+      var limit = rad * (drag.snap.kind === 'zone' ? DND.ZONE_NEAR : DND.STICKY);
+      if (cd <= limit && !(best && best.t !== drag.snap && best.d < cd * DND.SWITCH_GAIN)) return drag.snap;
+    }
+    return best ? best.t : null;
+  }
+
+  /* ---- 影子与预览 ---- */
+  function makeGhost(srcEl) {
+    var g = document.createElement('div');
+    g.className = 'ww-drag-ghost';
+    var c = srcEl.cloneNode(true);
+    c.classList.remove('dnd-src', 'used', 'fill-cur');
+    if (c.disabled) c.disabled = false;
+    g.appendChild(c);
+    document.body.appendChild(g);
+    g.__w = g.offsetWidth || 60; g.__h = g.offsetHeight || 30;
+    return g;
+  }
+  function makePlaceholder(extra) { /* 落前预览：半透明占位，周围积木自动让位 */
+    var c = drag.el.cloneNode(true);
+    c.classList.remove('dnd-src', 'used');
+    c.classList.add('pghost');
+    if (extra) c.classList.add(extra);
+    if (c.disabled) c.disabled = false;
+    return c;
+  }
+  function topLevelChips() {
+    return Array.prototype.filter.call(asmStrip.children, function (c) {
+      return c.classList.contains('tchip') && !c.classList.contains('pghost');
+    });
+  }
+  function stripIndexAt(x) {
+    var chips = topLevelChips();
+    for (var i = 0; i < chips.length; i++) {
+      var r = chips[i].getBoundingClientRect();
+      if (x < r.left + r.width / 2) return i;
+    }
+    return chips.length;
+  }
+  function clearPreview() {
+    var d = drag;
+    if (d.ph && d.ph.parentNode) d.ph.parentNode.removeChild(d.ph);
+    d.ph = null;
+    if (d.snap) d.snap.el.classList.remove('dnd-snap', 'dnd-deep', 'dnd-remove');
+    if (d.timer) { clearTimeout(d.timer); d.timer = null; }
+    d.snap = null;
+  }
+  function setSnap(t) {
+    var d = drag;
+    clearPreview();
+    d.snap = t;
+    if (!t) { /* 游离区：句尾淡影子预览 */
+      d.ph = makePlaceholder('tail');
+      asmStrip.appendChild(d.ph);
+      d.ghost.classList.remove('hide');
+      return;
+    }
+    if (t.kind === 'slot') {
+      t.el.classList.add('dnd-snap');
+      d.ph = makePlaceholder('');
+      var kids = Array.prototype.filter.call(t.el.children, function (c) {
+        return c.classList.contains('tchip') && !c.classList.contains('pghost');
+      });
+      var ki = kids.length;
+      for (var k = 0; k < kids.length; k++) {
+        var kr = kids[k].getBoundingClientRect();
+        if (d.x < kr.left + kr.width / 2) { ki = k; break; }
+      }
+      if (ki < kids.length) t.el.insertBefore(d.ph, kids[ki]); else t.el.appendChild(d.ph);
+      d.slotIdx = ki;
+      d.ghost.classList.add('hide');
+      d.timer = setTimeout(function () { /* 悬停展开子空位，便于再嵌一层 */
+        if (drag && drag.snap === t) { t.el.classList.add('dnd-deep'); }
+      }, DND.HOVER_MS);
+    } else if (t.kind === 'zone') { /* 拖回素材库 = 取出（仅条内积木生效） */
+      t.el.classList.add('dnd-remove');
+      d.ghost.classList.remove('hide');
+    } else { /* 顶层插入：按当前位置的几何序 */
+      d.ph = makePlaceholder('');
+      var ref = topLevelChips()[stripIndexAt(d.x)];
+      if (ref) asmStrip.insertBefore(d.ph, ref); else asmStrip.appendChild(d.ph);
+      d.ghost.classList.add('hide');
+    }
+    refreshRects(); /* 占位改变了布局，刷新缓存矩形 */
+  }
+
+  /* ---- 拖拽生命周期 ---- */
+  function armDrag(e, info) {
+    if (drag) return;
+    info.touch = e.pointerType === 'touch';
+    info.startX = e.clientX; info.startY = e.clientY;
+    info.held = false; info.active = false;
+    /* 标点块目标小：吸附半径放大，其余不变 */
+    var pbB = info.source === 'puncbar' ? { t: 'punc' }
+      : info.source === 'zone' ? cur().blocks[info.bi]
+      : info.source === 'strip' ? cur().blocks[+info.el.dataset.bi] : null;
+    info.rad = pbB && pbB.t === 'punc' ? DND.RADIUS * 1.6 : DND.RADIUS;
+    drag = info;
+    if (info.touch) info.holdT = setTimeout(function () { if (drag === info) info.held = true; }, DND.HOLD_MS);
+    window.addEventListener('pointermove', onDragMove, true);
+    window.addEventListener('pointerup', onDragEnd, true);
+    window.addEventListener('pointercancel', onDragCancel, true);
+    window.addEventListener('keydown', onDragKey, true);
+    window.addEventListener('contextmenu', blockMenu, true);
+  }
+  function removeDragListeners() {
+    window.removeEventListener('pointermove', onDragMove, true);
+    window.removeEventListener('pointerup', onDragEnd, true);
+    window.removeEventListener('pointercancel', onDragCancel, true);
+    window.removeEventListener('keydown', onDragKey, true);
+    window.removeEventListener('contextmenu', blockMenu, true);
+  }
+  function blockMenu(e) { if (drag) e.preventDefault(); } /* 触屏长按不弹菜单 */
+  function activateDrag(e) {
+    var d = drag;
+    d.active = true;
+    d.x = e.clientX; d.y = e.clientY - (d.touch ? DND.LIFT_Y : 0); /* 判定点 = 积木中心 */
+    document.body.classList.add('dnd-active');
+    d.el.classList.add('dnd-src');
+    d.targets = buildTargets();
+    d.ghost = makeGhost(d.el);
+    d.snap = null; d.ph = null; d.timer = null;
+    moveGhost();
+  }
+  function moveGhost() {
+    var d = drag, g = d.ghost;
+    if (!g) return;
+    g.style.left = (d.x - g.__w / 2) + 'px';
+    g.style.top = (d.y - g.__h / 2) + 'px';
+  }
+  function autoScroll(x, y) {
+    [zonesEl, document.scrollingElement].forEach(function (el) {
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.height < 2) return;
+      if (y - r.top < DND.EDGE && el.scrollTop > 0) el.scrollTop -= DND.SCROLL;
+      else if (r.bottom - y < DND.EDGE && el.scrollTop + r.height < el.scrollHeight) el.scrollTop += DND.SCROLL;
+    });
+  }
+  var rafPend = false;
+  window.addEventListener('scroll', function () { /* 滚动/占位后矩形失效，rAF 节流刷新 */
+    if (!drag || !drag.active || rafPend) return;
+    rafPend = true;
+    requestAnimationFrame(function () { rafPend = false; refreshRects(); });
+  }, true);
+  function onDragMove(e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+    if (!drag.active) {
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (drag.touch && !drag.held) { /* 触屏：纵向意图 = 页面滚动，放弃拖拽；长按或横向滑动才拖 */
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { onDragCancel(e); return; }
+        if (dist < 9) return;
+      } else if (dist < DND.THRESHOLD) return;
+      activateDrag(e);
+    }
+    drag.x = e.clientX;
+    drag.y = e.clientY - (drag.touch ? DND.LIFT_Y : 0);
+    moveGhost();
+    autoScroll(drag.x, drag.y);
+    var t = pickTarget(drag.x, drag.y);
+    if (t !== drag.snap) setSnap(t);
+  }
+  function cleanupVisuals() {
+    var d = drag;
+    if (d.ph && d.ph.parentNode) d.ph.parentNode.removeChild(d.ph);
+    if (d.snap) d.snap.el.classList.remove('dnd-snap', 'dnd-deep', 'dnd-remove');
+    if (d.timer) clearTimeout(d.timer);
+    if (d.ghost && d.ghost.parentNode) d.ghost.parentNode.removeChild(d.ghost);
+    d.el.classList.remove('dnd-src');
+    document.body.classList.remove('dnd-active');
+  }
+  function killClickOnce() { /* 拖拽结束吞掉紧随的 click，避免误触发点击放置 */
+    var killer = function (ev) { ev.stopPropagation(); ev.preventDefault(); };
+    window.addEventListener('click', killer, true);
+    setTimeout(function () { window.removeEventListener('click', killer, true); }, 80);
+  }
+  function onDragEnd(e) {
+    var d = drag;
+    if (!d) return;
+    removeDragListeners();
+    if (d.holdT) clearTimeout(d.holdT);
+    if (!d.active) { drag = null; return; } /* 只是点击：放行原 click 流程 */
+    killClickOnce();
+    var it = cur(), snap = d.snap;
+    var topIdx = (snap && snap.kind === 'strip') ? (function () { /* 预览位置 = 插入下标（清理前读 DOM） */
+      if (!d.ph || d.ph.parentNode !== asmStrip) return it.order.length;
+      var i = 0, hit = false;
+      Array.prototype.forEach.call(asmStrip.children, function (c) {
+        if (hit) return;
+        if (c === d.ph) { hit = true; return; }
+        if (c.classList.contains('tchip') && !c.classList.contains('pghost')) i++;
+      });
+      return i;
+    })() : -1;
+    cleanupVisuals();
+    drag = null;
+    /* 落在素材库：条内积木 = 取出；素材积木 = 放回；标点条 = 取消（未生成实例） */
+    if (snap && snap.kind === 'zone') {
+      if (d.source === 'strip') {
+        var zl = resolveEntry(d.path);
+        if (zl) zl.list.splice(zl.idx, 1);
+        commitOrder(false);
+      }
+      return;
+    }
+    /* 落在空位：先取目标列表，再移除原位置，最后放入（列表是活引用，路径不失效） */
+    if (snap && snap.kind === 'slot') {
+      if (d.source === 'strip' && d.el.contains(snap.el)) return; /* 放进自己内部：取消 */
+      var list = resolveSlot(snap.path);
+      if (list) {
+        var at = d.slotIdx == null ? list.length : Math.max(0, Math.min(d.slotIdx, list.length));
+        if (d.source === 'puncbar') {
+          list.splice(at, 0, { id: ensureUserPunc(d.ch), pick: null, fills: [] });
+          commitOrder(true);
+        } else if (d.source === 'zone') {
+          list.splice(at, 0, ensureFills({ id: d.bi, pick: null, fills: [] }));
+          commitOrder(true);
+        } else {
+          var ol = resolveEntry(d.path);
+          if (ol && ol.list[ol.idx]) {
+            var ent = ol.list[ol.idx];
+            ol.list.splice(ol.idx, 1);
+            list.splice(Math.min(at, list.length), 0, ent);
+          }
+          commitOrder(false);
+        }
+        return;
+      }
+    }
+    /* 顶层插入（有预览位）或句尾游离区（无吸附） */
+    var idx = topIdx > -1 ? topIdx : it.order.length;
+    if (d.source === 'puncbar') {
+      insertPuncAt(ensureUserPunc(d.ch), idx);
+      return;
+    }
+    idx = puncTopIdx(d, it, idx); /* 标点块句首守卫：-1 = 拦下 */
+    if (idx < 0) return;
+    if (d.source === 'zone') {
+      it.order.splice(idx, 0, ensureFills({ id: d.bi, pick: null, fills: [] }));
+      commitOrder(true);
+    } else {
+      var loc = resolveEntry(d.path);
+      if (!loc || !loc.list[loc.idx]) { commitOrder(false); return; }
+      var ent2 = loc.list[loc.idx];
+      loc.list.splice(loc.idx, 1);
+      var fromTop = String(d.path).indexOf(',') < 0 ? +String(d.path) : -1;
+      if (fromTop > -1 && idx > fromTop) idx--; /* 原位置在插入点之前：索引回退一格 */
+      it.order.splice(idx, 0, ent2);
+      commitOrder(false);
+    }
+  }
+  function onDragCancel() {
+    var d = drag;
+    if (!d) return;
+    removeDragListeners();
+    if (d.holdT) clearTimeout(d.holdT);
+    if (d.active) { killClickOnce(); cleanupVisuals(); }
+    drag = null;
+  }
+  function onDragKey(e) {
+    if (e.key === 'Escape' && drag && drag.active) onDragCancel(e);
+  }
+  /* 顶层落点句首守卫：标点块不落句首（句首 = 下标0 且已有词块）；返回 -1 = 拦下 */
+  function puncTopIdx(d, it, idx) {
+    var b = null;
+    if (d.source === 'zone') b = it.blocks[d.bi];
+    else if (d.source === 'strip') {
+      var pl = resolveEntry(d.path);
+      b = pl && pl.list[pl.idx] ? it.blocks[pl.list[pl.idx].id] : null;
+    }
+    if (!b || b.t !== 'punc') return idx;
+    if (!it.order.length) { setAsmHint('先放词块，再插标点', 'err'); return -1; }
+    return idx === 0 ? 1 : idx;
+  }
+
+  /* 按下即武装：素材积木 / 条内积木 / 标点条符号（空位本身是落点，不是拖拽源） */
+  zonesEl.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    var pb = e.target.closest('.pb-sym');
+    if (pb) { armDrag(e, { source: 'puncbar', ch: pb.dataset.ch, el: pb }); return; }
+    var b = e.target.closest('.block');
+    if (!b || b.classList.contains('used')) return;
+    armDrag(e, { source: 'zone', bi: +b.dataset.bi, el: b });
+  });
+  asmStrip.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    var c = e.target.closest('.tchip');
+    if (!c) return; /* 空位本身是落点不是拖拽源；条内/空位内积木都可拖 */
+    armDrag(e, { source: 'strip', el: c, path: c.dataset.path });
+  });
+
+  zonesEl.addEventListener('click', function (e) {
+    var tg = e.target.closest('.pb-toggle'); /* 系统标点开关：即时生效并重渲染 */
+    if (tg) {
+      S.puncSys = !(S.puncSys !== false);
+      save();
+      renderZones();
+      commitOrder(false);
+      setAsmHint(S.puncSys !== false ? '系统标点：开（必需标点计入缺口）' : '系统标点：关（请从标点条自加，判卷从严）', '');
+      return;
+    }
+    var pb = e.target.closest('.pb-sym'); /* 点符号 = 在光标处（无则句尾）插入用户标点 */
+    if (pb) {
+      if (!cur().order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
+      insertPuncAt(ensureUserPunc(pb.dataset.ch), caretAt > -1 ? caretAt : cur().order.length);
+      return;
+    }
+    var b = e.target.closest('.block');
+    if (!b) return;
+    var it = cur();
+    var ent = ensureFills({ id: +b.dataset.bi, pick: null, fills: [] });
+    /* 有当前空位（点选填充）：直接填入，并按左到右顺序跳到下一个空位 */
+    if (fillSlotPath) {
+      var list = resolveSlot(fillSlotPath);
+      if (list) {
+        var prevPath = fillSlotPath;
+        list.push(ent);
+        commitOrder(true);
+        advanceFillSlot(prevPath);
+        return;
+      }
+    }
+    it.order.push(ent);
+    commitOrder(true);
+  });
+
+  asmStrip.addEventListener('click', function (e) {
+    /* 点 gap = 设为标点插入光标（再点一次取消） */
+    var gp = e.target.closest('.gap');
+    if (gp) { setCaret(+gp.dataset.i === caretAt ? -1 : +gp.dataset.i); return; }
+    /* 点选填充：点空位 = 选为当前空位（再点一次取消） */
+    var sl = e.target.closest('.asm-slot');
+    if (sl && !sl.classList.contains('inert')) {
+      setFillSlot(sl.dataset.slotpath === fillSlotPath ? null : sl);
+      return;
+    }
+    var chip = e.target.closest('.tchip');
+    if (!chip) return;
+    var loc = resolveEntry(chip.dataset.path);
+    if (!loc) return;
+    var opt = e.target.closest('.or-opt');
+    if (opt) {
+      var ent = loc.list[loc.idx];
+      var side = +opt.dataset.side;
+      if (ent.pick === side) { loc.list.splice(loc.idx, 1); commitOrder(false); }
+      else { ent.pick = side; ensureFills(ent); commitOrder(false); }
+      return;
+    }
+    if (chip.classList.contains('or') && chip.dataset.pick === '') return; /* 未选定：先点选项 */
+    loc.list.splice(loc.idx, 1);
+    commitOrder(false);
+  });
+
+  /* 数据库卡片：拖入 / 点击填入中文框 */
+  var dbDragging = null;
+  document.getElementById('dbList').addEventListener('dragstart', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) return;
+    dbDragging = card;
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', card.querySelector('.zh').textContent.trim());
+  });
+  document.getElementById('dbList').addEventListener('dragend', function () { dbDragging = null; });
+  zhBox.addEventListener('dragover', function (e) {
+    if (dbDragging) { e.preventDefault(); zhBox.classList.add('over'); }
+  });
+  zhBox.addEventListener('dragleave', function () { zhBox.classList.remove('over'); });
+  zhBox.addEventListener('drop', function (e) {
+    if (!dbDragging) return;
+    e.preventDefault();
+    zhBox.classList.remove('over');
+    fillZh(dbDragging.querySelector('.zh').textContent.trim(), '已从数据库填入 · 可修改后校验');
+    dbDragging = null;
+  });
+  document.getElementById('dbList').addEventListener('click', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) return;
+    fillZh(card.querySelector('.zh').textContent.trim(), '已从数据库填入 · 可修改后校验');
+  });
+
+  function fillZh(text, hint) {
+    var it = cur();
+    it.zh = text;
+    it.sugg = '';
+    it.confirmed = false;
+    it.strikeParts = null;
+    /* 若本句已有词块，改中文需重新校验生成 */
+    if (it.blocks.length) {
+      it.blocks = [];
+      it.seq = [];
+      it.order = [];
+      it.done = false;
+      it.altOk = false;
+      partInput.value = '';
+      renderZones();
+      renderStrip();
+    }
+    acceptBtn.hidden = true;
+    zhEdit.contentEditable = 'true';
+    goBtn.classList.remove('ghost');
+    goBtn.textContent = '校验 →';
+    zhEdit.textContent = text;
+    zhEdit.classList.remove('sugg');
+    setZhHint(hint, '');
+    renderParas();
+    save();
+  }
+
+  /* 重新开始：两段式确认，避免误触 */
+  var restartArmed = false, restartTimer = null;
+  restartBtn.addEventListener('click', function () {
+    if (!restartArmed) {
+      restartArmed = true;
+      restartBtn.textContent = '确认清空？';
+      restartTimer = setTimeout(function () { restartArmed = false; restartBtn.textContent = '重新开始'; }, 3000);
+      return;
+    }
+    clearTimeout(restartTimer);
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    location.reload();
+  });
+
+  /* ================= 启动 ================= */
+  load();
+  var start = 0;
+  for (var i = 0; i < FLAT.length; i++) {
+    if (!S.items[i].done) { start = i; break; }
+    start = FLAT.length - 1;
+  }
+  S.cur = start;
+  renderAll();
+  var it0 = cur();
+  if (!allDone() && !it0.done && !it0.zh && !it0.sugg) suggest();
+  if (!allDone() && !it0.done && it0.confirmed && !it0.blocks.length) buildBlocks();
+})();
+</script>
+
+<script>
+/* ============ 检视模式（本地调试）：悬停高亮 · 点击定位代码行 · 临时微调 ============
+   右下角「◎ 检视」开启：悬停任意元素出蓝框；点击弹出面板——
+   ① 命中的 CSS 规则 + 所在行号（点击复制「文件:行」，VSCode Cmd+P 粘贴直达）；
+   ② 颜色/字号/圆角/内边距临时预览（刷新即恢复）；③ 就地编辑文字。
+   行号需经 VSCode「Live Preview」（http）打开才能取到；file:// 直开仅少行号，其余可用。 */
+(function () {
+  var FILE = 'english-writing-workshop.html';
+  var on = false, srcText = '', hoverEl = null, curEl = null, curStyle = '', editing = false, srcFetching = false;
+
+  var css = document.createElement('style');
+  css.textContent =
+    '#wwInspBtn{position:fixed;right:14px;bottom:14px;z-index:99998;appearance:none;border:1px solid rgba(60,60,67,.16);background:rgba(255,255,255,.86);color:#1c1c1e;font:600 11.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;padding:6px 12px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 4px 14px rgba(0,0,0,.14);}' +
+    '#wwInspBtn.on{background:#007aff;border-color:#007aff;color:#fff;}' +
+    '#wwInspBox{position:fixed;z-index:99997;pointer-events:none;border:1.5px solid #007aff;border-radius:6px;display:none;}' +
+    '#wwInspBox b{position:absolute;left:0;top:-20px;background:#007aff;color:#fff;font:600 10px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;padding:2px 7px;border-radius:5px;white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis;}' +
+    '#wwInspPanel{position:fixed;right:14px;bottom:52px;z-index:99998;width:266px;max-height:72vh;overflow:auto;background:rgba(255,255,255,.94);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);border:1px solid rgba(60,60,67,.14);border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,.18);padding:12px;display:none;font:400 11.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;color:#1c1c1e;}' +
+    '#wwInspPanel h4{margin:2px 0 6px;font-size:12px;font-weight:700;word-break:break-all;}' +
+    '#wwInspPanel .sec{margin-top:10px;padding-top:8px;border-top:1px solid rgba(60,60,67,.1);}' +
+    '#wwInspPanel .sec:first-of-type{border-top:none;}' +
+    '#wwInspPanel .sec h5{margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:.05em;color:rgba(60,60,67,.55);text-transform:uppercase;}' +
+    '#wwInspPanel .rule{display:flex;gap:6px;align-items:baseline;padding:3px 6px;margin:0 -6px;border-radius:6px;cursor:pointer;word-break:break-all;}' +
+    '#wwInspPanel .rule:hover{background:rgba(0,122,255,.1);}' +
+    '#wwInspPanel .rule .ln{flex:none;font-weight:700;color:#007aff;font-variant-numeric:tabular-nums;}' +
+    '#wwInspPanel .row{display:flex;align-items:center;gap:6px;margin:5px 0;}' +
+    '#wwInspPanel .row label{flex:1;color:rgba(60,60,67,.7);}' +
+    '#wwInspPanel input[type=range]{flex:1.2;accent-color:#007aff;}' +
+    '#wwInspPanel input[type=color]{width:28px;height:20px;padding:0;border:1px solid rgba(60,60,67,.2);border-radius:5px;background:none;cursor:pointer;flex:none;}' +
+    '#wwInspPanel .row output{font-variant-numeric:tabular-nums;color:rgba(60,60,67,.7);width:34px;text-align:right;flex:none;}' +
+    '#wwInspPanel .btns{display:flex;gap:6px;margin-top:8px;}' +
+    '#wwInspPanel .btns button{flex:1;appearance:none;border:none;border-radius:8px;padding:5px 0;font-size:11px;font-weight:600;cursor:pointer;background:rgba(120,120,128,.14);color:#1c1c1e;}' +
+    '#wwInspPanel .btns button.pri{background:#007aff;color:#fff;}' +
+    '#wwInspPanel .btns button:active{filter:brightness(.85);}' +
+    '#wwInspPanel .tip{margin-top:8px;color:rgba(60,60,67,.5);font-size:10px;line-height:1.5;}' +
+    '.ww-inspect, .ww-inspect *{cursor:crosshair !important;}';
+  document.head.appendChild(css);
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function name(el) {
+    var n = el.tagName.toLowerCase();
+    if (el.id) return n + '#' + el.id;
+    var cls = (el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.');
+    return n + (cls ? '.' + cls : '');
+  }
+  function copyText(t) {
+    try { navigator.clipboard.writeText(t); } catch (e) {}
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = t; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    } catch (e) {}
+  }
+  function loadSrc(cb) {
+    if (srcText || srcFetching) { if (cb) cb(); return; }
+    srcFetching = true;
+    try {
+      fetch(location.href).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+        srcText = t || ''; srcFetching = false; if (cb) cb();
+      }).catch(function () { srcFetching = false; if (cb) cb(); });
+    } catch (e) { srcFetching = false; if (cb) cb(); }
+  }
+  function lineOf(sel) {
+    if (!srcText) return -1;
+    var i = srcText.indexOf(sel + ' {');
+    if (i < 0) i = srcText.indexOf(sel + '{');
+    if (i < 0) return -1;
+    var n = 1;
+    for (var k = 0; k < i; k++) if (srcText.charAt(k) === '\n') n++;
+    return n;
+  }
+  function collectRules(rules, el, out, dark) {
+    for (var i = 0; i < rules.length; i++) {
+      var r = rules[i];
+      if (r.cssRules && r.media) { collectRules(r.cssRules, el, out, /dark/.test(r.media.mediaText || '')); continue; }
+      if (!r.selectorText) continue;
+      var m = false;
+      try { m = el.matches(r.selectorText); } catch (e) {}
+      if (m) out.push({ sel: r.selectorText, dark: !!dark });
+    }
+  }
+  function rulesFor(el) {
+    var out = [];
+    for (var s = 0; s < document.styleSheets.length; s++) {
+      var rs; try { rs = document.styleSheets[s].cssRules; } catch (e) { continue; }
+      if (rs) collectRules(rs, el, out, false);
+    }
+    var seen = {}, uniq = [];
+    out.forEach(function (r) { var k = r.sel + (r.dark ? '@d' : ''); if (!seen[k]) { seen[k] = 1; uniq.push(r); } });
+    return uniq.slice(-8).reverse(); /* 靠后的规则优先级高，放前面 */
+  }
+
+  var btn = document.createElement('button');
+  btn.id = 'wwInspBtn'; btn.type = 'button'; btn.textContent = '◎ 检视';
+  var box = document.createElement('div');
+  box.id = 'wwInspBox'; box.appendChild(document.createElement('b'));
+  var panel = document.createElement('div');
+  panel.id = 'wwInspPanel';
+  document.body.appendChild(btn); document.body.appendChild(box); document.body.appendChild(panel);
+
+  function moveBox(el) {
+    if (!el) { box.style.display = 'none'; return; }
+    var r = el.getBoundingClientRect();
+    if (r.width < 1 && r.height < 1) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.style.left = r.left + 'px'; box.style.top = r.top + 'px';
+    box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
+    box.firstChild.textContent = name(el);
+  }
+  function inUI(t) { return !!(t && t.closest && t.closest('#wwInspBtn, #wwInspPanel')); }
+
+  function hexify(c) {
+    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c || '');
+    if (!m) return '#000000';
+    function h(x) { x = (+x).toString(16); return x.length < 2 ? '0' + x : x; }
+    return '#' + h(m[1]) + h(m[2]) + h(m[3]);
+  }
+  function stopEdit() {
+    if (curEl && editing) { curEl.contentEditable = 'false'; curEl.blur(); }
+    editing = false;
+    var b = document.getElementById('wwT_edit'); if (b) b.textContent = '编辑文字';
+  }
+  function renderRules() {
+    var host = document.getElementById('wwInspRules');
+    if (!host || !curEl) return;
+    if (!srcText && srcFetching) { setTimeout(renderRules, 200); return; }
+    var rules = rulesFor(curEl), html = '';
+    rules.forEach(function (r) {
+      var ln = lineOf(r.sel);
+      html += '<div class="rule" data-line="' + ln + '" data-loc="' + esc(FILE + ':' + ln) + '">' +
+        '<span class="ln">' + (ln > 0 ? '第' + ln + '行' : '·') + '</span><span>' + esc(r.sel) + (r.dark ? '（深色）' : '') + '</span></div>';
+    });
+    if (curEl.getAttribute('style')) html += '<div class="rule"><span class="ln">内联</span><span>style 属性</span></div>';
+    host.innerHTML = html || '<div style="color:rgba(60,60,67,.5)">无匹配规则</div>';
+    if (!srcText) host.insertAdjacentHTML('beforeend', '<div style="color:rgba(60,60,67,.4);margin-top:4px">行号需经 Live Preview（http）打开</div>');
+    Array.prototype.forEach.call(host.querySelectorAll('.rule[data-line]'), function (row) {
+      row.addEventListener('click', function () {
+        var loc = row.getAttribute('data-loc');
+        if (/:-1$/.test(loc)) { copyText(row.querySelector('span:last-child').textContent); return; }
+        copyText(loc);
+        row.style.background = 'rgba(52,199,89,.15)';
+        setTimeout(function () { row.style.background = ''; }, 500);
+      });
+    });
+  }
+  function pick(el) {
+    stopEdit();
+    curEl = el;
+    curStyle = el.getAttribute('style') || '';
+    var cs = getComputedStyle(el);
+    panel.innerHTML =
+      '<h4>' + esc(name(el)) + '</h4>' +
+      '<div class="sec"><h5>命中 CSS 规则 · 点击复制「文件:行」</h5><div id="wwInspRules">载入中…</div></div>' +
+      '<div class="sec"><h5>临时微调（刷新即恢复）</h5>' +
+      '<div class="row"><label>文字色</label><input type="color" id="wwT_color" value="' + hexify(cs.color) + '"></div>' +
+      '<div class="row"><label>背景色</label><input type="color" id="wwT_bg" value="' + hexify(cs.backgroundColor) + '"></div>' +
+      '<div class="row"><label>边框色</label><input type="color" id="wwT_bc" value="' + hexify(cs.borderColor) + '"></div>' +
+      '<div class="row"><label>字号 px</label><input type="range" id="wwT_fs" min="8" max="40" value="' + parseInt(cs.fontSize, 10) + '"><output id="wwO_fs">' + parseInt(cs.fontSize, 10) + '</output></div>' +
+      '<div class="row"><label>圆角 px</label><input type="range" id="wwT_br" min="0" max="28" value="' + (parseInt(cs.borderRadius, 10) || 0) + '"><output id="wwO_br">' + (parseInt(cs.borderRadius, 10) || 0) + '</output></div>' +
+      '<div class="row"><label>内边距 px</label><input type="range" id="wwT_pd" min="0" max="32" value="' + (parseInt(cs.paddingTop, 10) || 0) + '"><output id="wwO_pd">' + (parseInt(cs.paddingTop, 10) || 0) + '</output></div>' +
+      '<div class="btns"><button type="button" id="wwT_reset">还原</button><button type="button" id="wwT_edit" class="pri">编辑文字</button></div></div>' +
+      '<div class="tip">复制到的「文件:行」粘贴进 VSCode Cmd+P 可直达该行；微调只是预览，要永久生效告诉 Claude 即可。</div>';
+    panel.style.display = 'block';
+    document.getElementById('wwT_color').addEventListener('input', function () { el.style.color = this.value; });
+    document.getElementById('wwT_bg').addEventListener('input', function () { el.style.backgroundColor = this.value; });
+    document.getElementById('wwT_bc').addEventListener('input', function () { el.style.borderColor = this.value; });
+    function bindRange(id, oid, prop) {
+      var rEl = document.getElementById(id), oEl = document.getElementById(oid);
+      rEl.addEventListener('input', function () { oEl.textContent = rEl.value; el.style[prop] = rEl.value + 'px'; });
+    }
+    bindRange('wwT_fs', 'wwO_fs', 'fontSize');
+    bindRange('wwT_br', 'wwO_br', 'borderRadius');
+    bindRange('wwT_pd', 'wwO_pd', 'padding');
+    document.getElementById('wwT_reset').addEventListener('click', function () {
+      stopEdit();
+      if (curStyle) el.setAttribute('style', curStyle); else el.removeAttribute('style');
+    });
+    document.getElementById('wwT_edit').addEventListener('click', function () {
+      if (editing) { stopEdit(); return; }
+      editing = true; el.contentEditable = 'true'; el.focus();
+      this.textContent = '完成编辑';
+    });
+    renderRules();
+    if (!srcText) loadSrc(renderRules);
+  }
+
+  btn.addEventListener('click', function () {
+    on = !on;
+    btn.classList.toggle('on', on);
+    document.body.classList.toggle('ww-inspect', on);
+    btn.textContent = on ? '◎ 检视中 (Esc 退)' : '◎ 检视';
+    if (on) { loadSrc(); }
+    else { box.style.display = 'none'; panel.style.display = 'none'; stopEdit(); hoverEl = null; }
+  });
+
+  window.addEventListener('mouseover', function (e) {
+    if (!on) return;
+    var t = e.target;
+    if (!t || t.nodeType !== 1) t = t && t.parentElement;
+    if (inUI(t)) { moveBox(null); return; }
+    if (editing && curEl && curEl.contains(t)) return;
+    hoverEl = t; moveBox(t);
+  }, true);
+  window.addEventListener('mousemove', function (e) {
+    if (!on || !hoverEl) return;
+    moveBox(hoverEl);
+  }, true);
+  window.addEventListener('click', function (e) {
+    if (!on) return;
+    var t = e.target;
+    if (!t || t.nodeType !== 1) t = t && t.parentElement;
+    if (inUI(t)) return;
+    if (editing && curEl && curEl.contains(t)) return; /* 编辑文字时允许光标操作 */
+    e.preventDefault(); e.stopPropagation();
+    pick(t);
+  }, true);
+  window.addEventListener('dragstart', function (e) {
+    if (!on || inUI(e.target)) return;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
+  window.addEventListener('scroll', function () { if (on) moveBox(hoverEl); }, true);
+  window.addEventListener('resize', function () { if (on) moveBox(hoverEl); }, true);
+  window.addEventListener('keydown', function (e) {
+    if (!on) return;
+    if (e.key === 'Escape') { if (editing) stopEdit(); else btn.click(); }
+  }, true);
+})();
+</script>
