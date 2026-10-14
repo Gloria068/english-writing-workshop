@@ -53,6 +53,8 @@
   --ring-blue: rgba(0, 122, 255, .25);
   --ring-purple: rgba(175, 82, 222, .2);
   --pulse: rgba(175, 82, 222, .35);
+  --caret: #ff2d55;           /* 品红：插入光标专属色，全界面唯一（与紫差56°、蓝差136°） */
+  --caret-glow: rgba(255, 45, 85, .3);
   --scroll-thumb: rgba(120, 120, 128, .35);
 }
 
@@ -101,6 +103,8 @@
     --ring-blue: rgba(10, 132, 255, .35);
     --ring-purple: rgba(191, 90, 242, .3);
     --pulse: rgba(191, 90, 242, .4);
+    --caret: #ff6480;         /* 深色模式提亮品红，黑底上对比更足 */
+    --caret-glow: rgba(255, 100, 128, .45);
     --scroll-thumb: rgba(235, 235, 245, .3);
   }
 }
@@ -446,11 +450,22 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .tchip.pn { padding: 3px 10px 4px; font-size: 14px; font-weight: 700; background: var(--part-block); }
 .tchip.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .8); }
 
-/* ---------- 拼装条间隙：标点插入光标与出错淡标记 ---------- */
-.gap { display: inline-flex; width: 5px; height: 24px; border-radius: 3px; cursor: text; flex: none; }
-.gap.caret { background: var(--blue); box-shadow: 0 0 0 2.5px var(--ring-blue); animation: caretBlink 1.1s steps(1) infinite; }
+/* ---------- 拼装条缝隙：点击热区 20px（视觉占位仍 5px）+ 出错淡标记 ---------- */
+.gap { display: inline-flex; width: 20px; height: 28px; margin: 0 -7.5px; border-radius: 3px; cursor: text; flex: none; position: relative; z-index: 1; }
 .gap.mark { background: var(--err); opacity: .38; box-shadow: 0 0 0 2px rgba(255, 69, 58, .18); }
-@keyframes caretBlink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: .25; } }
+
+/* ---------- 插入光标：专属色 --caret（全界面唯一）· 圆头竖线 + 同色光晕 + 呼吸 ---------- */
+#asmStrip { position: relative; }
+#wwCaret { position: absolute; width: 2.5px; border-radius: 2.5px; background: var(--caret);
+  box-shadow: 0 0 6px 1px var(--caret-glow); pointer-events: none; z-index: 6; opacity: 0;
+  transition: left .12s ease-out, top .12s ease-out, height .12s ease-out, opacity .25s ease; }
+#wwCaret.on { opacity: 1; animation: caretBreath 1.4s ease-in-out infinite; }
+#wwCaret.on.live, #wwCaret.on.dim { animation: none; }  /* 操作中常亮 / 失焦变淡，均停呼吸 */
+#wwCaret.on.dim { opacity: .3; }
+@keyframes caretBreath { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+/* 插入落定轻脉冲（飞入动画的收尾） */
+.tchip.fly-in { animation: flyPulse .34s ease-out .16s both; }
+@keyframes flyPulse { 0% { box-shadow: 0 0 0 3px var(--caret-glow); } 100% { box-shadow: 0 0 0 0 transparent; } }
 
 /* ---------- 细滚动条 ---------- */
 .db-list::-webkit-scrollbar, .zones::-webkit-scrollbar { width: 8px; }
@@ -469,7 +484,9 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce) {
   .block, .tchip { transition: none; }
   .schip.cur, .tchip.ok { animation: none; }
-  .gap.caret { animation: none; }
+  #wwCaret { transition: none; }
+  #wwCaret.on { animation: none; }
+  .tchip.fly-in { animation: none; }
 }
 </style>
 
@@ -1193,6 +1210,10 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     if (fillSlotPath) { /* 点选填充的高亮跨重渲染保持 */
       var fsEl = asmStrip.querySelector('.asm-slot[data-slotpath="' + fillSlotPath + '"]');
       if (fsEl) fsEl.classList.add('fill-cur'); else fillSlotPath = '';
+    }
+    if (typeof caretEl !== 'undefined' && caretEl) { /* 光标元素随重渲染复位（innerHTML 重建） */
+      if (caretEl.parentNode !== asmStrip) asmStrip.appendChild(caretEl);
+      positionCaret(true);
     }
   }
 
@@ -2404,6 +2425,8 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       it.done = false;
       it.altOk = false;
       it.puncMiss = 0;
+      caretAt = -1; puncMarkAt = -1; fillSlotPath = '';
+      resetUndo(); /* 重新生成：快照与光标作废 */
       save();
       setZhHint('✓ 已确认 · 词块已生成', 'ok');
       setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块');
@@ -2553,6 +2576,8 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     nodeFromJSON: nodeFromJSON, stripFills: stripFills, formKey: formKey,
     visibleWords: visibleWords, checkBackbone: checkBackbone, scanParts: scanParts,
     mechanicalSplit: mechanicalSplit, localBlocks: localBlocks,
+    placeBlockAt: placeBlockAt, setCaret: setCaret, undoRedo: undoRedo, resetUndo: resetUndo, cur: cur,
+    caretState: function () { return { caretAt: caretAt, fill: fillSlotPath, undo: undoStk.length, redo: redoStk.length }; },
     applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
     punctToks: punctToks, joinToks: joinToks, canonText: canonText,
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
@@ -2562,8 +2587,38 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
   };
 
   /* ================= 拼装与评判 ================= */
+  /* ---- 撤销/重做：每次结构变化前的 order 快照（含光标位置），Ctrl/Cmd+Z · Shift+Z · Y ---- */
+  var undoStk = [], redoStk = [], lastSnap = null, noSnap = false;
+  function resetUndo() { undoStk.length = 0; redoStk.length = 0; noSnap = false; var c = cur(); lastSnap = (c && c.order) ? { order: JSON.stringify(c.order), caretAt: -1, fill: '' } : null; } /* 播种 lastSnap：换句/清空后第一次插入也可撤销 */
+  function snapPush(s) {
+    undoStk.push(s);
+    if (undoStk.length > 80) undoStk.shift();
+    redoStk.length = 0;
+  }
+  function undoRedo(dir) { /* -1 撤销 / +1 重做 */
+    var from = dir < 0 ? undoStk : redoStk, to = dir < 0 ? redoStk : undoStk;
+    if (!from.length) return;
+    var s = from.pop();
+    var it = cur();
+    var now = { order: JSON.parse(JSON.stringify(it.order)), caretAt: caretAt, fill: fillSlotPath };
+    noSnap = true;
+    it.order = JSON.parse(JSON.stringify(s.order));
+    var ca = Math.min(s.caretAt == null ? -1 : s.caretAt, it.order.length);
+    var sl = s.fill ? asmStrip.querySelector('.asm-slot[data-slotpath="' + s.fill + '"]') : null;
+    if (sl) { setFillSlot(sl); ca = -1; } else setFillSlot(null);
+    commitOrder(false);
+    if (ca > -1) setCaret(ca);
+    noSnap = false;
+    var top = to[to.length - 1];
+    if (!top || JSON.stringify(top.order) !== JSON.stringify(now.order)) to.push(now);
+    caretLive();
+  }
+
   function commitOrder(justFinished) {
     var it = cur();
+    var snapStr = JSON.stringify(it.order);
+    if (!noSnap && lastSnap && snapStr !== lastSnap.order) snapPush({ order: JSON.parse(lastSnap.order), caretAt: lastSnap.caretAt, fill: lastSnap.fill });
+    lastSnap = { order: snapStr, caretAt: caretAt, fill: fillSlotPath };
     if (it.done && !it.altOk && !treeEq(it.order, it.seq)) it.done = false;
     puncMarkAt = -1; /* 结构已变，旧标记作废（重判会再标） */
     save();
@@ -2797,6 +2852,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     partInput.value = '';
     fillSlotPath = '';
     caretAt = -1; puncMarkAt = -1;
+    resetUndo(); /* 换句：快照作废 */
     save();
     renderAll();
     var it = cur();
@@ -2861,6 +2917,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     it.done = false;
     it.altOk = false;
     caretAt = -1; puncMarkAt = -1;
+    resetUndo(); /* 清空拼装：快照作废 */
     save();
     renderStrip();
     renderZones();
@@ -2919,12 +2976,13 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
   var drag = null;         // 按下/拖拽中的状态对象
   var fillSlotPath = '';   // 点选填充：当前空位的 data-slotpath
 
-  /* ---- 点选填充 ---- */
+  /* ---- 点选填充（空位内光标：与顶层光标同一套视觉） ---- */
   function setFillSlot(el) {
     var old = fillSlotPath && asmStrip.querySelector('.asm-slot[data-slotpath="' + fillSlotPath + '"]');
     if (old) old.classList.remove('fill-cur');
-    if (el && el.dataset.slotpath) { fillSlotPath = el.dataset.slotpath; el.classList.add('fill-cur'); }
+    if (el && el.dataset.slotpath) { fillSlotPath = el.dataset.slotpath; el.classList.add('fill-cur'); caretAt = -1; caretLive(); }
     else fillSlotPath = '';
+    positionCaret();
   }
   function advanceFillSlot(prevPath) {
     var anchor = prevPath ? asmStrip.querySelector('.asm-slot[data-slotpath="' + prevPath + '"]') : null;
@@ -2933,18 +2991,166 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     for (var i = 0; i < empt.length; i++) {
       if (!anchor || (anchor.compareDocumentPosition(empt[i]) & 4)) { next = empt[i]; break; } /* 4 = FOLLOWING */
     }
-    setFillSlot(next);
+    if (next) setFillSlot(next);
+    else { setFillSlot(null); setCaret(cur().order.length); } /* 没有空位了：光标停句尾 */
   }
-  /* ---- 标点插入：光标位（gap）+ 出错淡标记 ---- */
+  function firstEmptySlotEl() {
+    return asmStrip.querySelector('.asm-slot.empty:not(.inert)') || null;
+  }
+  function jumpNextSlot() {
+    advanceFillSlot(fillSlotPath);
+    caretLive();
+  }
+
+  /* ---- 统一插入光标：专属品红 #wwCaret（顶层缝隙 / 空位内 / 拖拽落点 共用） ---- */
   var caretAt = -1;    // 当前插入点（顶层 gap 下标，-1 无）
   var puncMarkAt = -1; // 标点出错位置的淡标记
+  var caretEl = document.createElement('div');
+  caretEl.id = 'wwCaret';
+  var caretIdleT = null;
+  var REDUCED_MQ = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  function reduced() { return !!(REDUCED_MQ && REDUCED_MQ.matches); }
+  function caretLive() { /* 操作中常亮，停手 900ms 恢复呼吸 */
+    if (!caretEl) return;
+    caretEl.classList.add('live');
+    caretEl.classList.remove('dim');
+    if (caretIdleT) clearTimeout(caretIdleT);
+    caretIdleT = setTimeout(function () { caretEl.classList.remove('live'); }, 900);
+  }
+  function caretDim(on) { /* 组装栏失焦：变淡停呼吸，位置保留 */
+    if (!caretEl) return;
+    caretEl.classList.toggle('dim', !!on);
+    if (on) caretEl.classList.remove('live');
+  }
+  function caretBoxOf(el, edge) { /* 缝隙中心 / 空位左缘（相对 asmStrip 内容坐标） */
+    var r = el.getBoundingClientRect(), sr = asmStrip.getBoundingClientRect();
+    return { x: (edge ? r.left + 3 : r.left + r.width / 2) - sr.left - 1.25, y: r.top - sr.top, h: r.height };
+  }
+  function caretApply(box, instant) {
+    if (instant || reduced()) caretEl.style.transition = 'none';
+    caretEl.style.left = box.x + 'px';
+    caretEl.style.top = (box.y + box.h / 2 - 15) + 'px';
+    caretEl.style.height = Math.min(Math.max(box.h + 6, 26), 44) + 'px'; /* 略高于积木 */
+    caretEl.classList.add('on');
+    if (instant || reduced()) { void caretEl.offsetHeight; caretEl.style.transition = ''; }
+  }
+  function positionCaret(instant) {
+    if (!caretEl || caretEl.parentNode !== asmStrip) return;
+    var el = null, edge = false;
+    if (fillSlotPath) { el = asmStrip.querySelector('.asm-slot[data-slotpath="' + fillSlotPath + '"]'); edge = true; }
+    else if (caretAt > -1) { el = asmStrip.querySelector('.gap[data-i="' + caretAt + '"]'); }
+    if (!el) { caretEl.classList.remove('on'); return; }
+    caretApply(caretBoxOf(el, edge), instant);
+  }
+  function caretShowAt(el, edge) { /* 拖拽落点指示：与插入光标同一个元素 */
+    if (caretEl.parentNode !== asmStrip) asmStrip.appendChild(caretEl);
+    caretApply(caretBoxOf(el, edge), false);
+    caretEl.classList.add('live');
+  }
   function markGap() {
     Array.prototype.forEach.call(asmStrip.querySelectorAll('.gap'), function (g) {
       var i = +g.dataset.i;
-      g.className = 'gap' + (i === caretAt ? ' caret' : '') + (i === puncMarkAt ? ' mark' : '');
+      g.className = 'gap' + (i === puncMarkAt ? ' mark' : '');
     });
   }
-  function setCaret(i) { caretAt = i; markGap(); }
+  function setCaret(i) {
+    if (i > -1 && fillSlotPath) setFillSlot(null);
+    caretAt = i;
+    caretLive();
+    positionCaret();
+  }
+  asmStrip.appendChild(caretEl);
+
+  /* ---- 点击素材积木 → 插入光标处（与拖拽共用同一套落地规则） ---- */
+  function placeBlockAt(bi, srcRect) {
+    var it = cur();
+    if (!it || !it.blocks[bi]) return;
+    var ent = ensureFills({ id: bi, pick: null, fills: [] });
+    flipCapture();
+    /* ① 空位内光标：填入该空位，之后跳下一个空位 */
+    if (fillSlotPath) {
+      var list = resolveSlot(fillSlotPath);
+      if (list) {
+        var prevPath = fillSlotPath;
+        list.push(ent);
+        commitOrder(true);
+        advanceFillSlot(prevPath);
+        flipPlay(srcRect, { slotAppend: prevPath });
+        return;
+      }
+    }
+    /* ② 顶层光标；从未设置 → 默认第一个空位，无空位则句尾 */
+    var at = caretAt;
+    if (at < 0) {
+      var fs = firstEmptySlotEl();
+      if (fs) {
+        setFillSlot(fs);
+        var l2 = resolveSlot(fillSlotPath);
+        if (l2) {
+          var p2 = fillSlotPath;
+          l2.push(ent);
+          commitOrder(true);
+          advanceFillSlot(p2);
+          flipPlay(srcRect, { slotAppend: p2 });
+          return;
+        }
+      }
+      at = it.order.length;
+    }
+    at = Math.max(0, Math.min(at, it.order.length));
+    it.order.splice(at, 0, ent);
+    commitOrder(true);
+    setCaret(at + 1); /* 光标移到新块右侧：可连续点入 */
+    flipPlay(srcRect, { topInsert: at });
+  }
+
+  /* ---- 插入动画：FLIP（素材库原位飞入 + 周围积木让位）；减少动效时关闭 ---- */
+  var flipMem = null;
+  function flipCapture() {
+    if (reduced()) { flipMem = null; return; }
+    var m = {};
+    Array.prototype.forEach.call(asmStrip.querySelectorAll('.tchip'), function (c) {
+      var r = c.getBoundingClientRect();
+      m[c.dataset.path] = { l: r.left, t: r.top };
+    });
+    flipMem = m;
+  }
+  function flipRemap(p, shift) { /* 插入后新路径 → 插入前旧路径（顶层插入使后续下标 +1） */
+    if (!shift || shift.topInsert == null) return p;
+    var seg = String(p).split(',');
+    if (+seg[0] >= shift.topInsert) { seg[0] = String(+seg[0] - 1); return seg.join(','); }
+    return p;
+  }
+  function flipPlay(srcRect, shift) {
+    var mem = flipMem;
+    flipMem = null;
+    if (!mem || reduced()) return;
+    requestAnimationFrame(function () {
+      var moved = [];
+      Array.prototype.forEach.call(asmStrip.querySelectorAll('.tchip'), function (c) {
+        var old = mem[flipRemap(c.dataset.path, shift)];
+        var isTop = String(c.dataset.path).indexOf(',') < 0;
+        if (!old && !srcRect) return;
+        if (!isTop && old) return; /* 嵌套块随父级移动，不单独动画 */
+        var r = c.getBoundingClientRect();
+        var dx = old ? old.l - r.left : srcRect.left - r.left;
+        var dy = old ? old.t - r.top : srcRect.top - r.top;
+        var fresh = !old;
+        if (!fresh && !dx && !dy) return;
+        c.style.transition = 'none';
+        c.style.transform = 'translate(' + dx + 'px,' + dy + 'px)' + (fresh ? ' scale(.92)' : '');
+        if (fresh) c.classList.add('fly-in');
+        moved.push(c);
+      });
+      requestAnimationFrame(function () {
+        moved.forEach(function (c) {
+          c.style.transition = 'transform .2s ease-out';
+          c.style.transform = '';
+        });
+        setTimeout(function () { moved.forEach(function (c) { c.style.transition = ''; }); }, 240);
+      });
+    });
+  }
   /* 标点条 → 用户标点积木（来源唯一，不计缺口、不显示按钮） */
   function ensureUserPunc(ch) {
     var it = cur(), bi = -1;
@@ -2956,29 +3162,75 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     it.blocks[bi].count++;
     return bi;
   }
-  function insertPuncAt(bi, idx) {
+  function insertPuncAt(bi, idx, srcRect) {
     var it = cur();
     if (!it.order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
     if (idx < 0 || idx > it.order.length) idx = it.order.length;
     if (idx === 0) idx = 1; /* 句首不放标点 */
+    flipCapture();
     it.order.splice(idx, 0, { id: bi, pick: null, fills: [] });
     puncMarkAt = -1;
     commitOrder(true);
+    flipPlay(srcRect || null, { topInsert: idx });
   }
   window.addEventListener('keydown', function (e) {
     if (drag) return;
-    if (e.key === 'Escape') { if (fillSlotPath) setFillSlot(null); if (caretAt > -1) setCaret(-1); return; }
-    if (caretAt < 0 || !PUNCT.rule[e.key]) return; /* 键盘 ,.;:?!() 直接落光标处 */
     var tg = e.target && e.target.tagName;
-    if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    if (tg === 'INPUT' || tg === 'TEXTAREA') return; /* 输入框内不接管按键 */
+    if (e.key === 'Escape') {
+      if (fillSlotPath) setFillSlot(null);
+      if (caretAt > -1) setCaret(-1);
+      if (caretEl) caretEl.classList.remove('on');
+      return;
+    }
+    /* 撤销 / 重做：Ctrl/Cmd+Z（Shift+Z 或 Y 为重做） */
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'z' || e.key === 'Z' || e.key === 'y')) {
+      e.preventDefault();
+      undoRedo(e.key === 'y' || e.shiftKey ? 1 : -1);
+      return;
+    }
+    var it = cur();
+    /* 光标移动：← → 逐缝 · Home/End 首尾 · Tab 下一空位 */
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End' || e.key === 'Tab') {
+      if (!it || !it.order.length) return;
+      e.preventDefault();
+      caretDim(false);
+      if (e.key === 'Tab') { jumpNextSlot(); return; }
+      var n = it.order.length;
+      if (e.key === 'Home') setCaret(0);
+      else if (e.key === 'End') setCaret(n);
+      else if (e.key === 'ArrowLeft') setCaret(caretAt < 0 ? 0 : Math.max(0, caretAt - 1));
+      else setCaret(caretAt < 0 ? n : Math.min(n, caretAt + 1));
+      return;
+    }
+    /* 删除：Backspace 光标左块 / Delete 右块，积木回素材库并恢复计数 */
+    if ((e.key === 'Backspace' || e.key === 'Delete') && (caretAt > -1 || fillSlotPath)) {
+      e.preventDefault();
+      if (fillSlotPath) {
+        var sl = resolveSlot(fillSlotPath);
+        if (sl && sl.length) { sl.splice(sl.length - 1, 1); commitOrder(false); }
+        positionCaret();
+        return;
+      }
+      if (e.key === 'Backspace' && caretAt > 0) {
+        it.order.splice(caretAt - 1, 1);
+        setCaret(caretAt - 1);
+        commitOrder(false);
+      } else if (e.key === 'Delete' && caretAt < it.order.length) {
+        it.order.splice(caretAt, 1);
+        commitOrder(false);
+      }
+      return;
+    }
+    if (caretAt < 0 || !PUNCT.rule[e.key]) return; /* 键盘 ,.;:?!() 直接落光标处 */
     insertPuncAt(ensureUserPunc(e.key), caretAt);
     setCaret(caretAt + 1); /* 插入后光标右移，可连续输入 */
     e.preventDefault();
   });
-  document.addEventListener('click', function (e) { /* 点空白处取消当前空位/标点光标 */
-    if (caretAt > -1 && !(e.target.closest && (e.target.closest('.gap') || e.target.closest('#asmStrip') || e.target.closest('.punct-bar')))) setCaret(-1);
-    if (!fillSlotPath || drag) return;
-    if (e.target.closest && (e.target.closest('.asm-slot') || e.target.closest('.block'))) return;
+  document.addEventListener('click', function (e) { /* 点组装栏与素材库以外：光标变淡保留位置；空位选中取消 */
+    var inside = e.target.closest && (e.target.closest('#asmStrip') || e.target.closest('#zones'));
+    if (caretAt > -1) caretDim(!inside);
+    if (!fillSlotPath || drag || inside) return;
     setFillSlot(null);
   });
 
@@ -3060,6 +3312,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     if (d.snap) d.snap.el.classList.remove('dnd-snap', 'dnd-deep', 'dnd-remove');
     if (d.timer) { clearTimeout(d.timer); d.timer = null; }
     d.snap = null;
+    positionCaret(); /* 落点光标复位到真实状态 */
   }
   function setSnap(t) {
     var d = drag;
@@ -3069,6 +3322,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       d.ph = makePlaceholder('tail');
       asmStrip.appendChild(d.ph);
       d.ghost.classList.remove('hide');
+      caretShowAt(d.ph, false); /* 落点指示 = 同一光标 */
       return;
     }
     if (t.kind === 'slot') {
@@ -3085,17 +3339,20 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       if (ki < kids.length) t.el.insertBefore(d.ph, kids[ki]); else t.el.appendChild(d.ph);
       d.slotIdx = ki;
       d.ghost.classList.add('hide');
+      caretShowAt(d.ph, false); /* 落点指示 = 同一光标 */
       d.timer = setTimeout(function () { /* 悬停展开子空位，便于再嵌一层 */
         if (drag && drag.snap === t) { t.el.classList.add('dnd-deep'); }
       }, DND.HOVER_MS);
     } else if (t.kind === 'zone') { /* 拖回素材库 = 取出（仅条内积木生效） */
       t.el.classList.add('dnd-remove');
       d.ghost.classList.remove('hide');
+      positionCaret(); /* 取出操作无落点：光标回到真实状态 */
     } else { /* 顶层插入：按当前位置的几何序 */
       d.ph = makePlaceholder('');
       var ref = topLevelChips()[stripIndexAt(d.x)];
       if (ref) asmStrip.insertBefore(d.ph, ref); else asmStrip.appendChild(d.ph);
       d.ghost.classList.add('hide');
+      caretShowAt(d.ph, false); /* 落点指示 = 同一光标 */
     }
     refreshRects(); /* 占位改变了布局，刷新缓存矩形 */
   }
@@ -3241,6 +3498,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
           }
           commitOrder(false);
         }
+        setFillSlot(snap.el); /* 拖放后光标留在该空位，可继续点入 */
         return;
       }
     }
@@ -3255,6 +3513,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     if (d.source === 'zone') {
       it.order.splice(idx, 0, ensureFills({ id: d.bi, pick: null, fills: [] }));
       commitOrder(true);
+      setCaret(idx + 1); /* 拖放后光标跟在新块右侧 */
     } else {
       var loc = resolveEntry(d.path);
       if (!loc || !loc.list[loc.idx]) { commitOrder(false); return; }
@@ -3264,6 +3523,7 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
       if (fromTop > -1 && idx > fromTop) idx--; /* 原位置在插入点之前：索引回退一格 */
       it.order.splice(idx, 0, ent2);
       commitOrder(false);
+      setCaret(idx + 1); /* 拖放后光标跟在新块右侧 */
     }
   }
   function onDragCancel() {
@@ -3299,6 +3559,9 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     if (!b || b.classList.contains('used')) return;
     armDrag(e, { source: 'zone', bi: +b.dataset.bi, el: b });
   });
+  zonesEl.addEventListener('mousedown', function (e) { /* mousedown 阶段阻止焦点转移：点素材库不抢走组装栏光标 */
+    if (e.target.closest && (e.target.closest('.block') || e.target.closest('.pb-sym'))) e.preventDefault();
+  });
   asmStrip.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     var c = e.target.closest('.tchip');
@@ -3319,32 +3582,32 @@ html[data-glass~="p4"][data-theme="dark"] .zone {
     var pb = e.target.closest('.pb-sym'); /* 点符号 = 在光标处（无则句尾）插入用户标点 */
     if (pb) {
       if (!cur().order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
-      insertPuncAt(ensureUserPunc(pb.dataset.ch), caretAt > -1 ? caretAt : cur().order.length);
+      var pAt = caretAt > -1 ? caretAt : cur().order.length;
+      insertPuncAt(ensureUserPunc(pb.dataset.ch), pAt, pb.getBoundingClientRect());
+      if (caretAt > -1) setCaret(caretAt + 1); /* 标点也落在光标处，之后右移 */
       return;
     }
     var b = e.target.closest('.block');
     if (!b) return;
-    var it = cur();
-    var ent = ensureFills({ id: +b.dataset.bi, pick: null, fills: [] });
-    /* 有当前空位（点选填充）：直接填入，并按左到右顺序跳到下一个空位 */
-    if (fillSlotPath) {
-      var list = resolveSlot(fillSlotPath);
-      if (list) {
-        var prevPath = fillSlotPath;
-        list.push(ent);
-        commitOrder(true);
-        advanceFillSlot(prevPath);
-        return;
-      }
-    }
-    it.order.push(ent);
-    commitOrder(true);
+    /* 点击积木 = 插入光标处（空位内光标优先，未设过光标走默认位） */
+    placeBlockAt(+b.dataset.bi, b.getBoundingClientRect());
   });
 
   asmStrip.addEventListener('click', function (e) {
-    /* 点 gap = 设为标点插入光标（再点一次取消） */
+    /* 点组装栏空白：光标吸附到最近的缝隙（按视觉位置，而非数据顺序） */
+    if (!e.target.closest('.gap') && !e.target.closest('.tchip') && !e.target.closest('.asm-slot')) {
+      var gs = asmStrip.querySelectorAll('.gap');
+      var best = null, bd = Infinity;
+      Array.prototype.forEach.call(gs, function (g) {
+        var d = distToRect(e.clientX, e.clientY, g.getBoundingClientRect());
+        if (d < bd) { bd = d; best = g; }
+      });
+      if (best) { caretDim(false); setCaret(+best.dataset.i); }
+      return;
+    }
+    /* 点 gap = 设为插入光标（再点一次取消） */
     var gp = e.target.closest('.gap');
-    if (gp) { setCaret(+gp.dataset.i === caretAt ? -1 : +gp.dataset.i); return; }
+    if (gp) { caretDim(false); setCaret(+gp.dataset.i === caretAt ? -1 : +gp.dataset.i); return; }
     /* 点选填充：点空位 = 选为当前空位（再点一次取消） */
     var sl = e.target.closest('.asm-slot');
     if (sl && !sl.classList.contains('inert')) {
