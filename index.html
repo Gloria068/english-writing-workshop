@@ -592,25 +592,14 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 }
 .part-add button:active { transform: scale(.96); filter: brightness(.9); }
 
-/* 系统标点开关：配件栏头右侧小胶囊（通用标点键盘已删，标点只以系统生成的积木出现） */
-.pb-toggle {
-  appearance: none; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .14); color: #DDE3E7;
-  font: inherit; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px;
-  cursor: pointer; white-space: nowrap; flex: none;
-  transition: filter .1s ease, transform .1s ease;
-}
-.pb-toggle:hover { filter: brightness(1.1); }
-.pb-toggle:active { transform: scale(.96); }
-.zone-head .pb-toggle { margin-left: 2px; }
-/* 标点积木：系统生成与用户自加（虚线边区分） */
+/* 标点积木：必需标点固定生成成块（系统），物理键盘插入的为用户块（虚线边区分） */
 .b-pn { color: inherit; font-weight: 700; font-size: 14px; min-width: 10px; text-align: center; }
 .b-pn.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .75); }
 .tchip.pn { padding: 4px 12px; font-size: 15px; font-weight: 700; background: var(--pill-part-bg); color: var(--pill-part-ink); }
 .tchip.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .8); }
 
-/* ---------- 拼装条缝隙：点击热区 20px（视觉占位仍 5px）+ 出错淡标记 ---------- */
+/* ---------- 拼装条缝隙：点击热区 20px（视觉占位仍 5px） ---------- */
 .gap { display: inline-flex; width: 20px; height: 28px; margin: 0 -7.5px; border-radius: 3px; cursor: text; flex: none; position: relative; z-index: 1; }
-.gap.mark { background: var(--err); opacity: .38; box-shadow: 0 0 0 2px var(--err-bg); }
 
 /* ---------- 插入光标：砖红语义色 --caret · 圆头竖线 + 同色光晕 + 呼吸 ---------- */
 #asmStrip { position: relative; }
@@ -1019,7 +1008,7 @@ body.creative .cs-close { display: inline-flex; }
   }) };
 
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify({ v: 4, cur: S.cur, puncSys: S.puncSys !== false, items: S.items })); } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify({ v: 4, cur: S.cur, items: S.items })); } catch (e) {}
   }
   function load() {
     try {
@@ -1027,7 +1016,8 @@ body.creative .cs-close { display: inline-flex; }
       if (!raw) return;
       var j = JSON.parse(raw);
       if (!j || j.v !== 4 || !Array.isArray(j.items) || j.items.length !== FLAT.length) return;
-      S = { cur: j.cur || 0, puncSys: j.puncSys !== false, items: j.items };
+      /* 旧档可能带 puncSys / puncRef / puncMiss 字段：系统标点已固定常开，静默忽略 */
+      S = { cur: j.cur || 0, items: j.items };
     } catch (e) {}
   }
 
@@ -1049,21 +1039,20 @@ body.creative .cs-close { display: inline-flex; }
   var restartBtn = document.getElementById('restartBtn');
   var QTEXT = (document.getElementById('qText').textContent || '').trim();
   /* ================= 标点规则表（渲染/评判都读这里，不写死在代码里） =================
-     before/after: 1=前/后有空格，0=无；tip: 同一处反复出错时的微型提示（只讲这类位置，不给答案） */
+     before/after: 1=前/后有空格，0=无；必需标点固定生成成块，按普通积木参与判卷 */
   var PUNCT = {
-    strip: [',', '.', ';', ':', '?', '!', '—', '(', ')', '“', '”'],
     rule: {
-      ',': { role: 'sep',   before: 0, after: 1, tip: '并列分句之间常需逗号加连词；状语提前时逗号收尾' },
-      '.': { role: 'end',   before: 0, after: 1, tip: '完整句子用句号收尾' },
-      ';': { role: 'sep',   before: 0, after: 1, tip: '分号连接两个关系紧密的独立分句' },
-      ':': { role: 'sep',   before: 0, after: 1, tip: '冒号引出解释、列举或说明' },
-      '?': { role: 'end',   before: 0, after: 1, tip: '疑问句句末用问号' },
-      '!': { role: 'end',   before: 0, after: 1, tip: '感叹语气句末用叹号（学术写作少用）' },
-      '—': { role: 'dash',  before: 1, after: 1, tip: '破折号两侧留空格，用于补充说明' },
-      '(': { role: 'open',  before: 1, after: 0, tip: '括号插入语：开括号前有空格、后无' },
-      ')': { role: 'close', before: 0, after: 1, tip: '括号插入语：闭括号前无空格、后有' },
-      '“': { role: 'open',  before: 1, after: 0, tip: '引号前有空格、后无' },
-      '”': { role: 'close', before: 0, after: 1, tip: '引号前无空格、后有' }
+      ',': { role: 'sep',   before: 0, after: 1 },
+      '.': { role: 'end',   before: 0, after: 1 },
+      ';': { role: 'sep',   before: 0, after: 1 },
+      ':': { role: 'sep',   before: 0, after: 1 },
+      '?': { role: 'end',   before: 0, after: 1 },
+      '!': { role: 'end',   before: 0, after: 1 },
+      '—': { role: 'dash',  before: 1, after: 1 },
+      '(': { role: 'open',  before: 1, after: 0 },
+      ')': { role: 'close', before: 0, after: 1 },
+      '“': { role: 'open',  before: 1, after: 0 },
+      '”': { role: 'close', before: 0, after: 1 }
     }
   };
 
@@ -1073,7 +1062,7 @@ body.creative .cs-close { display: inline-flex; }
     { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
     { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
     { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
-    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true, punct: true }
+    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true }
   ];
   var zonesEl = document.getElementById('zones');
   var zHtml = ZONES.map(function (z) {
@@ -1083,7 +1072,6 @@ body.creative .cs-close { display: inline-flex; }
       '<span class="zone-title">' + z.name + '<span class="en">' + z.en + '</span></span>' +
       '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
       '<span class="zone-hint">' + z.hint + '</span>' +
-      (z.punct ? '<button type="button" class="pb-toggle" id="puncToggle" title="系统是否自动生成必需标点积木"></button>' : '') +
       '</div>' +
       (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="缺什么词？输入后回车，生成配件块" maxlength="40" spellcheck="false" aria-label="自建配件词"><button type="button" id="partAdd" title="生成配件块">＋</button></div>' : '') +
       '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
@@ -1292,8 +1280,6 @@ body.creative .cs-close { display: inline-flex; }
       /* 配件栏带自建输入：句子进入拼装阶段就显示（即使暂无配件块） */
       if (z.hideEmpty) ZONE_DIV[z.key].style.display = (anyForm || (z.input && it.blocks.length)) ? '' : 'none';
     });
-    var pt = document.getElementById('puncToggle');
-    if (pt) pt.textContent = '系统标点：' + (S.puncSys !== false ? '开' : '关');
   }
 
   /* ---------- 拼装区：树状渲染（骨架空位可嵌套） ---------- */
@@ -2435,26 +2421,13 @@ body.creative .cs-close { display: inline-flex; }
     });
     return flat;
   }
-  /* 答案文本 → 标点参照（评判基准）：before=前一词，after=后一词 */
-  function puncRefFromText(s) {
-    var toks = punctToks(s), ref = [];
-    toks.forEach(function (tk, i) {
-      if (!PUNCT.rule[tk]) return;
-      var b = null, a = null;
-      for (var q = i - 1; q >= 0; q--) { if (!PUNCT.rule[toks[q]]) { b = toks[q]; break; } }
-      for (var q2 = i + 1; q2 < toks.length; q2++) { if (!PUNCT.rule[toks[q2]]) { a = toks[q2]; break; } }
-      var bw = wordsOf(b || ''), aw = wordsOf(a || '');
-      ref.push({ ch: tk, before: bw.length ? bw[bw.length - 1] : '', after: aw.length ? aw[0] : '', opt: false });
-    });
-    return ref;
-  }
-  /* 从树中移除标点节点（可选标点总是移除；系统生成关闭时全部移除），返回移除清单 */
-  function stripPuncNodes(tree, keepRequired) {
+  /* 从树中移除可选标点节点（必需标点固定保留成块，按普通积木参与判卷），返回移除清单 */
+  function stripPuncNodes(tree) {
     var removed = [];
     (function walk(lst) {
       for (var i = 0; i < lst.length;) {
         var n = lst[i];
-        if (n && n.t === 'punc' && (!keepRequired || n.opt)) { removed.push(n); lst.splice(i, 1); continue; }
+        if (n && n.t === 'punc' && n.opt) { removed.push(n); lst.splice(i, 1); continue; }
         if (n && n.or) n.or.forEach(function (o) { if (o.t === 'skel') walk(o.fills); });
         else if (n && n.t === 'skel') walk(n.fills);
         i++;
@@ -2746,22 +2719,39 @@ body.creative .cs-close { display: inline-flex; }
     return ws.map(function (w) { return { t: 'part', en: w }; });
   }
 
+  /* [方案B] 词树（全 {t,en} 扁平节点）按参考句把句级标点补成必需标点块：
+     本地词典/句库/机械切分路径只产词块，必需标点在这里固定生成，与 AI 路径的
+     模型标点节点同构；含骨架/or/标点的树（AI 路径，verifyText 已逐字校验）原样返回 */
+  function withPuncNodes(tree, sentence) {
+    var lst = tree || [], i;
+    for (i = 0; i < lst.length; i++) {
+      var n = lst[i];
+      if (!n || !n.en || n.or || n.t === 'punc') return lst;
+    }
+    var toks = punctToks(String(sentence));
+    var out = [], wi = 0, cover = 0;
+    toks.forEach(function (tk) {
+      if (PUNCT.rule[tk]) { out.push({ t: 'punc', ch: tk, role: (PUNCT.rule[tk] || {}).role || '', opt: false, src: 'sys' }); return; }
+      var need = wordsOf(tk).length;
+      while (need > 0 && wi < lst.length) {
+        if (cover === 0) { cover = Math.max(1, wordsOf(lst[wi].en).length); out.push(lst[wi]); }
+        var step = Math.min(need, cover);
+        need -= step; cover -= step;
+        if (cover === 0) wi++;
+      }
+    });
+    while (wi < lst.length) out.push(lst[wi++]); /* 词块多出句词（理论不至）：尾部保底不丢块 */
+    return out;
+  }
+
   /* 两段式生成：① 译句（答案锚定，模型拆分无权改写）② 对给定句子拆分。
      每段失败都明确重试，不再静默回退词典词表 */
   function buildBlocks(retryNote, tries, anchor, clauses) {
     var it = cur(), at = S.cur, zh = it.zh;
     tries = tries || 0;
     var finalize = function (tree, answer) {
-      /* 标点参照以答案为准；树上标 opt 的位置在参照里标记为可容忍 */
-      var refP = puncRefFromText(answer);
-      puncScan(tree, null).forEach(function (f) {
-        if (!f.p || !f.p.opt) return;
-        refP.forEach(function (rp) {
-          if (!rp.opt && rp.ch === f.p.ch && rp.before === f.p.before && rp.after === f.p.after) rp.opt = true;
-        });
-      });
-      it.puncRef = refP;
-      stripPuncNodes(tree, S.puncSys !== false); /* 可选标点总是剥离；系统生成关闭时全部剥离 */
+      tree = withPuncNodes(tree, answer); /* 必需标点固定生成成块（词树路径） */
+      stripPuncNodes(tree); /* 可选标点剥离；必需标点保留，按普通积木参与判卷 */
       it.blocks = [];
       var seq = ingestTree(tree, it, {});
       it.answer = answer;
@@ -2769,8 +2759,7 @@ body.creative .cs-close { display: inline-flex; }
       it.order = [];
       it.done = false;
       it.altOk = false;
-      it.puncMiss = 0;
-      caretAt = -1; puncMarkAt = -1; fillSlotPath = '';
+      caretAt = -1; fillSlotPath = '';
       resetUndo(); /* 重新生成：快照与光标作废 */
       save();
       setZhHint('✓ 已确认 · 词块已生成', 'ok');
@@ -2933,7 +2922,7 @@ body.creative .cs-close { display: inline-flex; }
     applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
     punctToks: punctToks, joinToks: joinToks, canonText: canonText,
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
-    puncRefFromText: puncRefFromText, stripPuncNodes: stripPuncNodes, ingestTree: ingestTree,
+    stripPuncNodes: stripPuncNodes, withPuncNodes: withPuncNodes, ingestTree: ingestTree,
     ACAD: ACAD, ACAD_BY: ACAD_BY, ACAD_EQ: ACAD_EQ, ACAD_REL_BY: ACAD_REL_BY,
     ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText, bonusBlockTip: bonusBlockTip
   };
@@ -2972,28 +2961,15 @@ body.creative .cs-close { display: inline-flex; }
     if (!noSnap && lastSnap && snapStr !== lastSnap.order) snapPush({ order: JSON.parse(lastSnap.order), caretAt: lastSnap.caretAt, fill: lastSnap.fill });
     lastSnap = { order: snapStr, caretAt: caretAt, fill: fillSlotPath };
     if (it.done && !it.altOk && !treeEq(it.order, it.seq)) it.done = false;
-    puncMarkAt = -1; /* 结构已变，旧标记作废（重判会再标） */
     save();
     renderStrip();
     renderZones();
     renderParas();
     if (!it.done) {
       var left = nodeCount(it.seq) - nodeCount(it.order);
-      if (S.puncSys === false) left += puncInSeq(it); /* 系统标点关闭：缺口只数词块 */
       setAsmHint(left > 0 ? '剩余 ' + left + ' 块 · 可随时点「确认」' : '全部放入 · 自动检查中…');
-      if (left <= 0 && it.order.length && !asmGo.hidden && !asmGo.disabled) asmGo.click(); /* 词块（含系统标点）全放入：自动评判 */
+      if (left <= 0 && it.order.length && !asmGo.hidden && !asmGo.disabled) asmGo.click(); /* 词块（含标点积木）全放入：自动评判 */
     }
-  }
-  /* 标准树里的标点块数（系统标点关闭时从缺口里扣除） */
-  function puncInSeq(it) {
-    var n = 0;
-    (function walk(l) {
-      (l || []).forEach(function (e) {
-        if ((it.blocks[e.id] || {}).t === 'punc') n++;
-        (e.fills || []).forEach(walk);
-      });
-    })(it.seq);
-    return n;
   }
 
   /* 拼装树展开为文本（供 AI 提示参考） */
@@ -3071,53 +3047,11 @@ body.creative .cs-close { display: inline-flex; }
       .catch(function () { /* 静默：无点评，答案条照常 */ });
   }
 
-  /* 标点闸门：词块过了才查标点。按 字符+前后词 贪心匹配参照表；
-     缺（必需未放）/多（放了不该放的）都拦下，可选项双向容忍；返回 true = 已拦下 */
-  function puncGate() {
-    var it = cur();
-    if (!it.puncRef) return false; /* 本句未登记标点参照（旧数据）：跳过 */
-    var flat = puncScan(it.order, function (id) { return it.blocks[id]; });
-    var user = flat.filter(function (f) { return f.p; });
-    var ref = it.puncRef;
-    if (!ref.length && !user.length) return false;
-    var refHit = ref.map(function () { return false; }), uHit = user.map(function () { return false; });
-    ref.forEach(function (rp, ri) {
-      for (var ui = 0; ui < user.length; ui++) {
-        if (uHit[ui]) continue;
-        if (user[ui].p.ch === rp.ch && user[ui].p.before === rp.before && user[ui].p.after === rp.after) {
-          refHit[ri] = true; uHit[ui] = true; break;
-        }
-      }
-    });
-    var miss = null, missAt = 0, extra = null;
-    ref.forEach(function (rp, ri) {
-      if (miss || refHit[ri] || rp.opt) return;
-      miss = rp;
-      var wi = -1;
-      flat.forEach(function (f) { if (f.w && f.w === rp.before && f.top > wi) wi = f.top; });
-      missAt = wi + 1; /* 出错点 = 前一词所在块之后 */
-    });
-    user.forEach(function (f, ui) {
-      if (extra || uHit[ui]) return;
-      extra = f;
-    });
-    if (!miss && !extra) return false;
-    var errCh = miss ? miss.ch : extra.p.ch;
-    var at = miss ? missAt : extra.top;
-    it.puncMiss = (it.puncMiss || 0) + 1;
-    puncMarkAt = Math.max(0, Math.min(at, it.order.length));
-    var tip = PUNCT.rule[errCh];
-    setAsmHint(it.puncMiss > 1 && tip ? tip.tip : '标点有误（拼装条上有淡色标记）', 'err');
-    updateAsmGo();
-    renderStrip();
-    save();
-    return true;
-  }
-
   function judge(justFinished) {
     var it = cur();
     revealAnswer(); /* 每次提交都亮参考答案（先于评判结果），对错另行落在提示行 */
-    if (treeEq(it.order, it.seq)) { if (!puncGate()) passSentence(justFinished); return; }
+    /* [方案B] 标点积木按普通积木参与判卷：结构树一致即通过（必需标点在树内，缺/错即 treeEq 不过） */
+    if (treeEq(it.order, it.seq)) { passSentence(justFinished); return; }
     /* 词库级辨析优先：用户词与答案词命中易混/程度差/反义 → 一句话辨析（不判对错、不泄答案） */
     var lh = lexHint();
     if (lh && !leaky(lh)) { setAsmHint(lh, 'err'); updateAsmGo(); return; }
@@ -3164,7 +3098,7 @@ body.creative .cs-close { display: inline-flex; }
       .then(function (out) {
         if (S.cur !== at) return;
         var j = parseJSON(out);
-        if (j && j.ok) { it.altOk = true; if (!puncGate()) passSentence(justFinished, 'equiv'); return; }
+        if (j && j.ok) { it.altOk = true; passSentence(justFinished, 'equiv'); return; }
         var msg = j && j.issue ? String(j.issue).slice(0, 40) : '';
         if (msg && !leaky(msg)) { setAsmHint(msg, 'err'); updateAsmGo(); return; }
         structHints();
@@ -3250,7 +3184,7 @@ body.creative .cs-close { display: inline-flex; }
     S.cur = i;
     partInput.value = '';
     fillSlotPath = '';
-    caretAt = -1; puncMarkAt = -1;
+    caretAt = -1;
     ansNextPending = false; /* 离开停等态：重访已完成句只看答案，不出「下一句」 */
     resetUndo(); /* 换句：快照作废 */
     save();
@@ -3317,7 +3251,7 @@ body.creative .cs-close { display: inline-flex; }
     it.done = false;
     it.altOk = false;
     ansNextPending = false; /* 重拼：停等按钮作废；答案条保留，对照着拼也算练习 */
-    caretAt = -1; puncMarkAt = -1;
+    caretAt = -1;
     resetUndo(); /* 清空拼装：快照作废 */
     save();
     renderStrip();
@@ -3469,7 +3403,6 @@ body.creative .cs-close { display: inline-flex; }
 
   /* ---- 统一插入光标：专属品红 #wwCaret（顶层缝隙 / 空位内 / 拖拽落点 共用） ---- */
   var caretAt = -1;    // 当前插入点（顶层 gap 下标，-1 无）
-  var puncMarkAt = -1; // 标点出错位置的淡标记
   var caretEl = document.createElement('div');
   caretEl.id = 'wwCaret';
   var caretIdleT = null;
@@ -3514,8 +3447,7 @@ body.creative .cs-close { display: inline-flex; }
   }
   function markGap() {
     Array.prototype.forEach.call(asmStrip.querySelectorAll('.gap'), function (g) {
-      var i = +g.dataset.i;
-      g.className = 'gap' + (i === puncMarkAt ? ' mark' : '');
+      g.className = 'gap';
     });
   }
   function setCaret(i) {
@@ -3634,7 +3566,6 @@ body.creative .cs-close { display: inline-flex; }
     if (idx === 0) idx = 1; /* 句首不放标点 */
     flipCapture();
     it.order.splice(idx, 0, { id: bi, pick: null, fills: [] });
-    puncMarkAt = -1;
     commitOrder(true);
     flipPlay(srcRect || null, { topInsert: idx });
   }
@@ -4025,15 +3956,6 @@ body.creative .cs-close { display: inline-flex; }
   });
 
   zonesEl.addEventListener('click', function (e) {
-    var tg = e.target.closest('.pb-toggle'); /* 系统标点开关：即时生效并重渲染 */
-    if (tg) {
-      S.puncSys = !(S.puncSys !== false);
-      save();
-      renderZones();
-      commitOrder(false);
-      setAsmHint(S.puncSys !== false ? '系统标点：开（必需标点自动生成并计入缺口）' : '系统标点：关（全部标点块移除，判卷从严）', '');
-      return;
-    }
     var b = e.target.closest('.block');
     if (!b) return;
     /* 点击积木 = 插入光标处（空位内光标优先，未设过光标走默认位） */
