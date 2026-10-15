@@ -406,6 +406,24 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .asm-reset { position: absolute; top: 6px; right: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: none; cursor: pointer; padding: 1px 2px; }
 .asm-reset:hover { color: var(--err); }
 
+/* ---------- 搭积木专属：参考答案条（提交即亮 · 拼错对照 · 拼对停等） ---------- */
+.ans-box { border: 1px solid var(--sub-brd); border-radius: 14px; background: var(--sub-bg); padding: 12px 16px; margin-top: 14px; }
+.ans-head { display: flex; align-items: baseline; gap: 10px; }
+.ans-tag { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ok-ink); white-space: nowrap; }
+.ans-role { font-size: 12px; font-weight: 400; color: var(--ink-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ans-en { margin: 7px 0 0; font-size: 15px; line-height: 1.65; font-weight: 600; color: var(--ink); text-align: left; }
+.ans-zh { margin: 5px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-2); text-align: justify; text-align-last: left; }
+.ans-note { margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed var(--divider); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.ans-note::before { content: '✎ 语法点评 · '; font-size: 12px; font-weight: 600; color: var(--accent); }
+.ans-foot { margin-top: 10px; display: flex; justify-content: flex-end; }
+.ans-next {
+  appearance: none; border: none; background: var(--accent); color: var(--accent-ink);
+  font-size: 13px; font-weight: 600; padding: 7px 20px; border-radius: 10px;
+  cursor: pointer; white-space: nowrap;
+  transition: transform .1s ease, filter .1s ease;
+}
+.ans-next:active { transform: scale(.97); filter: brightness(.9); }
+
 /* ---------- 右：素材区（前三栏滚动 + 配件固定底部） ---------- */
 .lex { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 .lex-scroll {
@@ -688,6 +706,8 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
             <button type="button" class="asm-go" id="asmGo" hidden>确认</button>
           </div>
         </div>
+        <!-- 搭积木专属：提交后亮出的参考答案条（未提交前隐藏） -->
+        <div class="ans-box" id="ansBox" hidden></div>
       </div>
 
     </section>
@@ -823,6 +843,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   var asmReset = document.getElementById('asmReset');
   var asmGo = document.getElementById('asmGo');
   var asmBox = document.getElementById('asmBox');
+  var ansBox = document.getElementById('ansBox');
   var restartBtn = document.getElementById('restartBtn');
   var QTEXT = (document.getElementById('qText').textContent || '').trim();
   /* ================= 标点规则表（渲染/评判都读这里，不写死在代码里） =================
@@ -1234,6 +1255,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
     renderWorkbench();
     renderZones();
     renderStrip();
+    renderAnswer();
   }
 
   /* ================= 建议与校验 ================= */
@@ -2656,6 +2678,8 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
     mechanicalSplit: mechanicalSplit, localBlocks: localBlocks,
     placeBlockAt: placeBlockAt, setCaret: setCaret, undoRedo: undoRedo, resetUndo: resetUndo, cur: cur,
     caretState: function () { return { caretAt: caretAt, fill: fillSlotPath, undo: undoStk.length, redo: redoStk.length }; },
+    revealAnswer: revealAnswer, renderAnswer: renderAnswer, askGramNote: askGramNote,
+    ansPending: function () { return ansNextPending; }, judge: judge, passSentence: passSentence, gotoSentence: gotoSentence,
     applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
     punctToks: punctToks, joinToks: joinToks, canonText: canonText,
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
@@ -2731,7 +2755,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   /* 空位类型 → 提示词（仅供评判，不拦截） */
   var KLABEL = { clause: '从句', noun: '名词短语', verb: '动词短语' };
 
-  /* 判定为通过：结构一致，或意思+语法等效通过；通过即可进入下一句 */
+  /* 判定为通过：结构一致，或意思+语法等效通过；通过后亮参考答案并停等「下一句」 */
   function passSentence(justFinished, via) {
     var it = cur();
     it.done = true;
@@ -2741,14 +2765,60 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
     renderParas();
     setAsmHint(via === 'equiv' ? '✓ 正确 · 意思与语法均通过' : '✓ 正确', 'ok');
     Array.prototype.forEach.call(asmStrip.querySelectorAll('.tchip'), function (c) { c.classList.add('ok'); });
+    revealAnswer();
+    askGramNote(it);
     if (allDone()) {
       renderWorkbench();
       return;
     }
-    var next = S.cur + 1;
-    if (justFinished !== false && next < FLAT.length) {
-      setTimeout(function () { gotoSentence(next); }, 1000);
+    if (justFinished !== false && S.cur + 1 < FLAT.length) {
+      ansNextPending = true; /* 停下展示：读完点「下一句」再走（替代原 1 秒自动跳句） */
+      renderAnswer();
     }
+  }
+
+  /* ================= 参考答案条（搭积木专属） =================
+     每次提交都亮出标准句：拼错对照着重拼（看答案不算完成，仍需拼对），
+     拼对后停等「下一句」；首次拼对异步补一句 AI 语法点评。 */
+  var ansNextPending = false; /* 拼对后的停等态：会话内瞬态，不持久化 */
+  function revealAnswer() {
+    var it = cur();
+    if (!it.ansShown) { it.ansShown = true; save(); }
+    renderAnswer();
+  }
+  function renderAnswer() {
+    var it = cur(), f = FLAT[S.cur];
+    if (!it.ansShown || !it.answer) { ansBox.hidden = true; ansBox.innerHTML = ''; return; }
+    var h = '<div class="ans-head"><span class="ans-tag">参考答案</span>' +
+      '<span class="ans-role">' + esc(f.label) + ' · ' + esc(f.s.role) + '</span></div>' +
+      '<p class="ans-en" lang="en">' + esc(it.answer) + '</p>';
+    if (it.zh) h += '<p class="ans-zh">' + esc(it.zh) + '</p>';
+    if (it.gramNote) h += '<p class="ans-note">' + esc(it.gramNote) + '</p>';
+    if (ansNextPending) h += '<div class="ans-foot"><button type="button" class="ans-next" id="ansNext">下一句 →</button></div>';
+    ansBox.innerHTML = h;
+    ansBox.hidden = false;
+    var nb = document.getElementById('ansNext');
+    if (nb) nb.addEventListener('click', function () {
+      ansNextPending = false;
+      gotoSentence(S.cur + 1);
+    });
+  }
+  /* 首次拼对 → AI 一句语法点评（只讲标准句亮点，≤40字；无 Key / 失败静默，成功后缓存不重复请求） */
+  function askGramNote(it) {
+    if (!MODEL_ON() || !it.answer || it.gramNote) return;
+    var at = S.cur, f = FLAT[at];
+    var msg = '雅思写作句子拼装练习的参考句：«' + it.answer + '»（本句职能：' + f.s.role + '）\n' +
+      '用一句中文点评这个句子的语法或结构亮点（如从句、平行结构、被动、逻辑连接词），40字以内。只输出这句点评，不要任何前缀。';
+    askModel([{ role: 'user', content: msg }], { temperature: 0.4, maxTokens: 300, noThink: true })
+      .then(function (out) {
+        if (S.cur !== at) return;
+        var t = out.trim().split('\n')[0].slice(0, 60);
+        if (!t) return;
+        it.gramNote = t;
+        save();
+        renderAnswer();
+      })
+      .catch(function () { /* 静默：无点评，答案条照常 */ });
   }
 
   /* 标点闸门：词块过了才查标点。按 字符+前后词 贪心匹配参照表；
@@ -2796,6 +2866,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 
   function judge(justFinished) {
     var it = cur();
+    revealAnswer(); /* 每次提交都亮参考答案（先于评判结果），对错另行落在提示行 */
     if (treeEq(it.order, it.seq)) { if (!puncGate()) passSentence(justFinished); return; }
     /* 词库级辨析优先：用户词与答案词命中易混/程度差/反义 → 一句话辨析（不判对错、不泄答案） */
     var lh = lexHint();
@@ -2930,6 +3001,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
     partInput.value = '';
     fillSlotPath = '';
     caretAt = -1; puncMarkAt = -1;
+    ansNextPending = false; /* 离开停等态：重访已完成句只看答案，不出「下一句」 */
     resetUndo(); /* 换句：快照作废 */
     save();
     renderAll();
@@ -2994,12 +3066,14 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
     it.order = [];
     it.done = false;
     it.altOk = false;
+    ansNextPending = false; /* 重拼：停等按钮作废；答案条保留，对照着拼也算练习 */
     caretAt = -1; puncMarkAt = -1;
     resetUndo(); /* 清空拼装：快照作废 */
     save();
     renderStrip();
     renderZones();
     renderParas();
+    renderAnswer();
     setAsmHint('已重置 · 重新拼装');
   });
 
