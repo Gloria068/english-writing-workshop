@@ -622,109 +622,137 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   .schip.cur, .tchip.ok, #wwCaret.on, .tchip.fly-in { animation: none !important; }
 }
 
-/* ================= 创想空间（body.creative 作用域，搭积木模块专属） =================
-   与主界面相互独立：双击主界面句子编辑栏（或拼装区，词块就绪后）进入；
-   界面保持干净素净——隐藏顶栏/观点库/快练/段落，改单栏沉浸布局，玻璃面板美术保留；
-   积木化作清透玻璃泡泡（四类浅基色）；拼装线单行+超宽渐隐平移；中文原句居中静默大字；
-   右上角玻璃珠 × / Esc 随时退出，句子状态原样保留。主界面美术不受任何影响。 */
-body.creative { overflow: hidden; }
+/* ================= 创想空间（副界面 · body.creative 作用域，搭积木模块专属） =================
+   主界面拼搭区空白处双击 / Cmd⏎ 进入；右上角 × / Esc 退出，进出约 200ms 淡入淡出。
+   上下各半：上半白底只放正在拼搭的句子（水平垂直居中·单行·超宽先等比缩字号再横向平移），
+   下半 #F6F7FA 只放备用积木（骨架紫/话题料青/加分词橘/配件灰四色行，同色同列折行，行序 CS_ROW_ORDER 可配）。
+   光标品红 #FF4FA3 仅光标使用；反馈一行 14px 灰字；界面只有 × 与极简确认；浅色模式。
+   业务逻辑（拖拽/点击/光标/撤销/标点/×N/or/评判）零改动共用同一份状态。 */
+body.creative {
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', system-ui, sans-serif;
+}
 body.creative .topbar, body.creative aside.db,
 body.creative .shop > .q-panel, body.creative .shop > .paras,
-body.creative .stage-top { display: none; }
+body.creative .stage-top, body.creative .zh-box, body.creative .ans-box { display: none; }
+body.creative .app { background: #FFFFFF; animation: csFade .2s ease both; }
+body.cs-return .app { animation: csFade .2s ease both; }
+@keyframes csFade { from { opacity: 0; } }
 body.creative .main {
   grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) minmax(150px, 37%);
-  padding: 3vh 4vw 2vh; gap: 2.5vh;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0; padding: 0; height: 100%;
 }
-/* 进/退场：整体淡入轻落 */
-@keyframes csIn { from { opacity: 0; transform: scale(1.03); } }
-body.creative .app { animation: csIn .5s cubic-bezier(.22, 1, .36, 1) both; }
-body.cs-return .app { animation: csIn .45s cubic-bezier(.22, 1, .36, 1) both; }
 
-/* 中文原句：居中静默大字（玻璃面板内） */
-body.creative .zh-edit {
-  background: none; border: none; min-height: 0; padding: 0;
-  text-align: center; text-align-last: center;
-  font-size: 17px; font-weight: 500; color: var(--ink-2); cursor: default;
+/* ---------- 上半：正在拼搭的句子（白底，居中，无容器） ---------- */
+body.creative .shop {
+  background: #FFFFFF; border: none; box-shadow: none; border-radius: 0; padding: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none; min-height: 0;
 }
-body.creative .zh-hint { text-align: center; font-size: 12px; }
-
-/* 拼装线：单行画布（nowrap + 溢出横向平移），玻璃面板内垂直居中 */
-body.creative .asm-box { margin-top: 3vh; flex: 1; justify-content: center; }
+body.creative .stage { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+body.creative .asm-box {
+  flex: 1; min-height: 0; border: none; background: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+body.creative .asm-reset { display: none; }
 body.creative .asm-strip {
   flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
-  justify-content: safe center; gap: 10px;
-  padding: 34px 48px; min-height: 116px;
-  scrollbar-width: none; -ms-overflow-style: none;
+  justify-content: safe center; gap: 12px; max-width: 100%;
+  padding: 20px 48px; font-size: 24px; /* 基准字号：JS 等比缩到最小 16px */
+  scrollbar-width: none; -ms-overflow-style: none; touch-action: manipulation;
 }
 body.creative .asm-strip::-webkit-scrollbar { display: none; }
 body.creative .asm-strip.cs-overflow {
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
 }
-body.creative .asm-empty { margin: auto; }
-body.creative .asm-foot { justify-content: center; margin-top: 2vh; gap: 16px; }
-body.creative .asm-hint { flex: none; text-align: center; }
-body.creative .asm-go { padding: 9px 26px; }
-body.creative .asm-reset { top: -4px; right: 2px; }
-body.creative .ans-box { max-width: 780px; margin: 2vh auto 0; }
-
-/* 玻璃泡泡：拼装线词块（15px / 500 / 9×15，规格内） */
+body.creative .asm-empty { margin: auto; color: #7A8194; font-size: 15px; }
+/* 句内积木：24px 粗体胶囊，四类配色（em 跟随整行缩放） */
 body.creative .tchip {
-  font-size: 15px; font-weight: 500; line-height: 1.4;
-  padding: 9px 15px; border-radius: 999px;
-  border: 1px solid var(--bub-rim);
-  color: var(--bub-topic-ink); background: var(--bub-spec-layer), var(--bub-topic);
-  -webkit-backdrop-filter: blur(9px) saturate(150%); backdrop-filter: blur(9px) saturate(150%);
-  box-shadow: 0 10px 26px rgba(31, 56, 66, .13), inset 0 1px 1px rgba(255, 255, 255, .38), inset 0 -10px 16px rgba(255, 255, 255, .09);
-  transition: transform .16s ease, filter .16s ease;
+  font-size: 1em; font-weight: 700; line-height: 1.3;
+  padding: 8px 22px; border-radius: 999px; border: 1px solid #8FD3C6;
+  background: #DCF4EF; color: #0D5247; cursor: default;
 }
-body.creative .tchip:hover { transform: translateY(-2px); filter: brightness(1.05); }
-body.creative .tchip.tc-o { color: var(--bub-skel-ink); background: var(--bub-spec-layer), var(--bub-skel); }
-body.creative .tchip.tc-x { color: var(--bub-bonus-ink); background: var(--bub-spec-layer), var(--bub-bonus); }
-body.creative .tchip.tc-c, body.creative .tchip.pn { color: var(--bub-part-ink); background: var(--bub-spec-layer), var(--bub-part); }
-/* 骨架空位虚线：浅泡泡上改深色虚线 */
-body.creative .asm-slot { border-color: rgba(31, 56, 66, .3); }
-body.creative .asm-slot.fill-cur { border-color: var(--accent); background: rgba(90, 125, 138, .1); }
-body.creative.dnd-active .asm-slot:not(.inert) { border-color: rgba(31, 56, 66, .5); }
+body.creative .tchip.tc-o { background: #ECE9FF; color: #3D3499; border-color: #B9B0F5; }
+body.creative .tchip.tc-x { background: #FDECCB; color: #6B4308; border-color: #F0C36E; }
+body.creative .tchip.tc-c, body.creative .tchip.pn { background: #ECEEF2; color: #444B5C; border-color: #C4C9D4; }
+body.creative .tchip.ok { border-style: solid; }
+/* 骨架固定文字：紫 */
+body.creative .sk-txt { color: #5D4FD0; font-weight: 700; }
+/* 空位：2px 虚线胶囊 #8FD3C6，最小 150×48（em 缩放） */
+body.creative .asm-slot {
+  min-width: 6.25em; min-height: 2em;
+  border: 2px dashed #8FD3C6; border-radius: 999px; background: none;
+}
+body.creative .asm-slot.fill-cur { border-color: #5FBFA9; background: rgba(143, 211, 198, .18); }
+body.creative.dnd-active .asm-slot:not(.inert) { border-color: #5FBFA9; }
+/* 光标：品红竖线，上下圆头 + 光晕 + 呼吸（此色全界面仅光标使用；em 跟随缩放） */
+body.creative #wwCaret {
+  width: 4px; min-width: 2px; height: 2.33em; border-radius: 999px;
+  background: #FF4FA3; box-shadow: 0 0 10px rgba(255, 79, 163, .55);
+}
+body.creative #wwCaret::before, body.creative #wwCaret::after {
+  content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px; min-width: 4px; border-radius: 50%;
+  background: #FF4FA3; box-shadow: 0 0 8px rgba(255, 79, 163, .5);
+}
+body.creative #wwCaret::before { top: -4px; }
+body.creative #wwCaret::after { bottom: -4px; }
+/* 反馈行：句子正下方一行小字 + 极简确认按钮 */
+body.creative .asm-foot { justify-content: center; align-items: center; gap: 14px; margin-top: 2.5vh; }
+body.creative .asm-hint { flex: none; text-align: center; font-size: 14px; color: #7A8194; background: none; border: none; padding: 0; }
+body.creative .asm-go {
+  font-size: 14px; font-weight: 500; padding: 8px 22px; border-radius: 999px;
+  background: #FFFFFF; border: 1px solid #C4C9D4; color: #444B5C; cursor: pointer;
+}
+body.creative .asm-go:hover { border-color: #8FD3C6; color: #0D5247; }
 
-/* 泡泡云：素材区（下半屏，原面板美术内漂浮居中） */
-body.creative .lex .blocks { gap: 18px 14px; justify-content: center; }
-body.creative .lex .zone-part .pg-row { justify-content: center; }
+/* ---------- 下半：备用积木（#F6F7FA，四色行，垂直居中，超高内滚） ---------- */
+body.creative .lex {
+  background: #F6F7FA; border: none; box-shadow: none; border-radius: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none; min-height: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 28px; overflow-y: auto; padding: 3vh clamp(24px, 10vw, 150px);
+}
+body.creative .lex-scroll { display: contents; -webkit-mask-image: none; mask-image: none; overflow: visible; }
+body.creative .zone { background: none; border: none; box-shadow: none; padding: 0; margin: 0; }
+body.creative .zone-head { display: none; }
+body.creative .blocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 16px; min-height: 0; }
+body.creative .zone-part .blocks { flex-direction: row; align-content: center; gap: 14px 16px; }
+body.creative .pg-row { justify-content: center; }
+body.creative .part-add { justify-content: center; opacity: .85; }
+body.creative .punct-bar { justify-content: center; opacity: .85; }
 body.creative .lex .block {
-  font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 999px;
-  border: 1px solid var(--bub-rim);
-  -webkit-backdrop-filter: blur(9px) saturate(150%); backdrop-filter: blur(9px) saturate(150%);
-  box-shadow: 0 10px 22px rgba(31, 56, 66, .12), inset 0 1px 1px rgba(255, 255, 255, .35);
-  animation: csFloat 7s ease-in-out var(--d, 0s) infinite;
+  font-size: 16px; font-weight: 400; padding: 10px 18px; border-radius: 999px;
+  border: 1px solid #8FD3C6; background: #DCF4EF; color: #0D5247; cursor: pointer;
+  animation: none; transition: opacity .15s ease;
 }
-body.creative .lex .block.pblock { color: var(--bub-topic-ink); background: var(--bub-spec-layer), var(--bub-topic); }
-body.creative .lex .block.oblock { color: var(--bub-skel-ink); background: var(--bub-spec-layer), var(--bub-skel); }
-body.creative .lex .block.xblock { color: var(--bub-bonus-ink); background: var(--bub-spec-layer), var(--bub-bonus); }
-body.creative .lex .block.cblock { color: var(--bub-part-ink); background: var(--bub-spec-layer), var(--bub-part); }
-body.creative .lex .blocks .block:nth-child(3n+1) { --d: -2.4s; }
-body.creative .lex .blocks .block:nth-child(3n+2) { --d: -4.7s; }
-body.creative .lex .block:hover { filter: brightness(1.06); }
-body.creative .lex .block.used { opacity: .38; filter: saturate(.55); }
-@keyframes csFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+body.creative .lex .block.oblock { background: #ECE9FF; color: #3D3499; border-color: #B9B0F5; }
+body.creative .lex .block.xblock { background: #FDECCB; color: #6B4308; border-color: #F0C36E; }
+body.creative .lex .block.cblock { background: #ECEEF2; color: #444B5C; border-color: #C4C9D4; }
+/* 用完：45% 透明 + 虚线边框，原位不动 */
+body.creative .lex .block.used { opacity: .45; border-style: dashed; cursor: default; }
+body.creative .lex .block:hover { filter: none; transform: none; }
 
-/* 退出：右上角极简玻璃珠（仅创想空间显示） */
+/* ---------- 退出：右上角极简 ×（界面唯一按钮之一） ---------- */
 .cs-close {
   display: none; position: fixed; top: 20px; right: 24px; z-index: 60;
-  width: 38px; height: 38px; border-radius: 999px;
+  width: 36px; height: 36px; border-radius: 999px;
   align-items: center; justify-content: center;
-  border: 1px solid var(--bub-rim); background: var(--bub-spec-layer), rgba(255, 255, 255, .18);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  color: var(--ink-2); font-size: 17px; font-weight: 500; line-height: 1; cursor: pointer;
-  box-shadow: 0 8px 20px rgba(31, 56, 66, .12), inset 0 1px 1px rgba(255, 255, 255, .4);
-  transition: transform .18s ease, color .18s ease;
+  border: 1px solid #C4C9D4; background: #FFFFFF;
+  color: #444B5C; font-size: 18px; font-weight: 400; line-height: 1; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(31, 42, 64, .08);
+  transition: color .15s ease, border-color .15s ease;
 }
 body.creative .cs-close { display: inline-flex; }
-.cs-close:hover { color: var(--ink); transform: rotate(90deg); }
+.cs-close:hover { color: #0D5247; border-color: #8FD3C6; }
 
 @media (prefers-reduced-motion: reduce) {
-  body.creative .lex .block { animation: none !important; }
   body.creative .app, body.cs-return .app { animation: none !important; }
+  body.creative #wwCaret, body.creative #wwCaret::before, body.creative #wwCaret::after { animation: none !important; }
+}
+@media (pointer: coarse) {
+  body.creative .lex .block, body.creative .tchip { min-height: 44px; }
 }
 
 /* 中文宋体：本机有宋体类字体就走 local，没有才用内嵌子集（仅本页用到的 906 字） */
@@ -1327,7 +1355,7 @@ body.creative .cs-close { display: inline-flex; }
       if (caretEl.parentNode !== asmStrip) asmStrip.appendChild(caretEl);
       positionCaret(true);
     }
-    if (csOn) { csSyncPan(); csFollow(); } /* 创想空间：重渲染后复查溢出并跟随光标 */
+    if (csOn) { csFitLine(); csFollow(); } /* 创想空间：重渲染后先缩字号再跟随光标 */
   }
 
   function setZhHint(text, cls) {
@@ -2658,7 +2686,7 @@ body.creative .cs-close { display: inline-flex; }
       resetUndo(); /* 重新生成：快照与光标作废 */
       save();
       setZhHint('✓ 已确认 · 词块已生成', 'ok');
-      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块 · 双击句子编辑栏进入创想空间');
+      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块 · 双击空白处进入创想空间 (⌘⏎)');
       renderZones();
       renderStrip();
     };
@@ -2809,7 +2837,7 @@ body.creative .cs-close { display: inline-flex; }
     caretState: function () { return { caretAt: caretAt, fill: fillSlotPath, undo: undoStk.length, redo: redoStk.length }; },
     revealAnswer: revealAnswer, renderAnswer: renderAnswer, askGramNote: askGramNote,
     ansPending: function () { return ansNextPending; }, judge: judge, passSentence: passSentence, gotoSentence: gotoSentence,
-    csEnter: csEnter, csExit: csExit, csState: function () { return csOn; }, csSyncPan: csSyncPan,
+    csEnter: csEnter, csExit: csExit, csState: function () { return csOn; }, csSyncPan: csSyncPan, csFitLine: csFitLine,
     applyLexRules: applyLexRules, lexHint: lexHint, lexStrengthGuard: lexStrengthGuard,
     punctToks: punctToks, joinToks: joinToks, canonText: canonText,
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
@@ -3220,42 +3248,63 @@ body.creative .cs-close { display: inline-flex; }
     judge(true);
   });
 
-  /* ================= 创想空间（全屏沉浸拼装，搭积木模块专属） =================
-     双击拼装区进入：只切 body.creative 展示层，词块/光标/撤销/评判等业务状态原样保留。
-     拼装线单行 + 溢出渐隐横向平移；Esc / 右上角 × 退回主布局。 */
+  /* ================= 创想空间（副界面：上下分区沉浸拼装，搭积木模块专属） =================
+     入口：拼搭区空白处双击（落在积木/骨架字/空位/光标上不触发）或 Cmd/Ctrl+Enter；
+     出口：右上角 × 或 Esc。只切 body.creative 展示层，词块/光标/撤销/评判共用同一份状态。 */
   var csOn = false;
   var csClose = document.getElementById('csClose');
+  var CS_ROW_ORDER = ['skel', 'topic', 'bonus', 'part']; /* 下半区四行顺序，可配置 */
   function csSyncPan() { /* 单行真正溢出时才挂左右渐隐遮罩 */
     asmStrip.classList.toggle('cs-overflow', !!(csOn && asmStrip.scrollWidth > asmStrip.clientWidth + 4));
+  }
+  function csFitLine() { /* 上半区单行放不下：字号 24→16 等比缩小；仍放不下留给横向平移 */
+    if (!csOn) return;
+    asmStrip.style.fontSize = '';
+    var avail = asmStrip.clientWidth, need = asmStrip.scrollWidth;
+    if (need > avail && need > 0) {
+      var size = Math.max(16, Math.floor(24 * avail / need));
+      if (size < 24) asmStrip.style.fontSize = size + 'px';
+    }
+    csSyncPan();
   }
   function csFollow() { /* 视角跟随光标（无光标跟句尾），长句拼装不丢位置 */
     if (!csOn) return;
     var el = (typeof caretEl !== 'undefined' && caretEl && caretEl.parentNode) ? caretEl : asmStrip.lastElementChild;
     if (el && el.scrollIntoView) { try { el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (e) {} }
   }
+  function csRowOrder() { /* 下半区四行按配置排序（仅样式 order，不动 DOM） */
+    CS_ROW_ORDER.forEach(function (k, i) {
+      var el = document.getElementById('zone-' + k);
+      if (el) el.style.order = i;
+    });
+  }
   function csEnter() {
     if (csOn || !cur().blocks.length) return; /* 词块已生成才可进入 */
     csOn = true;
     document.body.classList.add('creative');
     document.body.classList.remove('cs-return');
-    setTimeout(function () { csSyncPan(); csFollow(); }, 60); /* 布局动画后再量溢出 */
+    csRowOrder();
+    setTimeout(function () { csFitLine(); csFollow(); }, 60); /* 布局落定后再量宽缩字号 */
   }
   function csExit() {
     if (!csOn) return;
     csOn = false;
     document.body.classList.remove('creative');
     document.body.classList.add('cs-return'); /* 主布局淡入退场 */
-    setTimeout(function () { document.body.classList.remove('cs-return'); }, 500);
+    asmStrip.style.fontSize = ''; /* 还原主界面字号 */
+    setTimeout(function () { document.body.classList.remove('cs-return'); }, 220);
   }
-  function csTryEnter(e) {
-    if (e.target.closest('button')) return;
+  function csTryEnter(e) { /* 双击空白处进入；落在积木/骨架字/空位/光标/按钮上不触发 */
+    if (e.target.closest('button, .tchip, .sk-txt, .asm-slot, #wwCaret')) return;
     if (cur().blocks.length) { e.preventDefault(); csEnter(); }
   }
-  asmBox.addEventListener('dblclick', csTryEnter);   /* 双击拼装区进入 */
-  zhBox.addEventListener('dblclick', csTryEnter);    /* 双击句子编辑栏进入（主入口） */
+  asmBox.addEventListener('dblclick', csTryEnter);
   if (csClose) csClose.addEventListener('click', csExit);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && csOn) csExit(); });
-  window.addEventListener('resize', function () { csSyncPan(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && csOn) { csExit(); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !csOn && cur().blocks.length) { e.preventDefault(); csEnter(); }
+  });
+  window.addEventListener('resize', function () { csFitLine(); csSyncPan(); });
   asmStrip.addEventListener('scroll', function () {
     if (!csOn) return;
     csSyncPan();
