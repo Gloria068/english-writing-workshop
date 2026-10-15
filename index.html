@@ -1599,6 +1599,7 @@ body.creative .cs-close { display: inline-flex; }
       { zh: ['水果和蔬菜', '蔬果'], en: 'fruits and vegetables', t: 'topic' },
       { zh: ['健康食品'], en: 'healthy food', t: 'topic' },
       { zh: ['垃圾食品'], en: 'junk food', t: 'topic' },
+      { zh: ['不健康食品'], en: 'unhealthy food', t: 'topic' },
       { zh: ['含糖饮料'], en: 'sugary drinks', t: 'topic' },
       { zh: ['征税', '收税'], en: 'a tax on', t: 'topic' },
       { zh: ['价格'], en: 'the price of', t: 'topic' },
@@ -1626,6 +1627,58 @@ body.creative .cs-close { display: inline-flex; }
       { zh: ['有效'], en: 'an effective way to', t: 'bonus' },
       { zh: ['我认为', '我觉得'], en: 'I believe that', t: 'bonus' }
     ].concat(bonusTriggerDict()); /* [v2 模块接口] 加分词·语境词块的中文触发词 */
+    /* ================= [全句覆盖] 无 Key 本地全句模式 =================
+       现象：本地词典模式只输出「命中词库的块」，未收录词/功能词全部丢弃，
+       积木池残缺拼不成句。修复：zh 精确命中句库（内置默认建议 + 观点库双语卡）
+       → 按句库英文整句切分：词库短语贪心最长匹配归栏，其余逐词兜底进配件，
+       先归栏后兜底、零丢弃（Σ块词 == 句子全部词）。 */
+    function normZh(s) { return String(s || '').replace(/\s+/g, '').replace(/[。．！？!?.,，;；:：]+$/, ''); }
+    var LOCAL_BANK = [
+      /* localSuggest 无 Key 默认建议（pi0 / pi3）的配套全句——英文尽量复用 D 短语 */
+      { zh: '政府应该补贴蔬果还是对不健康食品征税，人们看法不一，我支持后者。', en: 'The government should subsidise fruits and vegetables or place a tax on unhealthy food; while opinions differ, I support the latter.' },
+      { zh: '总的来说，征税比补贴更能引导健康饮食，政府同时应宣传均衡饮食。', en: 'In conclusion, a tax on junk food can guide people towards healthy eating more effectively than subsidies, and the government should also promote a balanced diet.' },
+      /* 内置观点库双语卡（与 #dbList 六张卡同文；运行时再扫 DOM 收用户自加的卡） */
+      { zh: '补贴降低新鲜农产品的价格，让所有人都吃得起均衡饮食。', en: 'Subsidies lower the price of fresh produce, making a balanced diet affordable for everyone.' },
+      { zh: '对低收入家庭而言，价格是健康饮食的最大障碍。', en: 'For low-income families, price is the biggest barrier to healthy eating.' },
+      { zh: '对含糖饮料和垃圾食品征税抬高价格，直接抑制过度消费。', en: 'A tax on sugary drinks and junk food raises their price and directly discourages over-consumption.' },
+      { zh: '英国开征糖税后，饮料厂商显著降低了产品含糖量。', en: 'After the UK introduced its sugar tax, manufacturers cut the sugar content of drinks significantly.' },
+      { zh: '匈牙利的垃圾食品税资助了免费校餐和公共健康项目。', en: "Hungary's junk-food tax funds free school meals and public health programmes." },
+      { zh: '诚然食品税会加重穷人负担，但最终会引导更健康的选择。', en: 'Admittedly, food taxes can burden the poor, but they ultimately guide healthier choices.' }
+    ];
+    function bankEN(want) {
+      var w = normZh(want), en = null;
+      LOCAL_BANK.forEach(function (b) { if (!en && normZh(b.zh) === w) en = b.en; });
+      if (!en) {
+        try { /* 观点库用户自加的双语卡也进句库 */
+          Array.prototype.forEach.call(document.querySelectorAll('#dbList .card'), function (c) {
+            if (en) return;
+            var z = c.querySelector('.zh'), v = c.querySelector('.en');
+            if (z && v && normZh(z.textContent) === w) en = String(v.textContent).trim();
+          });
+        } catch (e) {}
+      }
+      return en;
+    }
+    function fullBlocks(en, dict) {
+      var CHUNK = {};
+      dict.forEach(function (e) { var k = lexNorm(e.en); if (k && !(k in CHUNK)) CHUNK[k] = e.t; });
+      var s = String(en).replace(/\s+/g, ' ').trim();
+      var ws = rawWordsOf(s); /* 保留句中实际形态（大小写/撇号） */
+      var tree = [], i = 0;
+      while (i < ws.length) {
+        var hitT = null, hitL = 0;
+        for (var L = Math.min(5, ws.length - i); L >= 1; L--) { /* 最长优先：短语整块，单词也查词库栏位 */
+          var t = CHUNK[lexNorm(ws.slice(i, i + L).join(' '))];
+          if (t) { hitT = t; hitL = L; break; }
+        }
+        if (hitL) { tree.push({ t: hitT, en: ws.slice(i, i + hitL).join(' ') }); i += hitL; }
+        else { tree.push({ t: 'part', en: ws[i] }); i++; } /* 未收录词不丢弃 → 配件兜底 */
+      }
+      tree = applyLexRules(tree, s); /* 词库词条→bonus、功能词保持 part、固定搭配合并 */
+      return { sentence: s, tree: tree };
+    }
+    var be = bankEN(zh);
+    if (be) return fullBlocks(be, D);
     /* [配件栏逻辑] 命中按中文出现位置成块（不再按词典序）；等长占位替换，位置索引不漂移 */
     var masked = zh, occ = [];
     D.map(function (e, i) {
