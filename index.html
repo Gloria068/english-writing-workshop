@@ -622,10 +622,11 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   .schip.cur, .tchip.ok, #wwCaret.on, .tchip.fly-in { animation: none !important; }
 }
 
-/* ================= 创想空间（全屏沉浸拼装 · body.creative 作用域，搭积木模块专属） =================
-   双击拼装区进入：仅隐藏无关栏位（顶栏/观点库/快练/段落），玻璃容器与面板美术原样保留；
-   全部积木化作清透玻璃泡泡（保留四类基色，苹果气泡质感）；
-   拼装线强制单行 + 超宽两侧渐隐可横向平移；Esc / 右上角 × 平滑退回，句子状态原样保留。 */
+/* ================= 创想空间（body.creative 作用域，搭积木模块专属） =================
+   与主界面相互独立：双击主界面句子编辑栏（或拼装区，词块就绪后）进入；
+   界面保持干净素净——隐藏顶栏/观点库/快练/段落，改单栏沉浸布局，玻璃面板美术保留；
+   积木化作清透玻璃泡泡（四类浅基色）；拼装线单行+超宽渐隐平移；中文原句居中静默大字；
+   右上角玻璃珠 × / Esc 随时退出，句子状态原样保留。主界面美术不受任何影响。 */
 body.creative { overflow: hidden; }
 body.creative .topbar, body.creative aside.db,
 body.creative .shop > .q-panel, body.creative .shop > .paras,
@@ -640,8 +641,7 @@ body.creative .main {
 body.creative .app { animation: csIn .5s cubic-bezier(.22, 1, .36, 1) both; }
 body.cs-return .app { animation: csIn .45s cubic-bezier(.22, 1, .36, 1) both; }
 
-/* 中文原句：顶部居中静默大字（玻璃面板内） */
-body.creative .zh-row .go-btn, body.creative .zh-row .accept-btn { display: none; }
+/* 中文原句：居中静默大字（玻璃面板内） */
 body.creative .zh-edit {
   background: none; border: none; min-height: 0; padding: 0;
   text-align: center; text-align-last: center;
@@ -2658,7 +2658,7 @@ body.creative .cs-close { display: inline-flex; }
       resetUndo(); /* 重新生成：快照与光标作废 */
       save();
       setZhHint('✓ 已确认 · 词块已生成', 'ok');
-      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块 · 双击本区进入创想空间');
+      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块 · 双击句子编辑栏进入创想空间');
       renderZones();
       renderStrip();
     };
@@ -3247,10 +3247,12 @@ body.creative .cs-close { display: inline-flex; }
     document.body.classList.add('cs-return'); /* 主布局淡入退场 */
     setTimeout(function () { document.body.classList.remove('cs-return'); }, 500);
   }
-  asmBox.addEventListener('dblclick', function (e) {
+  function csTryEnter(e) {
     if (e.target.closest('button')) return;
-    if (cur().blocks.length) csEnter();
-  });
+    if (cur().blocks.length) { e.preventDefault(); csEnter(); }
+  }
+  asmBox.addEventListener('dblclick', csTryEnter);   /* 双击拼装区进入 */
+  zhBox.addEventListener('dblclick', csTryEnter);    /* 双击句子编辑栏进入（主入口） */
   if (csClose) csClose.addEventListener('click', csExit);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && csOn) csExit(); });
   window.addEventListener('resize', function () { csSyncPan(); });
