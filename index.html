@@ -2186,10 +2186,16 @@ body.creative .cs-close { display: inline-flex; }
     ' is am are was were be been being do does did done doing have has had having will would shall should can could may might must' +
     ' of to in on at by for with about into over under from as and or but if so than then not no nor' +
     ' all any both each few more most other some such only same very too also there when where why how' +
-    ' while whereas although though because therefore however thus hence').split(' ');
+    ' while whereas although though because therefore however thus hence' +
+    /* [全词覆盖] 常用功能词补全：介词 */
+    ' upon onto among across behind beyond within without during since until beneath between through towards toward around near above below off against despite except via per amid' +
+    /* 代词/限定词 */
+    ' whom whose which what itself himself herself ourselves themselves oneself someone anyone everyone somebody anybody everybody something anything everything nobody nothing neither either another one ones whichever whatever whoever' +
+    /* 连词/引导词 */
+    ' whether unless once whilst').split(' ');
   var GLUE_BY = {};
   GLUE_WORDS.forEach(function (w) { GLUE_BY[w] = 1; });
-  ['not only', 'but also', 'so that', 'in order to'].forEach(function (w) { GLUE_BY[w] = 1; });
+  ['not only', 'but also', 'so that', 'in order to', 'ought to'].forEach(function (w) { GLUE_BY[w] = 1; });
 
   /* ---- 拆分落地的词库规则：or 过滤 → 固定搭配合并 → 自由词拆分 → 归栏 ---- */
   function applyLexRules(tree, sentence) {
@@ -2610,13 +2616,26 @@ body.creative .cs-close { display: inline-flex; }
     }
     return null;
   }
-  /* 仍有遗漏：按原位插入顶层进配件；主干成分整体缺失时用完整表达，并记录成分类型 */
-  function patchPart(tree, v, clauses) {
+  /* 仍有遗漏：按原位插入顶层进配件；主干成分整体缺失时用完整表达，并记录成分类型
+     [全词覆盖] 兜底块按句中实际形态找回原词——verifySplit 比对的是小写词元，直接
+     join 会把句首大写/弯撇号压平，拼装文本与答案形态不符（硬性规则1 同款要求） */
+  function rawWordsOf(s) { return (String(s).match(/[A-Za-z0-9'’-]+/g) || []); }
+  function rawMissing(words, sentence) {
+    if (!sentence) return null;
+    var raw = rawWordsOf(sentence);
+    var low = raw.map(function (w) { return w.toLowerCase(); });
+    var want = words.join('\u0001');
+    for (var i = 0; i + words.length <= low.length; i++) {
+      if (low.slice(i, i + words.length).join('\u0001') === want) return raw.slice(i, i + words.length).join(' ');
+    }
+    return null;
+  }
+  function patchPart(tree, v, clauses, sentence) {
     var off = 0;
     v.runs.forEach(function (r) {
       var m = matchSVOC(r.words, clauses);
       var whole = m && m.sw.length === r.words.length && m.sw.join('\u0001') === r.words.join('\u0001');
-      var en = whole ? m.span.trim() : r.words.join(' ');
+      var en = whole ? m.span.trim() : (rawMissing(r.words, sentence) || r.words.join(' '));
       var at = Math.min(Math.max(r.at, 0) + off, tree.length);
       tree.splice(at, 0, { t: 'part', en: en });
       off++;
@@ -2779,9 +2798,13 @@ body.creative .cs-close { display: inline-flex; }
       modelParts.forEach(function (en) { logPart(wordsOf(en), ''); });
       var vF = verifySplit(tree, anchor);
       if (vF.extras.length) { tree = pruneExtras(tree, vF); vF = verifySplit(tree, anchor); }
-      patchPart(tree, vF, clauses);
+      patchPart(tree, vF, clauses, anchor);
       checkBackbone(tree, anchor, clauses);
       var vEnd = verifySplit(tree, anchor);
+      if (vEnd.missing.length) { /* [全词覆盖] 终检仍漏 → 再兜底一次，绝不静默丢词 */
+        patchPart(tree, vEnd, clauses, anchor);
+        vEnd = verifySplit(tree, anchor);
+      }
       if (vEnd.missing.length || vEnd.extras.length) {
         try { console.warn('[ww] 校验未收敛', vEnd.missing, vEnd.extras.map(function (t) { return t.w; })); } catch (e) {}
       }
