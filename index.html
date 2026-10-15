@@ -313,7 +313,7 @@ body.creative #bgFx { display: none; }
 .dot-case { background: #B5AA86; }
 .dot-conc { background: #7D8790; }
 .card .en { font-size: 13px; font-weight: 600; line-height: 1.6; color: var(--ink); text-align: left; }
-.card .zh { font-size: 13px; color: var(--ink-2); font-weight: 400; margin-top: 5px; line-height: 1.75; text-align: justify; text-align-last: left; }
+.card .zh { font-size: 12px; color: #78838C; font-weight: 400; margin-top: 5px; line-height: 1.6; text-align: justify; text-align-last: left; }
 
 /* ---------- 中：舞台（唯一毛玻璃大容器） ---------- */
 .shop {
@@ -378,7 +378,6 @@ body.creative #bgFx { display: none; }
 .stage { flex: none; padding: 0; display: flex; flex-direction: column; }
 .stage-top { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 12px; }
 .stage-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--accent-deep); }
-.stage-note { font-size: 13px; font-weight: 400; color: var(--ink-2); }
 .stage-step { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
 /* 次级玻璃：中文句 / 拼装盘（无 blur，靠半透明白分区） */
@@ -387,6 +386,9 @@ body.creative #bgFx { display: none; }
   padding: 12px 16px; transition: border-color .15s ease, box-shadow .15s ease;
 }
 .zh-box.over { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+/* 题目说明：中文输入框内第一行（不可编辑，随句子切换） */
+.zh-note { font-size: 13px; font-weight: 400; color: #7D8790; line-height: 1.6; margin: -2px 0 6px; word-break: break-word; }
+.zh-note:empty { display: none; }
 .zh-row { display: flex; align-items: center; gap: 12px; }
 .zh-edit {
   flex: 1; min-width: 0; min-height: 34px; outline: none;
@@ -505,14 +507,12 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 }
 .ans-next:active { transform: scale(.97); filter: brightness(.9); }
 
-/* ---------- 右：素材区（前三栏滚动 + 配件固定底部） ---------- */
+/* ---------- 右：素材区（四栏同一滚动容器） ---------- */
 .lex { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 .lex-scroll {
   flex: 1; min-height: 0; overflow: auto;
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 2px 4px 16px 2px;
-  -webkit-mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 14px), transparent);
-  mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 14px), transparent);
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 4px 6px 20px 4px;
 }
 
 .zone {
@@ -524,7 +524,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .zone-title .en { font-size: 12px; font-weight: 400; color: var(--zen); margin-left: 6px; }
 .zone-hint { margin-left: auto; font-size: 13px; font-weight: 400; color: var(--zhint); }
 .zone-count { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: rgba(255, 255, 255, .4); color: var(--zen); font-variant-numeric: tabular-nums; }
-.zone-empty { font-size: 13px; font-weight: 400; color: var(--zhint); align-self: center; padding: 4px 2px; }
+.zone-empty { font-size: 14px; font-weight: 400; color: var(--ztitle); opacity: .45; width: 100%; text-align: center; padding: 10px 0 2px; }
 .chip { width: 12px; height: 12px; border-radius: 4px; flex: none; }
 .zone-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 
@@ -564,20 +564,16 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .xblock { background: var(--pill-bonus-bg); color: var(--pill-bonus-ink); }
 .cblock { background: var(--pill-part-bg); color: var(--pill-part-ink); }
 .block:hover { filter: brightness(1.08); }
-.block:focus-visible, .pb-sym:focus-visible, .db-toggle:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.block:focus-visible, .db-toggle:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 .b-en { color: inherit; font-weight: 600; font-size: 12px; line-height: 1.3; }
 .b-ct { color: inherit; opacity: .8; font-weight: 700; font-size: 10.5px; margin-left: 6px; font-variant-numeric: tabular-nums; }
 .block.used { opacity: .5; filter: saturate(.5); pointer-events: none; }
 .b-slot { display: inline-block; min-width: 30px; height: 11px; vertical-align: baseline; margin: 0 4px; border-bottom: 2px dashed rgba(255, 255, 255, .7); border-radius: 2px; }
 .b-or { color: inherit; opacity: .9; font-size: 10.5px; font-weight: 600; font-style: italic; margin: 0 6px; }
 
-/* 配件分组行：组名 13px / 64px 宽，无强调色（仅展示层分组） */
-.zone-part .blocks { flex-direction: column; gap: 8px; align-content: stretch; min-height: 0; }
-.pg-row { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
-.pg-name { flex: none; width: 64px; font-size: 13px; font-weight: 400; line-height: 1.9; color: var(--zhint); }
-.pg-blocks { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 8px; min-width: 0; }
+/* 配件区与其他区同构：整块连续流式排列（不再按词类分组，标点只以系统生成的积木出现） */
 
-/* 配件自建输入行 + 标点条（深色配件区上的浅色控件） */
+/* 配件自建输入行（深色配件区上的浅色控件） */
 .part-add { display: flex; gap: 6px; margin-bottom: 10px; }
 .part-add input {
   flex: 1; min-width: 0; appearance: none; outline: none;
@@ -596,24 +592,16 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 }
 .part-add button:active { transform: scale(.96); filter: brightness(.9); }
 
-.punct-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 10px; }
-.pb-label { font-size: 13px; font-weight: 400; color: var(--zhint); margin-right: 2px; }
-.pb-sym {
-  appearance: none; border: 1px solid rgba(62, 76, 84, .2); background: rgba(255, 255, 255, .92); color: #2B353E;
-  font: inherit; font-size: 13.5px; font-weight: 600; line-height: 1;
-  min-width: 30px; padding: 5px 7px 6px; border-radius: 8px; cursor: pointer;
-  transition: transform .08s ease, filter .08s ease, border-color .12s ease;
-}
-.pb-sym:hover { border-color: var(--accent); filter: brightness(1.04); }
-.pb-sym:active { transform: scale(.92); }
+/* 系统标点开关：配件栏头右侧小胶囊（通用标点键盘已删，标点只以系统生成的积木出现） */
 .pb-toggle {
   appearance: none; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .14); color: #DDE3E7;
   font: inherit; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px;
-  cursor: pointer; margin-left: auto; white-space: nowrap;
+  cursor: pointer; white-space: nowrap; flex: none;
   transition: filter .1s ease, transform .1s ease;
 }
 .pb-toggle:hover { filter: brightness(1.1); }
 .pb-toggle:active { transform: scale(.96); }
+.zone-head .pb-toggle { margin-left: 2px; }
 /* 标点积木：系统生成与用户自加（虚线边区分） */
 .b-pn { color: inherit; font-weight: 700; font-size: 14px; min-width: 10px; text-align: center; }
 .b-pn.upn { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .75); }
@@ -673,7 +661,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   body.db-open .db-mask { display: none; }
   .db-toggle { display: none; }
   .shop { padding: 20px; }
-  .lex-scroll { overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .lex-scroll { overflow: visible; }
   .paras { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -789,14 +777,11 @@ body.creative .lex {
   display: flex; flex-direction: column; justify-content: center;
   gap: 28px; overflow-y: auto; padding: 3vh clamp(24px, 10vw, 150px);
 }
-body.creative .lex-scroll { display: contents; -webkit-mask-image: none; mask-image: none; overflow: visible; }
+body.creative .lex-scroll { display: contents; overflow: visible; }
 body.creative .zone { background: none; border: none; box-shadow: none; padding: 0; margin: 0; }
 body.creative .zone-head { display: none; }
 body.creative .blocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 16px; min-height: 0; }
-body.creative .zone-part .blocks { flex-direction: row; align-content: center; gap: 14px 16px; }
-body.creative .pg-row { justify-content: center; }
 body.creative .part-add { justify-content: center; opacity: .85; }
-body.creative .punct-bar { justify-content: center; opacity: .85; }
 body.creative .lex .block {
   font-size: 16px; font-weight: 400; padding: 10px 18px; border-radius: 999px;
   border: 1px solid #8FD3C6; background: #DCF4EF; color: #0D5247; cursor: pointer;
@@ -904,10 +889,10 @@ body.creative .cs-close { display: inline-flex; }
       <div class="stage">
         <div class="stage-top">
           <span class="stage-eyebrow" id="stageEyebrow"></span>
-          <span class="stage-note" id="stageNote"></span>
           <span class="stage-step" id="stageStep"></span>
         </div>
         <div class="zh-box" id="zhBox">
+          <div class="zh-note" id="zhNote"></div>
           <div class="zh-row">
             <div class="zh-edit" id="zhEdit" contenteditable="true" role="textbox" aria-label="中文输入" data-placeholder="用一句中文描述这句话要表达什么（可从左侧数据库拖入）" spellcheck="false"></div>
             <button type="button" class="go-btn" id="goBtn">校验 →</button>
@@ -1049,7 +1034,7 @@ body.creative .cs-close { display: inline-flex; }
   /* ================= DOM ================= */
   var parasEl = document.getElementById('paras');
   var stageEyebrow = document.getElementById('stageEyebrow');
-  var stageNote = document.getElementById('stageNote');
+  var zhNote = document.getElementById('zhNote');
   var stageStep = document.getElementById('stageStep');
   var zhBox = document.getElementById('zhBox');
   var zhEdit = document.getElementById('zhEdit');
@@ -1098,19 +1083,13 @@ body.creative .cs-close { display: inline-flex; }
       '<span class="zone-title">' + z.name + '<span class="en">' + z.en + '</span></span>' +
       '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
       '<span class="zone-hint">' + z.hint + '</span>' +
+      (z.punct ? '<button type="button" class="pb-toggle" id="puncToggle" title="系统是否自动生成必需标点积木"></button>' : '') +
       '</div>' +
       (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="缺什么词？输入后回车，生成配件块" maxlength="40" spellcheck="false" aria-label="自建配件词"><button type="button" id="partAdd" title="生成配件块">＋</button></div>' : '') +
-      (z.punct ? '<div class="punct-bar" id="punctBar"><span class="pb-label">标点</span>' +
-        PUNCT.strip.map(function (c) {
-          return '<button type="button" class="pb-sym" data-ch="' + esc(c) + '" title="点击/拖入 · 生成标点积木">' + esc(c) + '</button>';
-        }).join('') +
-        '<button type="button" class="pb-toggle" id="puncToggle" title="系统是否自动生成必需标点积木"></button></div>' : '') +
       '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
   }).join('');
-  /* [视觉升级] 三栏布局：前三区入滚动层（上下渐隐），配件区固定右栏底部（仅加包装层，不改栏目配置） */
-  var partAt = zHtml.indexOf('<div class="zone zone-part"');
-  zonesEl.innerHTML = '<div class="lex-scroll">' + (partAt < 0 ? zHtml : zHtml.slice(0, partAt)) + '</div>' +
-    (partAt < 0 ? '' : zHtml.slice(partAt));
+  /* [单容器] 四区同入一个滚动层（无遮罩渐隐，栏目标题永不被裁；配件不再固定底部） */
+  zonesEl.innerHTML = '<div class="lex-scroll">' + zHtml + '</div>';
   var ZONE_BOX = {}, ZONE_CNT = {}, ZONE_DIV = {}, FORM_CLS = {}, TC_CLS = {}, ZKEYS = [];
   ZONES.forEach(function (z) {
     ZONE_BOX[z.key] = document.getElementById('blocks-' + z.key);
@@ -1282,29 +1261,7 @@ body.creative .cs-close { display: inline-flex; }
     return ent;
   }
 
-  /* [视觉升级] 配件分组：静态功能词类别表，按行展示（仅展示层分桶，不影响归栏/匹配/计数逻辑） */
-  var PART_GRPS = [
-    ['冠词/介词', { a: 1, an: 1, the: 1, of: 1, to: 1, in: 1, on: 1, at: 1, by: 1, for: 1, with: 1, about: 1, into: 1, over: 1, under: 1, from: 1, as: 1, than: 1 }],
-    ['连词', { and: 1, or: 1, but: 1, nor: 1, so: 1, then: 1, if: 1, because: 1, although: 1, though: 1, while: 1, whereas: 1, when: 1, where: 1, why: 1, how: 1, therefore: 1, however: 1, thus: 1, hence: 1 }],
-    ['助动词', { is: 1, am: 1, are: 1, was: 1, were: 1, be: 1, been: 1, being: 1, do: 1, does: 1, did: 1, done: 1, doing: 1, have: 1, has: 1, had: 1, having: 1, will: 1, would: 1, shall: 1, should: 1, can: 1, could: 1, may: 1, might: 1, must: 1, not: 1, no: 1 }],
-    ['标点积木', null],
-    ['零散词', null]
-  ];
-  function partGroupOf(b) {
-    if (b.t === 'punc') return 3;
-    if (b.or) return 4;
-    var w = normTok(b.en || ''); /* normTok：压空白+trim+小写——存量积木 en 可能带空白 */
-    for (var g = 0; g < 3; g++) if (PART_GRPS[g][1][w]) return g;
-    return 4;
-  }
-  function partRowsHTML(rows) {
-    var out = '';
-    rows.forEach(function (row, g) {
-      if (!row) return;
-      out += '<div class="pg-row"><span class="pg-name">' + PART_GRPS[g][0] + '</span><span class="pg-blocks">' + row + '</span></div>';
-    });
-    return out;
-  }
+  /* [配件平铺] 不再按功能词类别分组：全部配件块连续流式排列（归类逻辑在归栏阶段已完成） */
 
   function renderZones() {
     var it = cur();
@@ -1318,9 +1275,8 @@ body.creative .cs-close { display: inline-flex; }
         return;
       }
       var remTotal = 0, html = '', anyForm = false;
-      var partRows = z.key === 'part' ? ['', '', '', '', ''] : null; /* [视觉升级] 配件按功能词类别分桶展示 */
       it.blocks.forEach(function (b, bi) {
-        if (b.t === 'punc' && b.src === 'user') return; /* 用户标点不占缺口，来源只有标点条 */
+        if (b.t === 'punc' && b.src === 'user') return; /* 用户标点不占缺口（物理键盘插入，不进托盘渲染） */
         if (formZone(b) !== z.key) return;
         anyForm = true;
         var rem = b.count - usedCount(it.order, bi);
@@ -1330,11 +1286,10 @@ body.creative .cs-close { display: inline-flex; }
           (rem <= 0 ? ' disabled' : '') + (z.key === 'bonus' ? bonusBlockTip(b) : '') + ' data-bi="' + bi + '">' +
           formHTML(b) + badge + '</button>';
         html += btn;
-        if (partRows) partRows[partGroupOf(b)] += btn;
       });
       ZONE_CNT[z.key].textContent = remTotal;
-      box.innerHTML = anyForm ? (partRows ? partRowsHTML(partRows) : html) : '<div class="zone-empty">本句无</div>';
-      /* 配件栏带自建输入与标点条：句子进入拼装阶段就显示（即使暂无配件块） */
+      box.innerHTML = anyForm ? html : '<div class="zone-empty">—</div>';
+      /* 配件栏带自建输入：句子进入拼装阶段就显示（即使暂无配件块） */
       if (z.hideEmpty) ZONE_DIV[z.key].style.display = (anyForm || (z.input && it.blocks.length)) ? '' : 'none';
     });
     var pt = document.getElementById('puncToggle');
@@ -1431,7 +1386,7 @@ body.creative .cs-close { display: inline-flex; }
   function renderWorkbench() {
     var f = FLAT[S.cur], it = cur();
     stageEyebrow.textContent = f.label + ' · ' + f.s.role;
-    stageNote.textContent = f.s.note;
+    zhNote.textContent = f.s.note || ''; /* 题目说明移入中文框第一行（不可编辑行，纯展示） */
     stageStep.textContent = (S.cur + 1) + ' / ' + FLAT.length;
     var inStrike = !it.confirmed && !!it.strikeParts;
     acceptBtn.hidden = !inStrike;
@@ -3874,8 +3829,7 @@ body.creative .cs-close { display: inline-flex; }
     info.startX = e.clientX; info.startY = e.clientY;
     info.held = false; info.active = false;
     /* 标点块目标小：吸附半径放大，其余不变 */
-    var pbB = info.source === 'puncbar' ? { t: 'punc' }
-      : info.source === 'zone' ? cur().blocks[info.bi]
+    var pbB = info.source === 'zone' ? cur().blocks[info.bi]
       : info.source === 'strip' ? cur().blocks[+info.el.dataset.bi] : null;
     info.rad = pbB && pbB.t === 'punc' ? DND.RADIUS * 1.6 : DND.RADIUS;
     drag = info;
@@ -3993,10 +3947,7 @@ body.creative .cs-close { display: inline-flex; }
       var list = resolveSlot(snap.path);
       if (list) {
         var at = d.slotIdx == null ? list.length : Math.max(0, Math.min(d.slotIdx, list.length));
-        if (d.source === 'puncbar') {
-          list.splice(at, 0, { id: ensureUserPunc(d.ch), pick: null, fills: [] });
-          commitOrder(true);
-        } else if (d.source === 'zone') {
+        if (d.source === 'zone') {
           list.splice(at, 0, ensureFills({ id: d.bi, pick: null, fills: [] }));
           commitOrder(true);
         } else {
@@ -4014,10 +3965,6 @@ body.creative .cs-close { display: inline-flex; }
     }
     /* 顶层插入（有预览位）或句尾游离区（无吸附） */
     var idx = topIdx > -1 ? topIdx : it.order.length;
-    if (d.source === 'puncbar') {
-      insertPuncAt(ensureUserPunc(d.ch), idx);
-      return;
-    }
     idx = puncTopIdx(d, it, idx); /* 标点块句首守卫：-1 = 拦下 */
     if (idx < 0) return;
     if (d.source === 'zone') {
@@ -4060,17 +4007,15 @@ body.creative .cs-close { display: inline-flex; }
     return idx === 0 ? 1 : idx;
   }
 
-  /* 按下即武装：素材积木 / 条内积木 / 标点条符号（空位本身是落点，不是拖拽源） */
+  /* 按下即武装：素材积木 / 条内积木（空位本身是落点，不是拖拽源；通用标点键盘已删） */
   zonesEl.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    var pb = e.target.closest('.pb-sym');
-    if (pb) { armDrag(e, { source: 'puncbar', ch: pb.dataset.ch, el: pb }); return; }
     var b = e.target.closest('.block');
     if (!b || b.classList.contains('used')) return;
     armDrag(e, { source: 'zone', bi: +b.dataset.bi, el: b });
   });
   zonesEl.addEventListener('mousedown', function (e) { /* mousedown 阶段阻止焦点转移：点素材库不抢走组装栏光标 */
-    if (e.target.closest && (e.target.closest('.block') || e.target.closest('.pb-sym'))) e.preventDefault();
+    if (e.target.closest && e.target.closest('.block')) e.preventDefault();
   });
   asmStrip.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -4086,15 +4031,7 @@ body.creative .cs-close { display: inline-flex; }
       save();
       renderZones();
       commitOrder(false);
-      setAsmHint(S.puncSys !== false ? '系统标点：开（必需标点计入缺口）' : '系统标点：关（请从标点条自加，判卷从严）', '');
-      return;
-    }
-    var pb = e.target.closest('.pb-sym'); /* 点符号 = 在光标处（无则句尾）插入用户标点 */
-    if (pb) {
-      if (!cur().order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
-      var pAt = caretAt > -1 ? caretAt : cur().order.length;
-      insertPuncAt(ensureUserPunc(pb.dataset.ch), pAt, pb.getBoundingClientRect());
-      if (caretAt > -1) setCaret(caretAt + 1); /* 标点也落在光标处，之后右移 */
+      setAsmHint(S.puncSys !== false ? '系统标点：开（必需标点自动生成并计入缺口）' : '系统标点：关（全部标点块移除，判卷从严）', '');
       return;
     }
     var b = e.target.closest('.block');
