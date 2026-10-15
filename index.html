@@ -623,7 +623,8 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 }
 
 /* ================= 创想空间（全屏沉浸拼装 · body.creative 作用域，搭积木模块专属） =================
-   双击拼装区进入：隐藏无关栏位，全部积木化作清透玻璃泡泡（保留四类基色，苹果气泡质感）；
+   双击拼装区进入：仅隐藏无关栏位（顶栏/观点库/快练/段落），玻璃容器与面板美术原样保留；
+   全部积木化作清透玻璃泡泡（保留四类基色，苹果气泡质感）；
    拼装线强制单行 + 超宽两侧渐隐可横向平移；Esc / 右上角 × 平滑退回，句子状态原样保留。 */
 body.creative { overflow: hidden; }
 body.creative .topbar, body.creative aside.db,
@@ -639,13 +640,7 @@ body.creative .main {
 body.creative .app { animation: csIn .5s cubic-bezier(.22, 1, .36, 1) both; }
 body.cs-return .app { animation: csIn .45s cubic-bezier(.22, 1, .36, 1) both; }
 
-/* 舞台：卸下玻璃容器，留白画布；中文原句顶部居中静默大字 */
-body.creative .shop {
-  background: none; border: none; box-shadow: none; padding: 0;
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-}
-body.creative .shop > .stage { border-top: none; padding-top: 0; }
-body.creative .zh-box { border: none; background: none; padding: 0; }
+/* 中文原句：顶部居中静默大字（玻璃面板内） */
 body.creative .zh-row .go-btn, body.creative .zh-row .accept-btn { display: none; }
 body.creative .zh-edit {
   background: none; border: none; min-height: 0; padding: 0;
@@ -654,8 +649,8 @@ body.creative .zh-edit {
 }
 body.creative .zh-hint { text-align: center; font-size: 12px; }
 
-/* 拼装线：单行画布（nowrap + 溢出横向平移） */
-body.creative .asm-box { border: none; background: none; padding: 0; margin-top: 3vh; flex: 1; justify-content: center; }
+/* 拼装线：单行画布（nowrap + 溢出横向平移），玻璃面板内垂直居中 */
+body.creative .asm-box { margin-top: 3vh; flex: 1; justify-content: center; }
 body.creative .asm-strip {
   flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
   justify-content: safe center; gap: 10px;
@@ -693,13 +688,9 @@ body.creative .asm-slot { border-color: rgba(31, 56, 66, .3); }
 body.creative .asm-slot.fill-cur { border-color: var(--accent); background: rgba(90, 125, 138, .1); }
 body.creative.dnd-active .asm-slot:not(.inert) { border-color: rgba(31, 56, 66, .5); }
 
-/* 泡泡云：素材区（下半屏，去壳漂浮） */
-body.creative .lex .zone { background: none; border: none; box-shadow: none; padding: 0; }
-body.creative .lex .zone-head { margin-bottom: 12px; opacity: .62; }
-body.creative .lex .zone-hint { display: none; }
+/* 泡泡云：素材区（下半屏，原面板美术内漂浮居中） */
 body.creative .lex .blocks { gap: 18px 14px; justify-content: center; }
 body.creative .lex .zone-part .pg-row { justify-content: center; }
-body.creative .lex .part-add, body.creative .lex .punct-bar { opacity: .82; }
 body.creative .lex .block {
   font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 999px;
   border: 1px solid var(--bub-rim);
@@ -735,6 +726,7 @@ body.creative .cs-close { display: inline-flex; }
   body.creative .lex .block { animation: none !important; }
   body.creative .app, body.cs-return .app { animation: none !important; }
 }
+
 /* 中文宋体：本机有宋体类字体就走 local，没有才用内嵌子集（仅本页用到的 906 字） */
 @font-face {
   font-family: 'ZH Serif'; font-style: normal; font-weight: 400; font-display: swap;
