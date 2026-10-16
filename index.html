@@ -273,20 +273,50 @@ body.creative #bgFx { display: none; }
 }
 .db-toggle:hover { filter: brightness(1.04); }
 .db-toggle:active { transform: scale(.96); }
-/* 界面语言切换（EN | 中）：分段胶囊，激活项 accent 底 · 两种主题同规则 */
+/* 界面语言切换（EN | 中）：液态玻璃分段轨道 + 凸起玻璃滑块（radiogroup，键盘左右键可切换）
+   色调取自背景取色变量 --bgA/--bgB，随背景照片联动；文字选中/未选中均 ≥4.5:1 */
 .lang-toggle {
-  display: inline-flex; align-items: center; gap: 2px; flex: none;
-  margin-left: auto; padding: 2px;
-  border: 1px solid var(--glass-brd); background: var(--sub-bg);
+  position: relative; display: inline-flex; align-items: stretch; flex: none;
+  margin-left: auto; padding: 3px;
   border-radius: 9999px;
+  border: 1px solid var(--glass-brd);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0) 40%),
+    color-mix(in srgb, var(--bgB) 16%, var(--sub-bg));
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 2px 4px rgba(10, 30, 40, .08),
+    inset 0 -1px 1px rgba(255, 255, 255, .10),
+    0 2px 10px rgba(20, 40, 50, .10);
 }
+.lang-toggle::before { /* 滑块：比轨道更亮更通透的凸起玻璃 */
+  content: ''; position: absolute; z-index: 0; top: 2px; bottom: 2px; left: 2px;
+  width: calc(50% - 3px); border-radius: 9999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .66), rgba(255, 255, 255, .28) 55%, rgba(255, 255, 255, .40)),
+    color-mix(in srgb, var(--bgA) 10%, rgba(255, 255, 255, .30));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .85),
+    inset 0 -2px 3px rgba(10, 30, 40, .05),
+    0 3px 8px rgba(20, 40, 50, .22), 0 1px 2px rgba(20, 40, 50, .12);
+  transform: translateX(0);
+  transition: transform .25s ease-out, box-shadow .25s ease-out;
+}
+.lang-toggle[data-v="zh"]::before { transform: translateX(calc(100% + 2px)); }
 .lang-toggle button {
-  appearance: none; border: 0; background: transparent; color: var(--ink-2);
-  font-size: 12px; font-weight: 600; line-height: 1;
-  padding: 5px 10px; border-radius: 9999px; cursor: pointer;
-  transition: background .15s ease, color .15s ease;
+  position: relative; z-index: 1;
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  font-size: 12px; font-weight: 600; line-height: 1; letter-spacing: .02em;
+  color: var(--ink-2); min-width: 36px; padding: 7px 10px; text-align: center;
+  border-radius: 9999px;
+  transition: color .25s ease-out;
 }
-.lang-toggle button.on { background: var(--accent); color: var(--accent-ink); }
+.lang-toggle button::after { content: ''; position: absolute; inset: -8px -4px; } /* 点击热区 ≥44px */
+.lang-toggle button.on { color: #22333C; }
+.lang-toggle:active::before { filter: brightness(.96); } /* 按下：滑块轻微压缩感 */
+.lang-toggle[data-v="en"]:active::before { transform: scale(.95); }
+.lang-toggle[data-v="zh"]:active::before { transform: translateX(calc(100% + 2px)) scale(.95); }
 .lang-toggle button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 
 /* 抽屉遮罩（≤1200px 生效） */
@@ -304,7 +334,6 @@ body.creative #bgFx { display: none; }
 .db-head { padding: 2px 4px 0; flex: none; }
 .db-title-row { display: flex; align-items: baseline; gap: 8px; }
 .db-title-row h2 { font-size: 15px; font-weight: 700; }
-.db-title-row .en { font-size: 12px; font-weight: 400; color: var(--ink-3); }
 .badge { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--ink-3); border: 1px solid var(--divider); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .db-desc { margin-top: 5px; font-size: 13px; color: var(--ink-2); font-weight: 400; line-height: 1.6; }
 .db-list {
@@ -391,9 +420,6 @@ body.creative #bgFx { display: none; }
 
 /* ---------- 当前句工作台 ---------- */
 .stage { flex: none; padding: 0; display: flex; flex-direction: column; }
-.stage-top { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 12px; }
-.stage-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--accent-deep); }
-.stage-step { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
 /* 次级玻璃：中文句 / 拼装盘（无 blur，靠半透明白分区） */
 .zh-box {
@@ -494,13 +520,25 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .asm-hint.err { color: var(--err); }
 .asm-hint.ok { color: var(--ok-ink); }
 .asm-go {
-  appearance: none; border: none; background: var(--ok); color: #22332B;
-  font-size: 13px; font-weight: 600; padding: 7px 20px; border-radius: 10px;
-  cursor: pointer; white-space: nowrap; flex: none;
-  transition: transform .1s ease, filter .1s ease, opacity .15s ease;
+  /* 背景同色系深色玻璃：--go-deep 由取色脚本从背景主色推导（L≈25%、饱和略增），
+     换背景照片自动跟随；兜底为静态调色板同系深青 */
+  --go-bg: var(--go-deep, #2E4E60);
+  appearance: none; border: 1px solid rgba(255, 255, 255, .30); cursor: pointer; flex: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%),
+    color-mix(in srgb, var(--go-bg) 70%, transparent);
+  color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 20px; border-radius: 12px;
+  white-space: nowrap;
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    0 6px 16px color-mix(in srgb, var(--go-bg) 42%, transparent);
+  transition: transform .12s ease, filter .12s ease, opacity .15s ease;
 }
-.asm-go:active { transform: scale(.97); filter: brightness(.92); }
-.asm-go:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
+.asm-go:hover:not(:disabled) { filter: brightness(1.06); }
+.asm-go:active:not(:disabled) { transform: scale(.97); filter: brightness(.93); }
+.asm-go:disabled { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
 .asm-reset { position: absolute; top: 6px; right: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: none; cursor: pointer; padding: 1px 2px; }
 .asm-reset:hover { color: var(--err); }
 
@@ -536,32 +574,30 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 4px 16px rgba(30, 55, 65, .10);
 }
 .zone-title { font-size: 15px; font-weight: 700; color: var(--ztitle); }
-.zone-title .en { font-size: 12px; font-weight: 400; color: var(--zen); margin-left: 6px; }
-.zone-hint { margin-left: auto; font-size: 13px; font-weight: 400; color: var(--zhint); }
-.zone-count { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: rgba(255, 255, 255, .4); color: var(--zen); font-variant-numeric: tabular-nums; }
+.zone-count { margin-left: auto; font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: rgba(255, 255, 255, .4); color: var(--zen); font-variant-numeric: tabular-nums; }
 .zone-empty { font-size: 14px; font-weight: 400; color: var(--ztitle); opacity: .45; width: 100%; text-align: center; padding: 10px 0 2px; }
 .chip { width: 12px; height: 12px; border-radius: 4px; flex: none; }
 .zone-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 
 /* 栏目语义色（浅色）：话题料 青灰 / 骨架 橄榄 / 加分词 玫瑰 / 配件 深石板 */
-.zone-purple  { background: rgba(74, 114, 130, .6);   --ztitle: #12262E; --zen: #1E3A45; --zhint: #5F8292; }
-.zone-pattern { background: rgba(150, 140, 96, .6);   --ztitle: #2B2813; --zen: #3F3B1F; --zhint: #857B57; }
-.zone-prep    { background: rgba(176, 122, 134, .6);   --ztitle: #33151D; --zen: #4A2530; --zhint: #966E7A; }
-.zone-part    { background: rgba(62, 76, 84, .8);     --ztitle: #F0F3F5; --zen: #DDE3E7; --zhint: #AEBAC2; }
+.zone-purple  { background: rgba(74, 114, 130, .6);   --ztitle: #12262E; --zen: #1E3A45; }
+.zone-pattern { background: rgba(150, 140, 96, .6);   --ztitle: #2B2813; --zen: #3F3B1F; }
+.zone-prep    { background: rgba(176, 122, 134, .6);   --ztitle: #33151D; --zen: #4A2530; }
+.zone-part    { background: rgba(62, 76, 84, .8);     --ztitle: #F0F3F5; --zen: #DDE3E7; }
 .chip-purple { background: #4A7282; }
 .chip-pattern { background: #968C60; }
 .chip-prep { background: #B07A86; }
 .chip-part { background: rgba(255, 255, 255, .55); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; --zhint: #8FB0BC; }
-  :root:not([data-theme="light"]) .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; --zhint: #C6BC97; }
-  :root:not([data-theme="light"]) .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; --zhint: #D5AFB9; }
-  :root:not([data-theme="light"]) .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; --zhint: #AEBAC2; }
+  :root:not([data-theme="light"]) .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; }
+  :root:not([data-theme="light"]) .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; }
+  :root:not([data-theme="light"]) .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; }
+  :root:not([data-theme="light"]) .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; }
 }
-:root[data-theme="dark"] .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; --zhint: #8FB0BC; }
-:root[data-theme="dark"] .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; --zhint: #C6BC97; }
-:root[data-theme="dark"] .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; --zhint: #D5AFB9; }
-:root[data-theme="dark"] .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; --zhint: #AEBAC2; }
+:root[data-theme="dark"] .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; }
+:root[data-theme="dark"] .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; }
+:root[data-theme="dark"] .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; }
+:root[data-theme="dark"] .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; }
 
 .blocks { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 12px 10px; min-height: 48px; }
 
@@ -589,23 +625,6 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 /* 配件区与其他区同构：整块连续流式排列（不再按词类分组，标点只以系统生成的积木出现） */
 
 /* 配件自建输入行（深色配件区上的浅色控件） */
-.part-add { display: flex; gap: 6px; margin-bottom: 10px; }
-.part-add input {
-  flex: 1; min-width: 0; appearance: none; outline: none;
-  background: rgba(255, 255, 255, .92); color: #2B353E;
-  border: 1px solid rgba(62, 76, 84, .25); border-radius: 10px;
-  padding: 5px 10px; font: inherit; font-size: 13px; font-weight: 400;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-.part-add input::placeholder { color: #7D8790; opacity: .8; font-weight: 400; }
-.part-add input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
-.part-add button {
-  appearance: none; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .16); color: #F0F3F5;
-  font-size: 13px; font-weight: 600; padding: 5px 13px; border-radius: 10px;
-  cursor: pointer; white-space: nowrap; flex: none;
-  transition: transform .1s ease, filter .1s ease;
-}
-.part-add button:active { transform: scale(.96); filter: brightness(.9); }
 
 /* 标点积木：必需标点固定生成成块（系统），物理键盘插入的为用户块（虚线边区分） */
 .b-pn { color: inherit; font-weight: 700; font-size: 14px; min-width: 10px; text-align: center; }
@@ -687,6 +706,8 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
   .schip.cur, .tchip.ok, #wwCaret.on, .tchip.fly-in { animation: none !important; }
+  .asm-go:active:not(:disabled), .lang-toggle:active::before,
+  .lang-toggle[data-v="en"]:active::before, .lang-toggle[data-v="zh"]:active::before { transform: none; }
 }
 
 /* ================= 创想空间（副界面 · body.creative 作用域，搭积木模块专属） =================
@@ -701,7 +722,7 @@ body.creative {
 }
 body.creative .topbar, body.creative aside.db,
 body.creative .shop > .q-panel, body.creative .shop > .paras,
-body.creative .stage-top, body.creative .zh-box, body.creative .ans-box { display: none; }
+body.creative .zh-box, body.creative .ans-box { display: none; }
 body.creative .app { background: #FFFFFF; animation: csFade .2s ease both; }
 body.cs-return .app { animation: csFade .2s ease both; }
 @keyframes csFade { from { opacity: 0; } }
@@ -785,7 +806,6 @@ body.creative .lex-scroll { display: contents; overflow: visible; }
 body.creative .zone { background: none; border: none; box-shadow: none; padding: 0; margin: 0; }
 body.creative .zone-head { display: none; }
 body.creative .blocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 16px; min-height: 0; }
-body.creative .part-add { justify-content: center; opacity: .85; }
 body.creative .lex .block {
   font-size: 16px; font-weight: 400; padding: 10px 18px; border-radius: 999px;
   border: 1px solid #8FD3C6; background: #DCF4EF; color: #0D5247; cursor: pointer;
@@ -829,7 +849,7 @@ body.creative .cs-close { display: inline-flex; }
       <h1 data-i18n="app.title">英语写作工作台</h1>
       <span class="sub" data-i18n="app.sub">English Writing Workshop</span>
     </div>
-    <div class="lang-toggle" id="langToggle" role="group" aria-label="界面语言 / Language"><button type="button" data-l="en">EN</button><button type="button" data-l="zh" class="on">中</button></div>
+    <div class="lang-toggle" id="langToggle" data-v="zh" role="radiogroup" aria-label="界面语言 / Language"><button type="button" role="radio" aria-checked="false" data-l="en">EN</button><button type="button" role="radio" aria-checked="true" data-l="zh" class="on">中</button></div>
     <button type="button" class="db-toggle" id="dbToggle" aria-expanded="false" data-i18n="topbar.ideas">观点库</button>
   </header>
   <div class="db-mask" id="dbMask" aria-hidden="true"></div>
@@ -840,7 +860,7 @@ body.creative .cs-close { display: inline-flex; }
       <div class="db-head">
         <div class="db-title-row">
           <h2 id="dbTitle">观点库</h2>
-          <span class="en" id="dbTitleEn">Database</span>
+          
           <span class="badge" data-i18n="db.badge">拖入中文框 / 点击填入</span>
         </div>
         <p class="db-desc" data-i18n="db.desc">前置对话沉淀的论点与论据</p>
@@ -892,10 +912,6 @@ body.creative .cs-close { display: inline-flex; }
       <div class="paras" id="paras"></div>
 
       <div class="stage">
-        <div class="stage-top">
-          <span class="stage-eyebrow" id="stageEyebrow"></span>
-          <span class="stage-step" id="stageStep"></span>
-        </div>
         <div class="zh-box" id="zhBox">
           <div class="zh-note" id="zhNote"></div>
           <div class="zh-row">
@@ -1039,9 +1055,7 @@ body.creative .cs-close { display: inline-flex; }
 
   /* ================= DOM ================= */
   var parasEl = document.getElementById('paras');
-  var stageEyebrow = document.getElementById('stageEyebrow');
   var zhNote = document.getElementById('zhNote');
-  var stageStep = document.getElementById('stageStep');
   var zhBox = document.getElementById('zhBox');
   var zhEdit = document.getElementById('zhEdit');
   var zhHint = document.getElementById('zhHint');
@@ -1084,7 +1098,6 @@ body.creative .cs-close { display: inline-flex; }
     'app.sub': { zh: 'English Writing Workshop', en: '雅思写作 · 拼积木学写作' },
     'topbar.ideas': { zh: '观点库', en: 'Ideas' },
     'db.title': { zh: '观点库', en: 'Ideas' },
-    'db.titleSub': { zh: 'Database', en: '观点库' },
     'db.badge': { zh: '拖入中文框 / 点击填入', en: 'Drag into the Chinese box / click to insert' },
     'db.desc': { zh: '前置对话沉淀的论点与论据', en: 'Arguments and evidence from your earlier discussion' },
     'db.tag.argSub': { zh: '论点 · 补贴', en: 'Argument · Subsidies' },
@@ -1093,6 +1106,10 @@ body.creative .cs-close { display: inline-flex; }
     'db.tag.datTax': { zh: '论据 · 征税', en: 'Evidence · Taxing' },
     'db.tag.case': { zh: '事例', en: 'Example' },
     'db.tag.conc': { zh: '让步', en: 'Concession' },
+    'zone.title.skel': { zh: '骨架', en: 'Frames' },
+    'zone.title.topic': { zh: '话题料', en: 'Topic' },
+    'zone.title.bonus': { zh: '加分词', en: 'Bonus' },
+    'zone.title.part': { zh: '配件', en: 'Parts' },
     'q.eyebrow': { zh: 'IELTS Writing Task 2 · 当前话题', en: 'IELTS Writing Task 2 · Current topic' },
     'btn.restart': { zh: '重新开始', en: 'Start over' },
     'btn.restart.tip': { zh: '清空全部进度，从第一句重新开始', en: 'Clear all progress and start from the first sentence' },
@@ -1137,13 +1154,6 @@ body.creative .cs-close { display: inline-flex; }
     'ans.tag': { zh: '参考答案', en: 'Model answer' },
     'ans.next': { zh: '下一句 →', en: 'Next →' },
     'ans.notePrefix': { zh: '✎ 语法点评 · ', en: '✎ Grammar note · ' },
-    'zone.hint.skel': { zh: '句型模板 · 拖入句子', en: 'Sentence frames · drag into the sentence' },
-    'zone.hint.topic': { zh: '本题短语 · 点击放入', en: 'Topic phrases · click to insert' },
-    'zone.hint.bonus': { zh: '学术搭配 · 点击放入', en: 'Academic collocations · click to insert' },
-    'zone.hint.part': { zh: '功能词·零散词 · 可自建', en: 'Function & stray words · add your own' },
-    'part.input.ph': { zh: '缺什么词？输入后回车，生成配件块', en: 'Missing a word? Type it and press Enter' },
-    'part.input.aria': { zh: '自建配件词', en: 'Add your own part' },
-    'part.add.tip': { zh: '生成配件块', en: 'Create block' },
     'zone.empty.done': { zh: '全文完成', en: 'Essay complete' },
     'zone.empty.wait': { zh: '确认中文后生成本句积木', en: 'Confirm your Chinese to generate blocks' },
     'tip.reg.general': { zh: '通用', en: 'general' },
@@ -1175,8 +1185,6 @@ body.creative .cs-close { display: inline-flex; }
     'zhh.keepEmpty': { zh: '保留部分为空 · 请重写', en: 'Nothing left to keep · please rewrite' },
     'zhh.edited': { zh: '已编辑 · 重新校验', en: 'Edited · re-check' },
     'zhh.dbFilled': { zh: '已从数据库填入 · 可修改后校验', en: 'Inserted from the Ideas panel · edit if you like, then check' },
-    'asmh.needBlocks': { zh: '先确认中文生成词块，再自建配件', en: 'Confirm your Chinese and generate blocks first' },
-    'asmh.needEnglish': { zh: '配件请输入英文单词或短语', en: 'Please enter an English word or phrase' },
     'asmh.allDone': { zh: '✓ 全部句子已拼装正确', en: '✓ Every sentence built correctly' },
     'asmh.sentOk': { zh: '✓ 本句正确 · 可继续调整', en: '✓ Correct · adjust if you like' },
     'asmh.left': { zh: '剩余 {N} 块', en: '{N} blocks left' },
@@ -1226,24 +1234,22 @@ body.creative .cs-close { display: inline-flex; }
     updateBilingualHeads();
     updateLangToggle();
   }
-  /* 恒双语区：观点库标题 + 四栏标题（英文模式英文为主、中文小字；中文模式维持原状） */
+  /* 栏目标题随界面语言切换：只显示当前语言一种，绝不中英并列（观点库 + 四栏） */
   function updateBilingualHeads() {
-    var h2 = document.getElementById('dbTitle'), en = document.getElementById('dbTitleEn');
+    var h2 = document.getElementById('dbTitle');
     if (h2) h2.textContent = t('db.title');
-    if (en) en.textContent = t('db.titleSub');
     ZONES.forEach(function (z) {
       var zt = document.querySelector('#zone-' + z.key + ' .zone-title');
-      if (!zt) return;
-      var prim = LANG.v === 'en' ? z.en : z.name, sec = LANG.v === 'en' ? z.name : z.en;
-      if (zt.firstChild) zt.firstChild.nodeValue = prim;
-      var sp = zt.querySelector('.en'); if (sp) sp.textContent = sec;
-      var zh = document.querySelector('#zone-' + z.key + ' .zone-hint'); if (zh) zh.textContent = t(z.hintKey);
+      if (zt) zt.textContent = t(z.titleKey);
     });
-    var pi2 = document.getElementById('partInput'); if (pi2) pi2.placeholder = t('part.input.ph');
   }
   function updateLangToggle() {
+    var lt = document.getElementById('langToggle');
+    if (lt) lt.setAttribute('data-v', LANG.v);
     document.querySelectorAll('#langToggle button').forEach(function (b) {
-      b.classList.toggle('on', b.getAttribute('data-l') === LANG.v);
+      var sel = b.getAttribute('data-l') === LANG.v;
+      b.classList.toggle('on', sel);
+      b.setAttribute('aria-checked', sel ? 'true' : 'false');
     });
   }
   function setLang(v) {
@@ -1256,21 +1262,19 @@ body.creative .cs-close { display: inline-flex; }
   }
 
   var ZONES = [
-    { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', hintKey: 'zone.hint.skel', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
-    { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', hintKey: 'zone.hint.topic', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
-    { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', hintKey: 'zone.hint.bonus', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
-    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', hintKey: 'zone.hint.part', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true }
+    { key: 'skel',  titleKey: 'zone.title.skel',  zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
+    { key: 'topic', titleKey: 'zone.title.topic', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
+    { key: 'bonus', titleKey: 'zone.title.bonus', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
+    { key: 'part',  titleKey: 'zone.title.part',  zone: 'zone-part',    chip: 'chip-part',    blk: 'cblock', tc: 'tc-c', hideEmpty: true }
   ];
   var zonesEl = document.getElementById('zones');
   var zHtml = ZONES.map(function (z) {
     return '<div class="zone ' + z.zone + '" id="zone-' + z.key + '">' +
       '<div class="zone-head">' +
       '<span class="chip ' + z.chip + '" aria-hidden="true"></span>' +
-      '<span class="zone-title">' + z.name + '<span class="en">' + z.en + '</span></span>' +
+      '<span class="zone-title">' + t(z.titleKey) + '</span>' +
       '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
-      '<span class="zone-hint">' + t(z.hintKey) + '</span>' +
       '</div>' +
-      (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="' + t('part.input.ph') + '" maxlength="40" spellcheck="false" aria-label="' + t('part.input.aria') + '" data-i18n-aria="part.input.aria"><button type="button" id="partAdd" title="' + t('part.add.tip') + '" data-i18n-title="part.add.tip">＋</button></div>' : '') +
       '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
   }).join('');
   /* [单容器] 四区同入一个滚动层（无遮罩渐隐，栏目标题永不被裁；配件不再固定底部） */
@@ -1286,34 +1290,8 @@ body.creative .cs-close { display: inline-flex; }
   });
   var acceptBtn = document.getElementById('acceptBtn');
 
-  /* ---------- 配件自建：输入任意英文词/短语 → 生成可点击放置的配件块 ---------- */
-  var partInput = document.getElementById('partInput');
-  var partAddBtn = document.getElementById('partAdd');
-  function addCustomPart() {
-    var it = cur();
-    var raw = partInput.value.replace(/\s+/g, ' ').trim().slice(0, 40);
-    if (!raw) return;
-    if (!it.blocks.length) { setAsmHint(t('asmh.needBlocks'), 'err'); return; }
-    if (!/[A-Za-z0-9]/.test(raw)) { setAsmHint(t('asmh.needEnglish'), 'err'); return; }
-    /* 同形态（忽略大小写）合并计数 */
-    var k = formKey({ t: 'part', en: raw }), idx = -1;
-    for (var i = 0; i < it.blocks.length; i++) {
-      if (formKey(it.blocks[i]) === k) { idx = i; break; }
-    }
-    if (idx < 0) { idx = it.blocks.length; it.blocks.push({ t: 'part', en: raw, count: 0 }); }
-    it.blocks[idx].count++;
-    save();
-    renderZones();
-    /* [v2 模块接口] 加分词常见错误微提示：只提示不拦截、不泄练习答案 */
-    var tip = bonusCheckText(raw);
-    if (tip) setAsmHint(tip, 'err');
-    partInput.value = '';
-    partInput.focus();
-  }
-  partAddBtn.addEventListener('click', addCustomPart);
-  partInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); addCustomPart(); }
-  });
+  /* [配件自建已下线] 组装所需全部词块与必需标点都在配件栏内（方案B 自动生成）；
+     若拆分终检仍漏词，只在控制台记录该句，不再提供界面补词入口（见 landSplit 终检）。 */
 
   function cur() { return S.items[S.cur]; }
 
@@ -1568,9 +1546,7 @@ body.creative .cs-close { display: inline-flex; }
 
   function renderWorkbench() {
     var f = FLAT[S.cur], it = cur();
-    stageEyebrow.textContent = labelNow(f) + ' · ' + roleNow(f.s.role);
     zhNote.textContent = noteNow(f.s.note) || ''; /* 题目说明移入中文框第一行（不可编辑行，纯展示） */
-    stageStep.textContent = (S.cur + 1) + ' / ' + FLAT.length;
     var inStrike = !it.confirmed && !!it.strikeParts;
     acceptBtn.hidden = !inStrike;
     goBtn.textContent = it.confirmed ? t('go.edit') : (it.blocks.length ? t('go.recheck') : t('go.check'));
@@ -3011,7 +2987,7 @@ body.creative .cs-close { display: inline-flex; }
         vEnd = verifySplit(tree, anchor);
       }
       if (vEnd.missing.length || vEnd.extras.length) {
-        try { console.warn('[ww] 校验未收敛', vEnd.missing, vEnd.extras.map(function (t) { return t.w; })); } catch (e) {}
+        try { console.warn('[ww] 积木不完整，请反馈此句（已无界面补词入口）：', anchor, '漏词', vEnd.missing, '多词', vEnd.extras.map(function (t) { return t.w; })); } catch (e) {}
       }
       finalize(tree, anchor);
     };
@@ -3179,9 +3155,6 @@ body.creative .cs-close { display: inline-flex; }
   function orderText(list) {
     return joinToks(tokensOfTree(list || [], function (id) { return cur().blocks[id]; }, []));
   }
-
-  /* 空位类型 → 提示词（仅供评判，不拦截） */
-  var KLABEL = { clause: '从句', noun: '名词短语', verb: '动词短语' };
 
   /* 判定为通过：结构一致，或意思+语法等效通过；通过后亮参考答案并停等「下一句」 */
   function passSentence(justFinished, via) {
@@ -3384,7 +3357,6 @@ body.creative .cs-close { display: inline-flex; }
   function gotoSentence(i) {
     if (i < 0 || i >= FLAT.length || !unlocked(i)) return;
     S.cur = i;
-    partInput.value = '';
     fillSlotPath = '';
     caretAt = -1;
     ansNextPending = false; /* 离开停等态：重访已完成句只看答案，不出「下一句」 */
@@ -4242,7 +4214,6 @@ body.creative .cs-close { display: inline-flex; }
       it.order = [];
       it.done = false;
       it.altOk = false;
-      partInput.value = '';
       renderZones();
       renderStrip();
     }
@@ -4274,9 +4245,14 @@ body.creative .cs-close { display: inline-flex; }
   /* ================= 启动 ================= */
   load();
   applyStaticLang();
-  document.getElementById('langToggle').addEventListener('click', function (e) {
+  var langToggleEl = document.getElementById('langToggle');
+  langToggleEl.addEventListener('click', function (e) {
     var b = e.target.closest('button');
     if (b) setLang(b.getAttribute('data-l'));
+  });
+  langToggleEl.addEventListener('keydown', function (e) { /* radiogroup：左右/上下键切换 */
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setLang('en'); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setLang('zh'); }
   });
   var start = 0;
   for (var i = 0; i < FLAT.length; i++) {
@@ -4621,6 +4597,29 @@ var DEFAULT_BACKGROUND_IMAGE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIA
       if (pal.bgB) root.setProperty('--bgB', pal.bgB);
       if (pal.bgC) root.setProperty('--bgC', pal.bgC);
       if (pal.bgD) root.setProperty('--bgD', pal.bgD);
+      /* 确认键深色玻璃基色：取背景主色（photo），色相不变、亮度压到 25%、饱和略增 */
+      try {
+        var m = /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i.exec(pal.photo || '');
+        if (m) {
+          var r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
+          var mx = Math.max(r, g, b), mn = Math.min(r, g, b), df = mx - mn, h = 0;
+          if (df) {
+            if (mx === r) h = ((g - b) / df) % 6;
+            else if (mx === g) h = (b - r) / df + 2;
+            else h = (r - g) / df + 4;
+            h *= 60; if (h < 0) h += 360;
+          }
+          var sat = mx ? df / mx : 0, sat2 = Math.min(1, sat * 1.15 + .05), l2 = .25; /* L 25–35% 区间取下限保对比度 */
+          var c = sat2 * (1 - Math.abs(2 * l2 - 1)), x = c * (1 - Math.abs((h / 60) % 2 - 1)), m2 = l2 - c / 2;
+          var rr = 0, gg = 0, bb = 0;
+          if (h < 60) { rr = c; gg = x; } else if (h < 120) { rr = x; gg = c; }
+          else if (h < 180) { gg = c; bb = x; } else if (h < 240) { gg = x; bb = c; }
+          else if (h < 300) { rr = x; bb = c; } else { rr = c; bb = x; }
+          function b2(v) { var q = Math.round((v + m2) * 255); return ('0' + (q || 0).toString(16)).slice(-2); }
+          var hx2 = '#' + b2(rr) + b2(gg) + b2(bb);
+          root.setProperty('--go-deep', hx2.toUpperCase());
+        }
+      } catch (e) { /* 推导失败：保留 CSS 静态兜底色 */ }
     });
   } catch (e) { /* 整块失败也不影响主应用 */ }
 })();
