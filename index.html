@@ -76,6 +76,14 @@
   /* 段落进度三态 */
   --para-idle-bg: rgba(125, 135, 144, .12);
   --para-cur-bg: rgba(107, 142, 155, .3);
+  /* s1–s4 小方框 · 液态玻璃三态（同色系取自背景照片） */
+  --schip-ink: #5C6770;
+  --schip-cur-bg: color-mix(in srgb, var(--accent-deep) 82%, var(--bgA) 18%);
+  --schip-cur-brd: rgba(255, 255, 255, .55);
+  --schip-cur-ink: #FFFFFF;
+  --schip-done-bg: color-mix(in srgb, var(--ok) 34%, transparent);
+  --schip-done-brd: color-mix(in srgb, var(--ok-brd) 70%, transparent);
+  --schip-done-ink: #2E5341;
   /* 词块药丸（四栏通用：舞台大 / 侧栏小，仅字号内距不同） */
   --pill-topic-bg: rgba(52, 90, 106, .88);  --pill-topic-ink: #DCEBEF;
   --pill-skel-bg: rgba(98, 91, 56, .9);     --pill-skel-ink: #F3EFDA;
@@ -126,6 +134,13 @@
     --scroll: rgba(160, 185, 195, .3);
     --para-idle-bg: rgba(125, 135, 144, .16);
     --para-cur-bg: rgba(107, 142, 155, .25);
+    --schip-ink: #C6D1D8;
+    --schip-cur-bg: color-mix(in srgb, var(--accent) 26%, rgba(255, 255, 255, .08));
+    --schip-cur-brd: rgba(255, 255, 255, .4);
+    --schip-cur-ink: #FFFFFF;
+    --schip-done-bg: color-mix(in srgb, var(--ok) 24%, rgba(255, 255, 255, .05));
+    --schip-done-brd: color-mix(in srgb, var(--ok-brd) 70%, transparent);
+    --schip-done-ink: #CDE2D5;
     /* 栏目词块整体提亮 10–15% */
     --pill-topic-bg: rgba(74, 118, 134, .92);  --pill-topic-ink: #D5E8ED;
     --pill-skel-bg: rgba(122, 113, 76, .92);   --pill-skel-ink: #EFEAD2;
@@ -172,6 +187,13 @@
   --scroll: rgba(160, 185, 195, .3);
   --para-idle-bg: rgba(125, 135, 144, .16);
   --para-cur-bg: rgba(107, 142, 155, .25);
+  --schip-ink: #C6D1D8;
+  --schip-cur-bg: color-mix(in srgb, var(--accent) 26%, rgba(255, 255, 255, .08));
+  --schip-cur-brd: rgba(255, 255, 255, .4);
+  --schip-cur-ink: #FFFFFF;
+  --schip-done-bg: color-mix(in srgb, var(--ok) 24%, rgba(255, 255, 255, .05));
+  --schip-done-brd: color-mix(in srgb, var(--ok-brd) 70%, transparent);
+  --schip-done-ink: #CDE2D5;
   --pill-topic-bg: rgba(74, 118, 134, .92);  --pill-topic-ink: #D5E8ED;
   --pill-skel-bg: rgba(122, 113, 76, .92);   --pill-skel-ink: #EFEAD2;
   --pill-bonus-bg: rgba(150, 102, 116, .92); --pill-bonus-ink: #F6E3E7;
@@ -333,8 +355,7 @@ body.creative #bgFx { display: none; }
 .db { min-height: 0; display: flex; flex-direction: column; }
 .db-head { padding: 2px 4px 0; flex: none; }
 .db-title-row { display: flex; align-items: baseline; gap: 8px; }
-.db-title-row h2 { font-size: 15px; font-weight: 700; }
-.badge { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--ink-3); border: 1px solid var(--divider); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.db-title-row h2 { font-size: 15px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 .db-desc { margin-top: 5px; font-size: 13px; color: var(--ink-2); font-weight: 400; line-height: 1.6; }
 .db-list {
   flex: 1; min-height: 0; overflow: auto; padding: 14px 6px 18px 2px;
@@ -351,11 +372,6 @@ body.creative #bgFx { display: none; }
 .card:hover { border-color: rgba(107, 142, 155, .55); box-shadow: 0 6px 20px rgba(40, 70, 80, .1); }
 .card:active { cursor: grabbing; transform: scale(.99); }
 .card .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-bottom: 6px; }
-.tag i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
-.dot-arg { background: #6B8E9B; }
-.dot-data { background: #D1A9B0; }
-.dot-case { background: #B5AA86; }
-.dot-conc { background: #7D8790; }
 .card .en { font-size: 13px; font-weight: 600; line-height: 1.6; color: var(--ink); text-align: left; }
 .card .zh { font-size: 12px; color: #78838C; font-weight: 400; margin-top: 5px; line-height: 1.6; text-align: justify; text-align-last: left; }
 
@@ -371,7 +387,7 @@ body.creative #bgFx { display: none; }
   padding: 28px;
   box-shadow: var(--glass-shadow);
 }
-.shop > .paras, .shop > .stage { border-top: 1px solid var(--divider); padding-top: 20px; }
+.shop > .paras, .shop > .stage { padding-top: 20px; }
 
 /* 题目（玻璃内的裸区块） */
 .q-panel { flex: none; padding: 2px 4px 0; }
@@ -379,15 +395,14 @@ body.creative #bgFx { display: none; }
 .q-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); }
 .q-restart { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: none; cursor: pointer; padding: 0; }
 .q-restart:hover { color: var(--err); }
-.q-text {
-  font-size: 15px; line-height: 1.65; font-weight: 400; margin-top: 8px; color: var(--ink);
-  text-align: justify; text-align-last: left; hyphens: auto; -webkit-hyphens: auto;
-}
+.q-text { margin-top: 8px; color: var(--ink); text-align: justify; text-align-last: left; hyphens: auto; -webkit-hyphens: auto; }
+.q-text .q-statement { font-size: 16.5px; line-height: 1.6; font-weight: 600; }
+.q-text .q-task { font-size: 15px; line-height: 1.65; font-weight: 400; margin-top: .9em; }
 
 /* ---------- 段落进度（四态步骤块） ---------- */
 .paras { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .para {
-  display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 8px;
+  display: grid; grid-template-columns: 1fr; align-items: baseline;
   padding: 10px 12px; border-radius: 16px;
   background: var(--para-idle-bg); border: 1px solid transparent;
   transition: background-color .25s ease, border-color .25s ease;
@@ -395,27 +410,42 @@ body.creative #bgFx { display: none; }
 }
 .para:hover { filter: brightness(1.03); }
 .para .p-tag { grid-row: 1; font-size: 15px; font-weight: 700; color: var(--ink-2); line-height: 1.4; }
-.para .p-count { grid-row: 1; grid-column: 2; font-size: 13px; font-weight: 500; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .para .p-sub { grid-row: 2; grid-column: 1 / -1; font-size: 13px; font-weight: 400; color: var(--ink-3); margin-top: 2px; }
 .para .schips { grid-row: 3; grid-column: 1 / -1; display: flex; gap: 5px; margin-top: 7px; }
 .para.done { background: var(--ok-bg); border-color: var(--ok-brd); cursor: default; }
 .para.done .p-tag { color: var(--ok-ink); }
-.para.done .p-count, .para.done .p-sub { color: var(--ok-ink-2); }
-.para.done .schip { background: rgba(143, 169, 152, .18); border-color: transparent; color: var(--ok-ink-2); }
+.para.done .p-sub { color: var(--ok-ink-2); }
 .para.cur { background: var(--para-cur-bg); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .para.cur .p-tag { color: var(--accent-deep); font-weight: 800; }
-.para.cur .p-count, .para.cur .p-sub { color: var(--accent); }
+.para.cur .p-sub { color: var(--accent); }
 .schip {
+  position: relative;
   min-width: 22px; height: 20px; padding: 0 5px;
   border-radius: 8px; font-size: 11px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
-  color: var(--ink-2); border: 1px solid transparent; background: rgba(125, 135, 144, .16);
+  color: var(--schip-ink);
+  border: 1px solid rgba(255, 255, 255, .3);
+  background-color: color-mix(in srgb, var(--bgB) 12%, transparent);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 2px 5px color-mix(in srgb, var(--bgC) 26%, transparent);
   font-variant-numeric: tabular-nums; cursor: pointer;
-  transition: background-color .2s ease, color .2s ease;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
+.schip::after { content: ''; position: absolute; inset: -12px -11px; } /* 透明扩热区至 44px */
 .schip.lock { opacity: .4; cursor: not-allowed; }
-.schip.cur { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); animation: schipPulse 1.6s ease-in-out infinite; }
-.schip.done { background: var(--ok-bg); border-color: var(--ok-brd); color: var(--ok-ink); animation: none; }
+.schip.cur {
+  color: var(--schip-cur-ink); border-color: var(--schip-cur-brd);
+  background-color: var(--schip-cur-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 3px 8px color-mix(in srgb, var(--pulse) 70%, transparent);
+  animation: schipPulse 1.6s ease-in-out infinite;
+}
+.schip.done {
+  color: var(--schip-done-ink); border-color: var(--schip-done-brd);
+  background-color: var(--schip-done-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 2px 5px color-mix(in srgb, var(--ok) 22%, transparent);
+  animation: none;
+}
 @keyframes schipPulse { 0%, 100% { box-shadow: 0 0 0 0 var(--pulse); } 50% { box-shadow: 0 0 0 3px var(--pulse); } }
 
 /* ---------- 当前句工作台 ---------- */
@@ -860,39 +890,37 @@ body.creative .cs-close { display: inline-flex; }
       <div class="db-head">
         <div class="db-title-row">
           <h2 id="dbTitle">观点库</h2>
-          
-          <span class="badge" data-i18n="db.badge">拖入中文框 / 点击填入</span>
         </div>
         <p class="db-desc" data-i18n="db.desc">前置对话沉淀的论点与论据</p>
       </div>
       <div class="db-list" id="dbList">
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-arg"></i><span data-i18n="db.tag.argSub" data-zh="论点 · 补贴">论点 · 补贴</span></span>
+          <span class="tag"><span data-i18n="db.tag.arg" data-zh="论点">论点</span></span>
           <p class="en">Subsidies lower the price of fresh produce, making a balanced diet affordable for everyone.</p>
           <p class="zh">补贴降低新鲜农产品的价格，让所有人都吃得起均衡饮食。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-data"></i><span data-i18n="db.tag.datSub" data-zh="论据 · 补贴">论据 · 补贴</span></span>
+          <span class="tag"><span data-i18n="db.tag.dat" data-zh="论据">论据</span></span>
           <p class="en">For low-income families, price is the biggest barrier to healthy eating.</p>
           <p class="zh">对低收入家庭而言，价格是健康饮食的最大障碍。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-arg"></i><span data-i18n="db.tag.argTax" data-zh="论点 · 征税">论点 · 征税</span></span>
+          <span class="tag"><span data-i18n="db.tag.arg" data-zh="论点">论点</span></span>
           <p class="en">A tax on sugary drinks and junk food raises their price and directly discourages over-consumption.</p>
           <p class="zh">对含糖饮料和垃圾食品征税抬高价格，直接抑制过度消费。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-data"></i><span data-i18n="db.tag.datTax" data-zh="论据 · 征税">论据 · 征税</span></span>
+          <span class="tag"><span data-i18n="db.tag.dat" data-zh="论据">论据</span></span>
           <p class="en">After the UK introduced its sugar tax, manufacturers cut the sugar content of drinks significantly.</p>
           <p class="zh">英国开征糖税后，饮料厂商显著降低了产品含糖量。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-case"></i><span data-i18n="db.tag.case" data-zh="事例">事例</span></span>
+          <span class="tag"><span data-i18n="db.tag.case" data-zh="事例">事例</span></span>
           <p class="en">Hungary's junk-food tax funds free school meals and public health programmes.</p>
           <p class="zh">匈牙利的垃圾食品税资助了免费校餐和公共健康项目。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-conc"></i><span data-i18n="db.tag.conc" data-zh="让步">让步</span></span>
+          <span class="tag"><span data-i18n="db.tag.conc" data-zh="让步">让步</span></span>
           <p class="en">Admittedly, food taxes can burden the poor, but they ultimately guide healthier choices.</p>
           <p class="zh">诚然食品税会加重穷人负担，但最终会引导更健康的选择。</p>
         </div>
@@ -903,10 +931,10 @@ body.creative .cs-close { display: inline-flex; }
     <section class="shop">
       <div class="q-panel">
         <div class="q-top">
-          <div class="q-eyebrow" data-i18n="q.eyebrow">IELTS Writing Task 2 · 当前话题</div>
+          <div class="q-eyebrow" data-i18n="q.eyebrow">IELTS Writing Task 2</div>
           <button type="button" class="q-restart" id="restartBtn" title="清空全部进度，从第一句重新开始" data-i18n="btn.restart" data-i18n-title="btn.restart.tip">重新开始</button>
         </div>
-        <p class="q-text" id="qText" lang="en">Some people think the government should subsidise fruits and vegetables to make healthy food more affordable. Others argue that the government should tax unhealthy food instead. Discuss both views and give your opinion.</p>
+        <div class="q-text" id="qText" lang="en"><p class="q-statement">Some people think the government should subsidise fruits and vegetables to make healthy food more affordable. Others argue that the government should tax unhealthy food instead.</p><p class="q-task">Discuss both views and give your opinion.</p></div>
       </div>
 
       <div class="paras" id="paras"></div>
@@ -1067,7 +1095,11 @@ body.creative .cs-close { display: inline-flex; }
   var asmBox = document.getElementById('asmBox');
   var ansBox = document.getElementById('ansBox');
   var restartBtn = document.getElementById('restartBtn');
-  var QTEXT = (document.getElementById('qText').textContent || '').trim();
+  var QTEXT = (function (el) {
+    var ps = el ? el.querySelectorAll('p') : [];
+    var parts = Array.prototype.map.call(ps, function (p) { return (p.textContent || '').trim(); }).filter(Boolean);
+    return parts.length ? parts.join(' ') : ((el && el.textContent) || '').trim();
+  })(document.getElementById('qText'));
   /* ================= 标点规则表（渲染/评判都读这里，不写死在代码里） =================
      before/after: 1=前/后有空格，0=无；必需标点固定生成成块，按普通积木参与判卷 */
   var PUNCT = {
@@ -1098,19 +1130,16 @@ body.creative .cs-close { display: inline-flex; }
     'app.sub': { zh: 'English Writing Workshop', en: '雅思写作 · 拼积木学写作' },
     'topbar.ideas': { zh: '观点库', en: 'Ideas' },
     'db.title': { zh: '观点库', en: 'Ideas' },
-    'db.badge': { zh: '拖入中文框 / 点击填入', en: 'Drag into the Chinese box / click to insert' },
     'db.desc': { zh: '前置对话沉淀的论点与论据', en: 'Arguments and evidence from your earlier discussion' },
-    'db.tag.argSub': { zh: '论点 · 补贴', en: 'Argument · Subsidies' },
-    'db.tag.datSub': { zh: '论据 · 补贴', en: 'Evidence · Subsidies' },
-    'db.tag.argTax': { zh: '论点 · 征税', en: 'Argument · Taxing' },
-    'db.tag.datTax': { zh: '论据 · 征税', en: 'Evidence · Taxing' },
+    'db.tag.arg': { zh: '论点', en: 'Argument' },
+    'db.tag.dat': { zh: '论据', en: 'Evidence' },
     'db.tag.case': { zh: '事例', en: 'Example' },
     'db.tag.conc': { zh: '让步', en: 'Concession' },
     'zone.title.skel': { zh: '骨架', en: 'Frames' },
     'zone.title.topic': { zh: '话题料', en: 'Topic' },
     'zone.title.bonus': { zh: '加分词', en: 'Bonus' },
     'zone.title.part': { zh: '配件', en: 'Parts' },
-    'q.eyebrow': { zh: 'IELTS Writing Task 2 · 当前话题', en: 'IELTS Writing Task 2 · Current topic' },
+    'q.eyebrow': { zh: 'IELTS Writing Task 2', en: 'IELTS Writing Task 2' },
     'btn.restart': { zh: '重新开始', en: 'Start over' },
     'btn.restart.tip': { zh: '清空全部进度，从第一句重新开始', en: 'Clear all progress and start from the first sentence' },
     'btn.restart.confirm': { zh: '确认清空？', en: 'Clear everything?' },
@@ -1118,10 +1147,10 @@ body.creative .cs-close { display: inline-flex; }
     'para.t2': { zh: '第二段', en: 'Part 2' },
     'para.t3': { zh: '第三段', en: 'Part 3' },
     'para.t4': { zh: '第四段', en: 'Part 4' },
-    'para.s1': { zh: '开头 · 表明立场', en: 'Intro · state your stance' },
-    'para.s2': { zh: '正面论述 · 补贴', en: 'Body · the case for subsidies' },
-    'para.s3': { zh: '反面论述 · 征税', en: 'Body · the case for taxing' },
-    'para.s4': { zh: '结尾 · 结论与建议', en: 'Conclusion · summary and advice' },
+    'para.s1': { zh: '开头', en: 'Intro' },
+    'para.s2': { zh: '正面论述', en: 'Body' },
+    'para.s3': { zh: '反面论述', en: 'Body' },
+    'para.s4': { zh: '结尾', en: 'Conclusion' },
     'role.bg': { zh: '背景', en: 'Background' },
     'role.views': { zh: '双方', en: 'Both views' },
     'role.stance': { zh: '立场', en: 'Your stance' },
@@ -1131,7 +1160,6 @@ body.creative .cs-close { display: inline-flex; }
     'role.pt3': { zh: '分论点3', en: 'Point 3' },
     'role.sum': { zh: '总结', en: 'Summary' },
     'role.sug': { zh: '建议', en: 'Advice' },
-    'para.words': { zh: '{N} 词', en: '{N} words' },
     'zh.aria': { zh: '中文输入', en: 'Chinese input' },
     'zh.placeholder': { zh: '用一句中文描述这句话要表达什么（可从左侧数据库拖入）', en: 'Describe this sentence in one line of Chinese (drag in from the Ideas panel)' },
     'go.check': { zh: '校验 →', en: 'Check →' },
@@ -1333,8 +1361,7 @@ body.creative .cs-close { display: inline-flex; }
       html += '<div class="para' + (doneAll ? ' done' : (hasCur ? ' cur' : '')) + '" data-p="' + pi + '">' +
         '<span class="p-tag">' + paraTitle(pi) + '</span>' +
         '<span class="p-sub">' + paraSub(pi) + '</span>' +
-        '<span class="schips">' + chips + '</span>' +
-        '<span class="p-count">' + tN('para.words', paraWords(pi)) + '</span></div>';
+        '<span class="schips">' + chips + '</span></div>';
     });
     parasEl.innerHTML = html;
   }
