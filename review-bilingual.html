@@ -1,0 +1,462 @@
+<title>双语化审校表</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* 设计简注：工作台项目自审文档 —— 莫兰迪纸面 + 工作台四区色作分组标记；系统 sans 为主，键名用 JetBrains Mono */
+:root {
+  --bg: #FAF9F7; --card: #FFFFFF; --fg: #2B2F33; --muted: #7A8288;
+  --line: #E6E2DB; --code-bg: #F1EFEA;
+  --accent: #4F7A87; --accent-soft: #EAF0F1;
+  --ok: #4E8A6C; --ok-soft: #EAF3EE;
+  --fix: #B9695C; --fix-soft: #F7EDEA;
+  --dot-skel: #8B87B8; --dot-topic: #5F8292; --dot-bonus: #C99A94; --dot-part: #8D939C;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1E2124; --card: #26292D; --fg: #E8E6E1; --muted: #9AA1A7;
+    --line: #34383D; --code-bg: #2B2F33;
+    --accent: #7FAAB5; --accent-soft: #2A3438;
+    --ok: #7FBF9E; --ok-soft: #26332C;
+    --fix: #D98B7F; --fix-soft: #382C29;
+    --dot-skel: #9B97C6; --dot-topic: #7FAAB5; --dot-bonus: #D8ACA6; --dot-part: #9AA1A7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1E2124; --card: #26292D; --fg: #E8E6E1; --muted: #9AA1A7;
+  --line: #34383D; --code-bg: #2B2F33;
+  --accent: #7FAAB5; --accent-soft: #2A3438;
+  --ok: #7FBF9E; --ok-soft: #26332C;
+  --fix: #D98B7F; --fix-soft: #382C29;
+  --dot-skel: #9B97C6; --dot-topic: #7FAAB5; --dot-bonus: #D8ACA6; --dot-part: #9AA1A7;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 14px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1020px; margin: 0 auto; padding-block: 20px 72px; }
+.mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* 粘性工具条 */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--bg); padding: 10px 0 12px; border-bottom: 1px solid var(--line);
+}
+.bar h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: .01em; }
+.bar .count { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.copy-btn {
+  margin-left: auto; appearance: none; border: 1px solid var(--line); background: var(--card);
+  color: var(--fg); font: 600 12.5px/1 inherit; padding: 7px 14px; border-radius: 999px; cursor: pointer;
+}
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.copy-btn:active { transform: scale(.97); }
+.copy-btn:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lead { color: var(--muted); font-size: 13px; margin: 14px 2px 0; max-width: 72ch; }
+.lead b { color: var(--fg); font-weight: 600; }
+
+/* 分区 */
+section { margin-top: 40px; }
+.sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.sec-head .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; align-self: center; }
+.sec-head h2 { font-size: 15.5px; font-weight: 700; margin: 0; }
+.sec-head .n { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sec-note {
+  font-size: 12.5px; color: var(--muted); background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px 14px; margin: 10px 0 14px; max-width: 78ch;
+}
+.sec-note b { color: var(--fg); font-weight: 600; }
+.sec-note code { font-family: "JetBrains Mono", monospace; font-size: 11.5px; background: var(--code-bg); padding: 1px 5px; border-radius: 5px; }
+
+/* 表格 */
+.tbl-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr[data-key] { cursor: pointer; transition: background .12s ease; }
+tr[data-key]:hover { background: var(--accent-soft); }
+td.k { white-space: nowrap; font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--accent); }
+td.ln { white-space: nowrap; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+td.zh { color: var(--fg); min-width: 200px; }
+td.en { color: var(--fg); }
+td.en .tpl { color: var(--muted); font-size: 11.5px; }
+td.ctx { color: var(--muted); font-size: 12px; }
+tr.mark-ok td { background: var(--ok-soft); }
+tr.mark-fix td { background: var(--fix-soft); }
+tr.mark-ok td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+tr.mark-fix td:first-child { box-shadow: inset 3px 0 0 var(--fix); }
+.state { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
+tr.mark-ok .state { background: var(--ok); color: #fff; }
+tr.mark-fix .state { background: var(--fix); color: #fff; }
+
+/* 决策卡 */
+.dec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.dec {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0;
+}
+.dec h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 700; display: flex; gap: 8px; align-items: baseline; }
+.dec h3 .id { color: var(--accent); font-family: "JetBrains Mono", monospace; font-size: 12px; }
+.dec p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.dec p b { color: var(--fg); font-weight: 600; }
+.dec .rec { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 9px; }
+footer { margin-top: 44px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 560px) {
+  td.zh { min-width: 150px; }
+  .bar h1 { font-size: 15.5px; }
+}
+</style>
+<div class="wrap">
+
+  <div class="bar">
+    <h1>双语化审校表</h1>
+    <span class="count" id="prog">—</span>
+    <button type="button" class="copy-btn" id="copyBtn">复制审校结果</button>
+  </div>
+  <p class="lead">给「雅思写作工作台」的中英双语化审校用。两个决定分列如下：<b>决定 2</b> 是 13 条任务描述的英文草稿（数据存双语）；<b>决定 3</b> 是全量 UI 字符串的 i18n 对照表。每行可点击循环标记：<b>未标 → ✓ 通过 → ✗ 需修改</b>，标记只存在本页，点右上角可复制汇总发回。行号为主文件 english-writing-workshop.html 中的位置。</p>
+
+  <!-- ============ 决定2 任务描述 ============ -->
+  <section id="t2">
+    <div class="sec-head"><span class="dot" style="background:var(--dot-topic)"></span><h2>决定 2 · 任务描述英文草稿</h2><span class="n">13 条</span></div>
+    <div class="sec-note">
+      <b>现状核实</b>：全部任务描述是文件内的静态数据（<code>ESSAY_PLAN[].sentences[].note</code>），<b>不存在运行时模型生成</b>——AI 只是消费这些要点写进提示词，因此「切换语言触发重新生成」天然不会发生。<br>
+      <b>拟议存法</b>：<code>note: '中文'</code> → <code>note: { zh: '…', en: '…' }</code>。上屏三处（中文框说明行 / s1s2 气泡 tooltip / 兜底建议模板）按界面语言取值；发给模型的提示词固定取 <code>zh</code>，模型行为零变化。前缀「改写题目背景：」只出现在 1段s1，英文版直接含自然前缀 "Paraphrase the topic:"，不单独拆 key。
+    </div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>位置</th></tr></thead>
+      <tbody>
+        <tr data-key="note.p1s1"><td class="k">note.p1s1</td><td class="zh">改写题目背景：政府该补贴健康食品还是向不健康食品征税</td><td class="en">Paraphrase the topic: should the government subsidise healthy food or tax unhealthy food?</td><td class="ctx">1段s1 · 背景</td></tr>
+        <tr data-key="note.p1s2"><td class="k">note.p1s2</td><td class="zh">概括两种对立观点</td><td class="en">Briefly present the two opposing views</td><td class="ctx">1段s2 · 双方</td></tr>
+        <tr data-key="note.p1s3"><td class="k">note.p1s3</td><td class="zh">亮明自己的立场</td><td class="en">State your own position clearly</td><td class="ctx">1段s3 · 立场</td></tr>
+        <tr data-key="note.p2s1"><td class="k">note.p2s1</td><td class="zh">本段总论点：补贴的核心理由</td><td class="en">Topic sentence: the core argument for subsidies</td><td class="ctx">2段s1 · 段首句</td></tr>
+        <tr data-key="note.p2s2"><td class="k">note.p2s2</td><td class="zh">分论点一及其论据</td><td class="en">Supporting point 1, with evidence</td><td class="ctx">2段s2 · 分论点1</td></tr>
+        <tr data-key="note.p2s3"><td class="k">note.p2s3</td><td class="zh">分论点二及其论据</td><td class="en">Supporting point 2, with evidence</td><td class="ctx">2段s3 · 分论点2</td></tr>
+        <tr data-key="note.p2s4"><td class="k">note.p2s4</td><td class="zh">分论点三及其论据</td><td class="en">Supporting point 3, with evidence</td><td class="ctx">2段s4 · 分论点3</td></tr>
+        <tr data-key="note.p3s1"><td class="k">note.p3s1</td><td class="zh">本段总论点：征税的核心理由</td><td class="en">Topic sentence: the core argument for a tax</td><td class="ctx">3段s1 · 段首句</td></tr>
+        <tr data-key="note.p3s2"><td class="k">note.p3s2</td><td class="zh">分论点一及其论据</td><td class="en">Supporting point 1, with evidence</td><td class="ctx">3段s2 · 分论点1（同 p2s2）</td></tr>
+        <tr data-key="note.p3s3"><td class="k">note.p3s3</td><td class="zh">分论点二及其论据</td><td class="en">Supporting point 2, with evidence</td><td class="ctx">3段s3 · 分论点2（同 p2s3）</td></tr>
+        <tr data-key="note.p3s4"><td class="k">note.p3s4</td><td class="zh">分论点三及其论据</td><td class="en">Supporting point 3, with evidence</td><td class="ctx">3段s4 · 分论点3（同 p2s4）</td></tr>
+        <tr data-key="note.p4s1"><td class="k">note.p4s1</td><td class="zh">综合两方观点，重申立场</td><td class="en">Weigh up both views and restate your position</td><td class="ctx">4段s1 · 总结</td></tr>
+        <tr data-key="note.p4s2"><td class="k">note.p4s2</td><td class="zh">给出措施或建议</td><td class="en">Close with a suggestion or recommendation</td><td class="ctx">4段s2 · 建议</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ 决定3 i18n ============ -->
+  <section id="t3">
+    <div class="sec-head"><span class="dot" style="background:var(--dot-skel)"></span><h2>决定 3 · i18n 对照表（全量 UI 字符串）</h2><span class="n" id="t3n">—</span></div>
+    <div class="sec-note">
+      <b>机制</b>：字典 <code>{ key: {zh, en} }</code> + <code>t(key)</code>；顶栏加 <code>EN | 中</code> 切换；<code>localStorage('yasi-lang')</code> 记忆，默认中文。<b>永远英文不翻译</b>：积木块内容、题目原文、参考答案句、观点库卡面英文。<b>永远双语</b>：观点库面板与四栏标题（英文模式英文为主、中文弱化成小字，中文模式维持现状）。<br>
+      <b>不入表</b>：等价块分隔词 <code>or</code>、空栏占位 <code>—</code>、按钮符号 <code>＋ ×</code>（语言中立）；本地兜底建议三句（1437–1439，填进中文框的内容，保持中文）；AI 提示词全部保持中文。花括号 <code>{N}</code> 为数字占位。
+    </div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-part)"></span><h2 style="font-size:13.5px">顶栏与页面</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.app.title"><td class="k">app.title</td><td class="zh">英语写作工作台</td><td class="en">English Writing Workshop <span class="tpl">（h1 与页签 title 同 key）</span></td><td class="ln">4 / 814</td></tr>
+        <tr data-key="i18n.app.sub"><td class="k">app.sub</td><td class="zh">English Writing Workshop</td><td class="en">雅思写作 · 拼积木学写作 <span class="tpl">（中英对调：副题永远显示另一语言，见决策 D2）</span></td><td class="ln">815</td></tr>
+        <tr data-key="i18n.topbar.ideas"><td class="k">topbar.ideas</td><td class="zh">观点库</td><td class="en">Ideas</td><td class="ln">817</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-topic)"></span><h2 style="font-size:13.5px">左栏 · 观点库</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.db.title"><td class="k">db.title</td><td class="zh">观点库（副题 Database）</td><td class="en">Ideas <span class="tpl">（副题位换弱化的「观点库」）</span></td><td class="ln">826</td></tr>
+        <tr data-key="i18n.db.badge"><td class="k">db.badge</td><td class="zh">拖入中文框 / 点击填入</td><td class="en">Drag into the Chinese box / click to insert</td><td class="ln">828</td></tr>
+        <tr data-key="i18n.db.desc"><td class="k">db.desc</td><td class="zh">前置对话沉淀的论点与论据</td><td class="en">Arguments and evidence from your earlier discussion</td><td class="ln">830</td></tr>
+        <tr data-key="i18n.db.tag.argSub"><td class="k">db.tag.argSub</td><td class="zh">论点 · 补贴</td><td class="en">Argument · Subsidies</td><td class="ln">834</td></tr>
+        <tr data-key="i18n.db.tag.datSub"><td class="k">db.tag.datSub</td><td class="zh">论据 · 补贴</td><td class="en">Evidence · Subsidies</td><td class="ln">839</td></tr>
+        <tr data-key="i18n.db.tag.argTax"><td class="k">db.tag.argTax</td><td class="zh">论点 · 征税</td><td class="en">Argument · Taxing</td><td class="ln">844</td></tr>
+        <tr data-key="i18n.db.tag.datTax"><td class="k">db.tag.datTax</td><td class="zh">论据 · 征税</td><td class="en">Evidence · Taxing</td><td class="ln">849</td></tr>
+        <tr data-key="i18n.db.tag.case"><td class="k">db.tag.case</td><td class="zh">事例</td><td class="en">Example</td><td class="ln">854</td></tr>
+        <tr data-key="i18n.db.tag.conc"><td class="k">db.tag.conc</td><td class="zh">让步</td><td class="en">Concession</td><td class="ln">859</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-bonus)"></span><h2 style="font-size:13.5px">题目面板</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.q.eyebrow"><td class="k">q.eyebrow</td><td class="zh">IELTS Writing Task 2 · 当前话题</td><td class="en">IELTS Writing Task 2 · Current topic</td><td class="ln">870</td></tr>
+        <tr data-key="i18n.btn.restart"><td class="k">btn.restart</td><td class="zh">重新开始</td><td class="en">Start over</td><td class="ln">871</td></tr>
+        <tr data-key="i18n.btn.restart.tip"><td class="k">btn.restart.tip</td><td class="zh">清空全部进度，从第一句重新开始</td><td class="en">Clear all progress and start from the first sentence</td><td class="ln">871</td></tr>
+        <tr data-key="i18n.btn.restart.confirm"><td class="k">btn.restart.confirm</td><td class="zh">确认清空？</td><td class="en">Clear everything?</td><td class="ln">4063</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-skel)"></span><h2 style="font-size:13.5px">段落与句子职能（段落列表 / 舞台眉题 / 答案条共用）</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.para.t1"><td class="k">para.t1</td><td class="zh">第一段</td><td class="en">Part 1</td><td class="ln">972</td></tr>
+        <tr data-key="i18n.para.t2"><td class="k">para.t2</td><td class="zh">第二段</td><td class="en">Part 2</td><td class="ln">977</td></tr>
+        <tr data-key="i18n.para.t3"><td class="k">para.t3</td><td class="zh">第三段</td><td class="en">Part 3</td><td class="ln">983</td></tr>
+        <tr data-key="i18n.para.t4"><td class="k">para.t4</td><td class="zh">第四段</td><td class="en">Part 4</td><td class="ln">989</td></tr>
+        <tr data-key="i18n.para.s1"><td class="k">para.s1</td><td class="zh">开头 · 表明立场</td><td class="en">Intro · state your stance</td><td class="ln">972</td></tr>
+        <tr data-key="i18n.para.s2"><td class="k">para.s2</td><td class="zh">正面论述 · 补贴</td><td class="en">Body · the case for subsidies</td><td class="ln">977</td></tr>
+        <tr data-key="i18n.para.s3"><td class="k">para.s3</td><td class="zh">反面论述 · 征税</td><td class="en">Body · the case for taxing</td><td class="ln">983</td></tr>
+        <tr data-key="i18n.para.s4"><td class="k">para.s4</td><td class="zh">结尾 · 结论与建议</td><td class="en">Conclusion · summary and advice</td><td class="ln">989</td></tr>
+        <tr data-key="i18n.role.bg"><td class="k">role.bg</td><td class="zh">背景</td><td class="en">Background</td><td class="ln">973</td></tr>
+        <tr data-key="i18n.role.views"><td class="k">role.views</td><td class="zh">双方</td><td class="en">Both views</td><td class="ln">974</td></tr>
+        <tr data-key="i18n.role.stance"><td class="k">role.stance</td><td class="zh">立场</td><td class="en">Your stance</td><td class="ln">975</td></tr>
+        <tr data-key="i18n.role.ts"><td class="k">role.ts</td><td class="zh">段首句</td><td class="en">Topic sentence</td><td class="ln">978</td></tr>
+        <tr data-key="i18n.role.pt1"><td class="k">role.pt1</td><td class="zh">分论点1</td><td class="en">Point 1</td><td class="ln">979</td></tr>
+        <tr data-key="i18n.role.pt2"><td class="k">role.pt2</td><td class="zh">分论点2</td><td class="en">Point 2</td><td class="ln">980</td></tr>
+        <tr data-key="i18n.role.pt3"><td class="k">role.pt3</td><td class="zh">分论点3</td><td class="en">Point 3</td><td class="ln">981</td></tr>
+        <tr data-key="i18n.role.sum"><td class="k">role.sum</td><td class="zh">总结</td><td class="en">Summary</td><td class="ln">990</td></tr>
+        <tr data-key="i18n.role.sug"><td class="k">role.sug</td><td class="zh">建议</td><td class="en">Advice</td><td class="ln">991</td></tr>
+        <tr data-key="i18n.para.words"><td class="k">para.words</td><td class="zh">词 <span class="tpl">（{N} 词）</span></td><td class="en">{N} words</td><td class="ln">1162</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-part)"></span><h2 style="font-size:13.5px">中文输入区</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.zh.aria"><td class="k">zh.aria</td><td class="zh">中文输入</td><td class="en">Chinese input</td><td class="ln">886</td></tr>
+        <tr data-key="i18n.zh.placeholder"><td class="k">zh.placeholder</td><td class="zh">用一句中文描述这句话要表达什么（可从左侧数据库拖入）</td><td class="en">Describe this sentence in one line of Chinese (drag in from the Ideas panel)</td><td class="ln">886</td></tr>
+        <tr data-key="i18n.go.check"><td class="k">go.check</td><td class="zh">校验 →</td><td class="en">Check →</td><td class="ln">887</td></tr>
+        <tr data-key="i18n.go.edit"><td class="k">go.edit</td><td class="zh">修改中文</td><td class="en">Edit Chinese</td><td class="ln">1379</td></tr>
+        <tr data-key="i18n.go.recheck"><td class="k">go.recheck</td><td class="zh">重新校验</td><td class="en">Re-check</td><td class="ln">1473</td></tr>
+        <tr data-key="i18n.go.accept"><td class="k">go.accept</td><td class="zh">接受修改</td><td class="en">Accept changes</td><td class="ln">888</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-skel)"></span><h2 style="font-size:13.5px">拼装区</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.asm.reset"><td class="k">asm.reset</td><td class="zh">重置</td><td class="en">Reset</td><td class="ln">893</td></tr>
+        <tr data-key="i18n.asm.reset.tip"><td class="k">asm.reset.tip</td><td class="zh">清空本句已拼的词块</td><td class="en">Clear the blocks placed in this sentence</td><td class="ln">893</td></tr>
+        <tr data-key="i18n.asm.go"><td class="k">asm.go</td><td class="zh">确认</td><td class="en">Check</td><td class="ln">897</td></tr>
+        <tr data-key="i18n.asm.go.checking"><td class="k">asm.go.checking</td><td class="zh">检查中…</td><td class="en">Checking…</td><td class="ln">3273</td></tr>
+        <tr data-key="i18n.asm.empty.done"><td class="k">asm.empty.done</td><td class="zh">本句已完成</td><td class="en">Sentence complete</td><td class="ln">1340</td></tr>
+        <tr data-key="i18n.asm.empty.wait"><td class="k">asm.empty.wait</td><td class="zh">确认中文后开始拼装</td><td class="en">Confirm your Chinese to start building</td><td class="ln">1340</td></tr>
+        <tr data-key="i18n.asm.empty.guide"><td class="k">asm.empty.guide</td><td class="zh">点击或拖入词块，按正确语序拼出这句 · 骨架空位拖入积木</td><td class="en">Click or drag blocks to build this sentence in order · drop blocks into frame slots</td><td class="ln">1344</td></tr>
+        <tr data-key="i18n.asm.tchip.tip"><td class="k">asm.tchip.tip</td><td class="zh">点击取出 · 拖动换位</td><td class="en">Click to remove · drag to reorder</td><td class="ln">1314</td></tr>
+        <tr data-key="i18n.slot.prefix"><td class="k">slot.prefix</td><td class="zh">空位 · <span class="tpl">（空位 · {类型}）</span></td><td class="en">Slot · </td><td class="ln">1291</td></tr>
+        <tr data-key="i18n.slot.content"><td class="k">slot.content</td><td class="zh">内容</td><td class="en">content</td><td class="ln">1291</td></tr>
+        <tr data-key="i18n.slot.clause"><td class="k">slot.clause</td><td class="zh">从句</td><td class="en">clause</td><td class="ln">2982</td></tr>
+        <tr data-key="i18n.slot.np"><td class="k">slot.np</td><td class="zh">名词短语</td><td class="en">noun phrase</td><td class="ln">2982</td></tr>
+        <tr data-key="i18n.slot.vp"><td class="k">slot.vp</td><td class="zh">动词短语</td><td class="en">verb phrase</td><td class="ln">2982</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-bonus)"></span><h2 style="font-size:13.5px">参考答案条</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.ans.tag"><td class="k">ans.tag</td><td class="zh">参考答案</td><td class="en">Model answer</td><td class="ln">3018</td></tr>
+        <tr data-key="i18n.ans.next"><td class="k">ans.next</td><td class="zh">下一句 →</td><td class="en">Next →</td><td class="ln">3023</td></tr>
+        <tr data-key="i18n.ans.notePrefix"><td class="k">ans.notePrefix</td><td class="zh">✎ 语法点评 · </td><td class="en">✎ Grammar note · </td><td class="ln">500</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-part)"></span><h2 style="font-size:13.5px">右栏 · 素材区与悬浮卡</h2></div>
+    <div class="sec-note">四栏标题（骨架/话题料/加分词/配件）已自带英文名 Frames / Topic / Bonus / Parts：语言切换只对调主副显示，无新文案。下表是提示语与 tooltip。</div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.zone.hint.skel"><td class="k">zone.hint.skel</td><td class="zh">句型模板 · 拖入句子</td><td class="en">Sentence frames · drag into the sentence</td><td class="ln">1062</td></tr>
+        <tr data-key="i18n.zone.hint.topic"><td class="k">zone.hint.topic</td><td class="zh">本题短语 · 点击放入</td><td class="en">Topic phrases · click to insert</td><td class="ln">1063</td></tr>
+        <tr data-key="i18n.zone.hint.bonus"><td class="k">zone.hint.bonus</td><td class="zh">学术搭配 · 点击放入</td><td class="en">Academic collocations · click to insert</td><td class="ln">1064</td></tr>
+        <tr data-key="i18n.zone.hint.part"><td class="k">zone.hint.part</td><td class="zh">功能词·零散词 · 可自建</td><td class="en">Function &amp; stray words · add your own</td><td class="ln">1065</td></tr>
+        <tr data-key="i18n.part.input.ph"><td class="k">part.input.ph</td><td class="zh">缺什么词？输入后回车，生成配件块</td><td class="en">Missing a word? Type it and press Enter</td><td class="ln">1076</td></tr>
+        <tr data-key="i18n.part.input.aria"><td class="k">part.input.aria</td><td class="zh">自建配件词</td><td class="en">Add your own part</td><td class="ln">1076</td></tr>
+        <tr data-key="i18n.part.add.tip"><td class="k">part.add.tip</td><td class="zh">生成配件块</td><td class="en">Create block</td><td class="ln">1076</td></tr>
+        <tr data-key="i18n.zone.empty.done"><td class="k">zone.empty.done</td><td class="zh">全文完成</td><td class="en">Essay complete</td><td class="ln">1261</td></tr>
+        <tr data-key="i18n.zone.empty.wait"><td class="k">zone.empty.wait</td><td class="zh">确认中文后生成本句积木</td><td class="en">Confirm your Chinese to generate blocks</td><td class="ln">1261</td></tr>
+        <tr data-key="i18n.tip.reg.general"><td class="k">tip.reg.general</td><td class="zh">通用</td><td class="en">general</td><td class="ln">2117</td></tr>
+        <tr data-key="i18n.tip.reg.written"><td class="k">tip.reg.written</td><td class="zh">书面</td><td class="en">written</td><td class="ln">2117</td></tr>
+        <tr data-key="i18n.tip.reg.formal"><td class="k">tip.reg.formal</td><td class="zh">正式</td><td class="en">formal</td><td class="ln">2117</td></tr>
+        <tr data-key="i18n.tip.dom.med"><td class="k">tip.dom.med</td><td class="zh">医学</td><td class="en">medical</td><td class="ln">2118</td></tr>
+        <tr data-key="i18n.tip.dom.phy"><td class="k">tip.dom.phy</td><td class="zh">物理</td><td class="en">physics</td><td class="ln">2118</td></tr>
+        <tr data-key="i18n.tip.dom.soc"><td class="k">tip.dom.soc</td><td class="zh">社科</td><td class="en">social science</td><td class="ln">2118</td></tr>
+        <tr data-key="i18n.tip.strength"><td class="k">tip.strength</td><td class="zh">强度 <span class="tpl">（强度{N}）</span></td><td class="en">strength {N}</td><td class="ln">2120</td></tr>
+        <tr data-key="i18n.tip.metaphor"><td class="k">tip.metaphor</td><td class="zh">隐喻</td><td class="en">metaphorical</td><td class="ln">2121</td></tr>
+        <tr data-key="i18n.tip.colloc"><td class="k">tip.colloc</td><td class="zh">常搭 <span class="tpl">（常搭 {词}…）</span></td><td class="en">often with {words}</td><td class="ln">2123</td></tr>
+        <tr data-key="i18n.tip.alt"><td class="k">tip.alt</td><td class="zh">可换 <span class="tpl">（可换 {形式}…）</span></td><td class="en">alt: {forms}</td><td class="ln">2124</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-topic)"></span><h2 style="font-size:13.5px">中文框提示行（zhHint 全部状态）</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.zhh.done"><td class="k">zhh.done</td><td class="zh">全文完成 · 共 {N} 词</td><td class="en">Essay complete · {N} words</td><td class="ln">1385</td></tr>
+        <tr data-key="i18n.zhh.sentDone"><td class="k">zhh.sentDone</td><td class="zh">已完成 · 可点「修改中文」重来，或直接改词序</td><td class="en">Done · click “Edit Chinese” to redo, or just reorder the blocks</td><td class="ln">1388</td></tr>
+        <tr data-key="i18n.zhh.struck"><td class="k">zhh.struck</td><td class="zh">已划掉偏离部分 · 接受或继续编辑</td><td class="en">Off-target parts struck out · accept or keep editing</td><td class="ln">1394</td></tr>
+        <tr data-key="i18n.zhh.confirmed"><td class="k">zhh.confirmed</td><td class="zh">✓ 已确认</td><td class="en">✓ Confirmed</td><td class="ln">1397</td></tr>
+        <tr data-key="i18n.zhh.suggFilled"><td class="k">zhh.suggFilled</td><td class="zh">数据库建议已填入 · 可修改后校验</td><td class="en">Suggestion inserted · edit if you like, then check</td><td class="ln">1402</td></tr>
+        <tr data-key="i18n.zhh.localMode"><td class="k">zhh.localMode</td><td class="zh">本地规则模式 · 直接输入中文即可</td><td class="en">Local rule mode · just type your Chinese sentence</td><td class="ln">1402</td></tr>
+        <tr data-key="i18n.zhh.zhEdited"><td class="k">zhh.zhEdited</td><td class="zh">中文已修改 · 需重新校验</td><td class="en">Chinese edited · needs a re-check</td><td class="ln">1405</td></tr>
+        <tr data-key="i18n.zhh.sugging"><td class="k">zhh.sugging</td><td class="zh">建议生成中…</td><td class="en">Generating a suggestion…</td><td class="ln">1445</td></tr>
+        <tr data-key="i18n.zhh.unlocked"><td class="k">zhh.unlocked</td><td class="zh">已解锁 · 修改后重新校验</td><td class="en">Unlocked · re-check after editing</td><td class="ln">1474</td></tr>
+        <tr data-key="i18n.zhh.needZh"><td class="k">zhh.needZh</td><td class="zh">先写一句中文</td><td class="en">Write a Chinese sentence first</td><td class="ln">1479</td></tr>
+        <tr data-key="i18n.zhh.offBrief"><td class="k">zhh.offBrief</td><td class="zh">不符合本句要点，请修改</td><td class="en">This doesn’t match the brief for this sentence — please revise</td><td class="ln">1502</td></tr>
+        <tr data-key="i18n.zhh.notZh"><td class="k">zhh.notZh</td><td class="zh">过短或不是中文</td><td class="en">Too short or not Chinese</td><td class="ln">1518</td></tr>
+        <tr data-key="i18n.zhh.checking"><td class="k">zhh.checking</td><td class="zh">校验中…</td><td class="en">Checking…</td><td class="ln">1523</td></tr>
+        <tr data-key="i18n.zhh.confBlocks"><td class="k">zhh.confBlocks</td><td class="zh">✓ 已确认 · 词块已生成</td><td class="en">✓ Confirmed · blocks generated</td><td class="ln">2765</td></tr>
+        <tr data-key="i18n.zhh.resplit"><td class="k">zhh.resplit</td><td class="zh">重新拆分中…</td><td class="en">Re-splitting…</td><td class="ln">2819</td></tr>
+        <tr data-key="i18n.zhh.blocking"><td class="k">zhh.blocking</td><td class="zh">词块生成中…</td><td class="en">Generating blocks…</td><td class="ln">2873</td></tr>
+        <tr data-key="i18n.zhh.keepEmpty"><td class="k">zhh.keepEmpty</td><td class="zh">保留部分为空 · 请重写</td><td class="en">Nothing left to keep · please rewrite</td><td class="ln">3220</td></tr>
+        <tr data-key="i18n.zhh.edited"><td class="k">zhh.edited</td><td class="zh">已编辑 · 重新校验</td><td class="en">Edited · re-check</td><td class="ln">3239</td></tr>
+        <tr data-key="i18n.zhh.dbFilled"><td class="k">zhh.dbFilled</td><td class="zh">已从数据库填入 · 可修改后校验</td><td class="en">Inserted from the Ideas panel · edit if you like, then check</td><td class="ln">4021</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-skel)"></span><h2 style="font-size:13.5px">拼装提示行（asmHint 全部状态）</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.asmh.needBlocks"><td class="k">asmh.needBlocks</td><td class="zh">先确认中文生成词块，再自建配件</td><td class="en">Confirm your Chinese and generate blocks first</td><td class="ln">1099</td></tr>
+        <tr data-key="i18n.asmh.needEnglish"><td class="k">asmh.needEnglish</td><td class="zh">配件请输入英文单词或短语</td><td class="en">Please enter an English word or phrase</td><td class="ln">1100</td></tr>
+        <tr data-key="i18n.asmh.allDone"><td class="k">asmh.allDone</td><td class="zh">✓ 全部句子已拼装正确</td><td class="en">✓ Every sentence built correctly</td><td class="ln">1386</td></tr>
+        <tr data-key="i18n.asmh.sentOk"><td class="k">asmh.sentOk</td><td class="zh">✓ 本句正确 · 可继续调整</td><td class="en">✓ Correct · adjust if you like</td><td class="ln">1389</td></tr>
+        <tr data-key="i18n.asmh.left"><td class="k">asmh.left</td><td class="zh">剩余 {N} 块</td><td class="en">{N} blocks left</td><td class="ln">1399</td></tr>
+        <tr data-key="i18n.asmh.allPlaced"><td class="k">asmh.allPlaced</td><td class="zh">全部放入 · 点「确认」检查</td><td class="en">All placed · click “Check”</td><td class="ln">1400</td></tr>
+        <tr data-key="i18n.asmh.leftAny"><td class="k">asmh.leftAny</td><td class="zh">剩余 {N} 块 · 可随时点「确认」</td><td class="en">{N} blocks left · check any time</td><td class="ln">1407</td></tr>
+        <tr data-key="i18n.asmh.allPlaced2"><td class="k">asmh.allPlaced2</td><td class="zh">全部放入 · 可点「确认」检查</td><td class="en">All placed · ready to check</td><td class="ln">1408</td></tr>
+        <tr data-key="i18n.asmh.tip.colloc"><td class="k">asmh.tip.colloc</td><td class="zh">搭配微提示</td><td class="en">Collocation tip</td><td class="ln">2103</td></tr>
+        <tr data-key="i18n.asmh.tip.grammar"><td class="k">asmh.tip.grammar</td><td class="zh">语法微提示</td><td class="en">Grammar tip</td><td class="ln">2103</td></tr>
+        <tr data-key="i18n.asmh.tip.register"><td class="k">asmh.tip.register</td><td class="zh">语体微提示</td><td class="en">Register tip</td><td class="ln">2104</td></tr>
+        <tr data-key="i18n.asmh.guide"><td class="k">asmh.guide</td><td class="zh">拖入骨架 · 空位填积木 · 共 {N} 块 · 双击空白处进入创想空间 (⌘⏎)</td><td class="en">Drag in a frame · fill its slots · {N} blocks · double-click blank space for Focus mode (⌘⏎)</td><td class="ln">2766</td></tr>
+        <tr data-key="i18n.asmh.autoCheck"><td class="k">asmh.autoCheck</td><td class="zh">全部放入 · 自动检查中…</td><td class="en">All placed · checking…</td><td class="ln">2970</td></tr>
+        <tr data-key="i18n.asmh.ok"><td class="k">asmh.ok</td><td class="zh">✓ 正确</td><td class="en">✓ Correct</td><td class="ln">2992</td></tr>
+        <tr data-key="i18n.asmh.okEquiv"><td class="k">asmh.okEquiv</td><td class="zh">✓ 正确 · 意思与语法均通过</td><td class="en">✓ Correct · meaning and grammar both pass</td><td class="ln">2992</td></tr>
+        <tr data-key="i18n.asmh.slotN"><td class="k">asmh.slotN</td><td class="zh">第{N}空：</td><td class="en">Slot {N}: </td><td class="ln">3080</td></tr>
+        <tr data-key="i18n.asmh.slotOrder"><td class="k">asmh.slotOrder</td><td class="zh">词序调整</td><td class="en">fix the word order</td><td class="ln">3080</td></tr>
+        <tr data-key="i18n.asmh.slotNeed"><td class="k">asmh.slotNeed</td><td class="zh">此处需要{类型}</td><td class="en">this slot needs {type}</td><td class="ln">3080</td></tr>
+        <tr data-key="i18n.asmh.slotOther"><td class="k">asmh.slotOther</td><td class="zh">其他内容</td><td class="en">other content</td><td class="ln">3080</td></tr>
+        <tr data-key="i18n.asmh.orderMove"><td class="k">asmh.orderMove</td><td class="zh">词序：调整 {块名}、…</td><td class="en">Order: move {blocks}</td><td class="ln">3089</td></tr>
+        <tr data-key="i18n.asmh.equivChecking"><td class="k">asmh.equivChecking</td><td class="zh">对照中文检查中…</td><td class="en">Checking against your Chinese…</td><td class="ln">3096</td></tr>
+        <tr data-key="i18n.asmh.backbone"><td class="k">asmh.backbone</td><td class="zh">先搭主干（主语+动词+宾语），连接词放在它连接的两部分之间，介词紧随其宾语前。</td><td class="en">Build the backbone first (subject + verb + object). Linking words sit between the two parts they join; prepositions come right before their object.</td><td class="ln">3162</td></tr>
+        <tr data-key="i18n.asmh.tipping"><td class="k">asmh.tipping</td><td class="zh">提示生成中…</td><td class="en">Generating a tip…</td><td class="ln">3164</td></tr>
+        <tr data-key="i18n.asmh.reset"><td class="k">asmh.reset</td><td class="zh">已重置 · 重新拼装</td><td class="en">Reset · build it again</td><td class="ln">3261</td></tr>
+        <tr data-key="i18n.asmh.needFirst"><td class="k">asmh.needFirst</td><td class="zh">先放入词块再确认</td><td class="en">Place some blocks first</td><td class="ln">3269</td></tr>
+        <tr data-key="i18n.asmh.noPunc"><td class="k">asmh.noPunc</td><td class="zh">先放词块，再插标点</td><td class="en">Place blocks before punctuation</td><td class="ln">3564</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sec-head" style="margin-top:22px"><span class="dot" style="background:var(--dot-bonus)"></span><h2 style="font-size:13.5px">创想空间</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="i18n.cs.exit.aria"><td class="k">cs.exit.aria</td><td class="zh">退出创想空间（Esc）</td><td class="en">Exit Focus mode (Esc)</td><td class="ln">4316</td></tr>
+        <tr data-key="i18n.cs.exit.title"><td class="k">cs.exit.title</td><td class="zh">退出创想空间 (Esc)</td><td class="en">Exit Focus mode (Esc)</td><td class="ln">4316</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ 附录 ============ -->
+  <section id="ax">
+    <div class="sec-head"><span class="dot" style="background:var(--dot-part)"></span><h2>附录 · 易混词辨析提示英译（选做，见决策 D4）</h2><span class="n">10 条</span></div>
+    <div class="sec-note">拼错词命中易混/程度差/反义对时，提示行显示的一句辨析（<code>ACAD_REL[].note</code>）。若做双语，同样存 <code>{zh, en}</code>；若不做，英文界面下这 10 条保持中文。</div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Key</th><th>中文原文</th><th>英文草案</th><th>行号</th></tr></thead>
+      <tbody>
+        <tr data-key="rel.specially"><td class="k">rel.specially</td><td class="zh">specially 与 especially 意思不同：specially＝特意、专门地（表目的）；especially＝尤其、特别地</td><td class="en">specially = on purpose, for a specific aim; especially = particularly, above all</td><td class="ln">1741</td></tr>
+        <tr data-key="rel.somewhat"><td class="k">rel.somewhat</td><td class="zh">somewhat 与 considerably 程度不同：somewhat＝略微；considerably＝大幅</td><td class="en">somewhat = slightly; considerably = greatly</td><td class="ln">1742</td></tr>
+        <tr data-key="rel.significantly"><td class="k">rel.significantly</td><td class="zh">significantly 与 slightly 程度相反：显著 vs 略微</td><td class="en">significantly = markedly; slightly = only a little — opposite degrees</td><td class="ln">1743</td></tr>
+        <tr data-key="rel.directly"><td class="k">rel.directly</td><td class="zh">directly 与 indirectly 方向相反：直接地 / 间接地</td><td class="en">directly and indirectly are opposites</td><td class="ln">1744</td></tr>
+        <tr data-key="rel.prove"><td class="k">rel.prove</td><td class="zh">prove 与 indicate 断言强度不同：prove＝证明（最强）；indicate＝表明（中性）</td><td class="en">prove = establish as certain (strongest); indicate = point to, suggest (neutral)</td><td class="ln">1745</td></tr>
+        <tr data-key="rel.demonstrate"><td class="k">rel.demonstrate</td><td class="zh">demonstrate 与 indicate 断言强度不同：demonstrate＝（以证据）证明；indicate＝表明（中性）</td><td class="en">demonstrate = show with evidence; indicate = point to, suggest (neutral)</td><td class="ln">1746</td></tr>
+        <tr data-key="rel.resultIn"><td class="k">rel.resultIn</td><td class="zh">result in 与 result from 方向相反：result in＝导致（前因后果）；result from＝源于（前果后因）</td><td class="en">result in = cause (A leads to B); result from = be caused by (B comes from A) — opposite directions</td><td class="ln">1747</td></tr>
+        <tr data-key="rel.claim"><td class="k">rel.claim</td><td class="zh">claim 与 argue 不同：claim＝声称（未必属实）；argue＝论辩（给出理由）</td><td class="en">claim = state as fact without proof; argue = make a case with reasons</td><td class="ln">1748</td></tr>
+        <tr data-key="rel.sharply"><td class="k">rel.sharply</td><td class="zh">sharply 与 gradually 相反：急剧地 / 逐渐地</td><td class="en">sharply = rapidly; gradually = step by step — opposites</td><td class="ln">1749</td></tr>
+        <tr data-key="rel.remain"><td class="k">rel.remain</td><td class="zh">remain 与 increase 相反：保持不变 / 增长</td><td class="en">remain = stay the same; increase = go up — opposites</td><td class="ln">1750</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ 决策 ============ -->
+  <section id="dec">
+    <div class="sec-head"><span class="dot" style="background:var(--accent)"></span><h2>待你定夺的 6 个决策</h2></div>
+    <div class="dec-grid">
+      <div class="dec"><h3><span class="id">D1</span>「创想空间」英文名</h3><p>英译需要这个名字出现在引导语与退出按钮。候选：<b>Focus mode</b> / Flow space / Builder。表格暂用 Focus mode。</p><span class="rec">暂拟 Focus mode</span></div>
+      <div class="dec"><h3><span class="id">D2</span>顶栏副题处理</h3><p>现在是「英语写作工作台 + English Writing Workshop」。英文模式主副对调（主 English Writing Workshop，副小字中文），还是英文模式直接隐藏副题？</p><span class="rec">建议对调</span></div>
+      <div class="dec"><h3><span class="id">D3</span>检视调试面板</h3><p>右下角「◎ 检视」元素拾取器是开发自用工具，含 20+ 条文案（文字色/圆角/行号等）。建议不翻译，保持中文。</p><span class="rec">建议不翻</span></div>
+      <div class="dec"><h3><span class="id">D4</span>易混词辨析提示</h3><p>附录 10 条。做双语（存 {zh,en}，随界面切换）还是英文界面下保持中文？</p><span class="rec">建议做双语（量小）</span></div>
+      <div class="dec"><h3><span class="id">D5</span>本地兜底建议</h3><p>无 Key 模式三句兜底中文（含 1段/4段完整例句）直接填进中文框，是输入内容不是界面。建议两种语言下都保持中文。</p><span class="rec">建议保持中文</span></div>
+      <div class="dec"><h3><span class="id">D6</span>四栏标题显示</h3><p>骨架/话题料/加分词/配件已带英文名。英文模式对调主副（Frames 为主、骨架小字），中文模式维持现状，不加新文案。</p><span class="rec">建议对调</span></div>
+    </div>
+    <footer>确认或改完后，把标记汇总复制发回即可按表实施：先写 i18n 字典与切换（决定 3），再把任务描述双语落进 ESSAY_PLAN 数据（决定 2），最后全量回归 193 项验收 + 双语言 bg-snap 视觉验收。行号基于 2026-10-15 主文件（commit 961e9c8 对应的带 Key 版）。</footer>
+  </section>
+</div>
+<script>
+(function () {
+  var KEY = 'bilingual-review-marks';
+  var marks = {};
+  try { marks = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { marks = {}; }
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-key]'));
+  var total = rows.length;
+
+  function paint() {
+    var okN = 0, fixN = 0;
+    rows.forEach(function (tr) {
+      var k = tr.getAttribute('data-key'), st = marks[k] || '';
+      tr.classList.toggle('mark-ok', st === 'ok');
+      tr.classList.toggle('mark-fix', st === 'fix');
+      var old = tr.querySelector('.state'); if (old) old.remove();
+      if (st) {
+        var s = document.createElement('span');
+        s.className = 'state'; s.textContent = st === 'ok' ? '✓ 通过' : '✗ 需改';
+        tr.querySelector('.k').appendChild(s);
+        if (st === 'ok') okN++; else fixN++;
+      }
+    });
+    document.getElementById('prog').textContent = '已审 ' + (okN + fixN) + ' / ' + total + '（✓ ' + okN + ' · ✗ ' + fixN + '）';
+    document.getElementById('t3n').textContent = (total - 13 - 10) + ' 条';
+  }
+
+  rows.forEach(function (tr) {
+    tr.setAttribute('tabindex', '0');
+    tr.setAttribute('title', '点击标记：通过 / 需修改 / 清除');
+    function cycle() {
+      var k = tr.getAttribute('data-key'), cur = marks[k] || '';
+      marks[k] = cur === '' ? 'ok' : (cur === 'ok' ? 'fix' : '');
+      if (!marks[k]) delete marks[k];
+      try { localStorage.setItem(KEY, JSON.stringify(marks)); } catch (e) {}
+      paint();
+    }
+    tr.addEventListener('click', cycle);
+    tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); } });
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var ok = [], fix = [];
+    rows.forEach(function (tr) {
+      var k = tr.getAttribute('data-key'), st = marks[k];
+      if (st === 'ok') ok.push(k); else if (st === 'fix') fix.push(k);
+    });
+    var txt = '【双语化审校结果】\n✓ 通过 ' + ok.length + ' 项：' + (ok.join('、') || '无') +
+      '\n✗ 需修改 ' + fix.length + ' 项：\n' + (fix.map(function (k) { return '- ' + k + '：改成 …'; }).join('\n') || '无') +
+      '\n未标记 ' + (total - ok.length - fix.length) + ' 项（视为通过）\n决策：D1= D2= D3= D4= D5= D6=';
+    var done = function () {};
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function () { fallback(txt); });
+    } else { fallback(txt); }
+    function fallback(t) {
+      var ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    var b = document.getElementById('copyBtn'), old = b.textContent;
+    b.textContent = '已复制'; setTimeout(function () { b.textContent = old; }, 1600);
+  });
+
+  paint();
+})();
+</script>
