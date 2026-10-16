@@ -265,7 +265,7 @@ body.creative #bgFx { display: none; }
 .app-name h1 { font-size: 16px; font-weight: 700; letter-spacing: .01em; }
 .app-name .sub { font-size: 12px; font-weight: 400; color: var(--ink-3); }
 .db-toggle {
-  display: none; margin-left: auto;
+  display: none; margin-left: 0; /* 顶栏右端留位给 .lang-toggle（决定3 语言切换） */
   appearance: none; border: 1px solid rgba(30, 55, 65, .22); background: var(--sub-bg);
   color: var(--ink); font-size: 13px; font-weight: 600;
   padding: 6px 14px; border-radius: 10px; cursor: pointer; flex: none;
@@ -273,6 +273,21 @@ body.creative #bgFx { display: none; }
 }
 .db-toggle:hover { filter: brightness(1.04); }
 .db-toggle:active { transform: scale(.96); }
+/* 界面语言切换（EN | 中）：分段胶囊，激活项 accent 底 · 两种主题同规则 */
+.lang-toggle {
+  display: inline-flex; align-items: center; gap: 2px; flex: none;
+  margin-left: auto; padding: 2px;
+  border: 1px solid var(--glass-brd); background: var(--sub-bg);
+  border-radius: 9999px;
+}
+.lang-toggle button {
+  appearance: none; border: 0; background: transparent; color: var(--ink-2);
+  font-size: 12px; font-weight: 600; line-height: 1;
+  padding: 5px 10px; border-radius: 9999px; cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.lang-toggle button.on { background: var(--accent); color: var(--accent-ink); }
+.lang-toggle button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
 
 /* 抽屉遮罩（≤1200px 生效） */
 .db-mask { display: none; }
@@ -497,7 +512,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .ans-en { margin: 7px 0 0; font-size: 15px; line-height: 1.65; font-weight: 600; color: var(--ink); text-align: left; }
 .ans-zh { margin: 5px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-2); text-align: justify; text-align-last: left; }
 .ans-note { margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed var(--divider); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
-.ans-note::before { content: '✎ 语法点评 · '; font-size: 12px; font-weight: 600; color: var(--accent); }
+.ans-note-pre { font-size: 12px; font-weight: 600; color: var(--accent); } /* i18n：前缀改 span，可随语言切换 */
 .ans-foot { margin-top: 10px; display: flex; justify-content: flex-end; }
 .ans-next {
   appearance: none; border: none; background: var(--accent); color: var(--accent-ink);
@@ -811,10 +826,11 @@ body.creative .cs-close { display: inline-flex; }
   <header class="topbar">
     <div class="logo" aria-hidden="true"></div>
     <div class="app-name">
-      <h1>英语写作工作台</h1>
-      <span class="sub">English Writing Workshop</span>
+      <h1 data-i18n="app.title">英语写作工作台</h1>
+      <span class="sub" data-i18n="app.sub">English Writing Workshop</span>
     </div>
-    <button type="button" class="db-toggle" id="dbToggle" aria-expanded="false">观点库</button>
+    <div class="lang-toggle" id="langToggle" role="group" aria-label="界面语言 / Language"><button type="button" data-l="en">EN</button><button type="button" data-l="zh" class="on">中</button></div>
+    <button type="button" class="db-toggle" id="dbToggle" aria-expanded="false" data-i18n="topbar.ideas">观点库</button>
   </header>
   <div class="db-mask" id="dbMask" aria-hidden="true"></div>
 
@@ -823,40 +839,40 @@ body.creative .cs-close { display: inline-flex; }
     <aside class="db">
       <div class="db-head">
         <div class="db-title-row">
-          <h2>观点库</h2>
-          <span class="en">Database</span>
-          <span class="badge">拖入中文框 / 点击填入</span>
+          <h2 id="dbTitle">观点库</h2>
+          <span class="en" id="dbTitleEn">Database</span>
+          <span class="badge" data-i18n="db.badge">拖入中文框 / 点击填入</span>
         </div>
-        <p class="db-desc">前置对话沉淀的论点与论据</p>
+        <p class="db-desc" data-i18n="db.desc">前置对话沉淀的论点与论据</p>
       </div>
       <div class="db-list" id="dbList">
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-arg"></i>论点 · 补贴</span>
+          <span class="tag"><i class="dot-arg"></i><span data-i18n="db.tag.argSub" data-zh="论点 · 补贴">论点 · 补贴</span></span>
           <p class="en">Subsidies lower the price of fresh produce, making a balanced diet affordable for everyone.</p>
           <p class="zh">补贴降低新鲜农产品的价格，让所有人都吃得起均衡饮食。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-data"></i>论据 · 补贴</span>
+          <span class="tag"><i class="dot-data"></i><span data-i18n="db.tag.datSub" data-zh="论据 · 补贴">论据 · 补贴</span></span>
           <p class="en">For low-income families, price is the biggest barrier to healthy eating.</p>
           <p class="zh">对低收入家庭而言，价格是健康饮食的最大障碍。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-arg"></i>论点 · 征税</span>
+          <span class="tag"><i class="dot-arg"></i><span data-i18n="db.tag.argTax" data-zh="论点 · 征税">论点 · 征税</span></span>
           <p class="en">A tax on sugary drinks and junk food raises their price and directly discourages over-consumption.</p>
           <p class="zh">对含糖饮料和垃圾食品征税抬高价格，直接抑制过度消费。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-data"></i>论据 · 征税</span>
+          <span class="tag"><i class="dot-data"></i><span data-i18n="db.tag.datTax" data-zh="论据 · 征税">论据 · 征税</span></span>
           <p class="en">After the UK introduced its sugar tax, manufacturers cut the sugar content of drinks significantly.</p>
           <p class="zh">英国开征糖税后，饮料厂商显著降低了产品含糖量。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-case"></i>事例</span>
+          <span class="tag"><i class="dot-case"></i><span data-i18n="db.tag.case" data-zh="事例">事例</span></span>
           <p class="en">Hungary's junk-food tax funds free school meals and public health programmes.</p>
           <p class="zh">匈牙利的垃圾食品税资助了免费校餐和公共健康项目。</p>
         </div>
         <div class="card" draggable="true">
-          <span class="tag"><i class="dot-conc"></i>让步</span>
+          <span class="tag"><i class="dot-conc"></i><span data-i18n="db.tag.conc" data-zh="让步">让步</span></span>
           <p class="en">Admittedly, food taxes can burden the poor, but they ultimately guide healthier choices.</p>
           <p class="zh">诚然食品税会加重穷人负担，但最终会引导更健康的选择。</p>
         </div>
@@ -867,8 +883,8 @@ body.creative .cs-close { display: inline-flex; }
     <section class="shop">
       <div class="q-panel">
         <div class="q-top">
-          <div class="q-eyebrow">IELTS Writing Task 2 · 当前话题</div>
-          <button type="button" class="q-restart" id="restartBtn" title="清空全部进度，从第一句重新开始">重新开始</button>
+          <div class="q-eyebrow" data-i18n="q.eyebrow">IELTS Writing Task 2 · 当前话题</div>
+          <button type="button" class="q-restart" id="restartBtn" title="清空全部进度，从第一句重新开始" data-i18n="btn.restart" data-i18n-title="btn.restart.tip">重新开始</button>
         </div>
         <p class="q-text" id="qText" lang="en">Some people think the government should subsidise fruits and vegetables to make healthy food more affordable. Others argue that the government should tax unhealthy food instead. Discuss both views and give your opinion.</p>
       </div>
@@ -883,18 +899,18 @@ body.creative .cs-close { display: inline-flex; }
         <div class="zh-box" id="zhBox">
           <div class="zh-note" id="zhNote"></div>
           <div class="zh-row">
-            <div class="zh-edit" id="zhEdit" contenteditable="true" role="textbox" aria-label="中文输入" data-placeholder="用一句中文描述这句话要表达什么（可从左侧数据库拖入）" spellcheck="false"></div>
-            <button type="button" class="go-btn" id="goBtn">校验 →</button>
-            <button type="button" class="accept-btn" id="acceptBtn" hidden>接受修改</button>
+            <div class="zh-edit" id="zhEdit" contenteditable="true" role="textbox" aria-label="中文输入" data-i18n-aria="zh.aria" data-placeholder="用一句中文描述这句话要表达什么（可从左侧数据库拖入）" data-i18n-dph="zh.placeholder" spellcheck="false"></div>
+            <button type="button" class="go-btn" id="goBtn" data-i18n="go.check">校验 →</button>
+            <button type="button" class="accept-btn" id="acceptBtn" hidden data-i18n="go.accept">接受修改</button>
           </div>
           <div class="zh-hint" id="zhHint"></div>
         </div>
         <div class="asm-box" id="asmBox">
-          <button type="button" class="asm-reset" id="asmReset" title="清空本句已拼的词块" hidden>重置</button>
+          <button type="button" class="asm-reset" id="asmReset" title="清空本句已拼的词块" hidden data-i18n="asm.reset" data-i18n-title="asm.reset.tip">重置</button>
           <div class="asm-strip" id="asmStrip"></div>
           <div class="asm-foot">
             <div class="asm-hint" id="asmHint"></div>
-            <button type="button" class="asm-go" id="asmGo" hidden>确认</button>
+            <button type="button" class="asm-go" id="asmGo" hidden data-i18n="asm.go">确认</button>
           </div>
         </div>
         <!-- 搭积木专属：提交后亮出的参考答案条（未提交前隐藏） -->
@@ -970,25 +986,25 @@ body.creative .cs-close { display: inline-flex; }
      role = 这一句的职能，note = 这一句要写什么（用于 AI 校验与建议）。 */
   var ESSAY_PLAN = [
     { title: '第一段', sub: '开头 · 表明立场', tag: '立场', sentences: [
-      { role: '背景', note: '改写题目背景：政府该补贴健康食品还是向不健康食品征税' },
-      { role: '双方', note: '概括两种对立观点' },
-      { role: '立场', note: '亮明自己的立场' }
+      { role: '背景', note: { zh: '改写题目背景：政府该补贴健康食品还是向不健康食品征税', en: 'Paraphrase the topic: should the government subsidise healthy food or tax unhealthy food?' } },
+      { role: '双方', note: { zh: '概括两种对立观点', en: 'Briefly present the two opposing views' } },
+      { role: '立场', note: { zh: '亮明自己的立场', en: 'State your own position clearly' } }
     ] },
     { title: '第二段', sub: '正面论述 · 补贴', tag: '补贴', sentences: [
-      { role: '段首句', note: '本段总论点：补贴的核心理由' },
-      { role: '分论点1', note: '分论点一及其论据' },
-      { role: '分论点2', note: '分论点二及其论据' },
-      { role: '分论点3', note: '分论点三及其论据' }
+      { role: '段首句', note: { zh: '本段总论点：补贴的核心理由', en: 'Topic sentence: the core argument for subsidies' } },
+      { role: '分论点1', note: { zh: '分论点一及其论据', en: 'Supporting point 1, with evidence' } },
+      { role: '分论点2', note: { zh: '分论点二及其论据', en: 'Supporting point 2, with evidence' } },
+      { role: '分论点3', note: { zh: '分论点三及其论据', en: 'Supporting point 3, with evidence' } }
     ] },
     { title: '第三段', sub: '反面论述 · 征税', tag: '征税', sentences: [
-      { role: '段首句', note: '本段总论点：征税的核心理由' },
-      { role: '分论点1', note: '分论点一及其论据' },
-      { role: '分论点2', note: '分论点二及其论据' },
-      { role: '分论点3', note: '分论点三及其论据' }
+      { role: '段首句', note: { zh: '本段总论点：征税的核心理由', en: 'Topic sentence: the core argument for a tax' } },
+      { role: '分论点1', note: { zh: '分论点一及其论据', en: 'Supporting point 1, with evidence' } },
+      { role: '分论点2', note: { zh: '分论点二及其论据', en: 'Supporting point 2, with evidence' } },
+      { role: '分论点3', note: { zh: '分论点三及其论据', en: 'Supporting point 3, with evidence' } }
     ] },
     { title: '第四段', sub: '结尾 · 结论与建议', tag: '结论', sentences: [
-      { role: '总结', note: '综合两方观点，重申立场' },
-      { role: '建议', note: '给出措施或建议' }
+      { role: '总结', note: { zh: '综合两方观点，重申立场', en: 'Weigh up both views and restate your position' } },
+      { role: '建议', note: { zh: '给出措施或建议', en: 'Close with a suggestion or recommendation' } }
     ] }
   ];
 
@@ -1058,11 +1074,192 @@ body.creative .cs-close { display: inline-flex; }
 
   /* ================= 可配置栏目（改名称/配色/顺序在这里） =================
      key: 积木类型；zone/chip/blk/tc: 配色类名；cnt: 计数元素后缀 */
+  /* ================= 界面语言（决定3：顶栏 EN | 中，localStorage 'yasi-lang' 记忆，默认 zh） =================
+     永远不随语言变：积木内容、题目原文、参考答案、观点库卡面（本就英文）；
+     发给模型的提示词永远用中文原文（f.label / note.zh / data-zh 角标）。 */
+  var LANG_KEY = 'yasi-lang', LANG = { v: 'zh' };
+  try { if (localStorage.getItem(LANG_KEY) === 'en') LANG.v = 'en'; } catch (e) {}
+  var I18N = {
+    'app.title': { zh: '英语写作工作台', en: 'English Writing Workshop' },
+    'app.sub': { zh: 'English Writing Workshop', en: '雅思写作 · 拼积木学写作' },
+    'topbar.ideas': { zh: '观点库', en: 'Ideas' },
+    'db.title': { zh: '观点库', en: 'Ideas' },
+    'db.titleSub': { zh: 'Database', en: '观点库' },
+    'db.badge': { zh: '拖入中文框 / 点击填入', en: 'Drag into the Chinese box / click to insert' },
+    'db.desc': { zh: '前置对话沉淀的论点与论据', en: 'Arguments and evidence from your earlier discussion' },
+    'db.tag.argSub': { zh: '论点 · 补贴', en: 'Argument · Subsidies' },
+    'db.tag.datSub': { zh: '论据 · 补贴', en: 'Evidence · Subsidies' },
+    'db.tag.argTax': { zh: '论点 · 征税', en: 'Argument · Taxing' },
+    'db.tag.datTax': { zh: '论据 · 征税', en: 'Evidence · Taxing' },
+    'db.tag.case': { zh: '事例', en: 'Example' },
+    'db.tag.conc': { zh: '让步', en: 'Concession' },
+    'q.eyebrow': { zh: 'IELTS Writing Task 2 · 当前话题', en: 'IELTS Writing Task 2 · Current topic' },
+    'btn.restart': { zh: '重新开始', en: 'Start over' },
+    'btn.restart.tip': { zh: '清空全部进度，从第一句重新开始', en: 'Clear all progress and start from the first sentence' },
+    'btn.restart.confirm': { zh: '确认清空？', en: 'Clear everything?' },
+    'para.t1': { zh: '第一段', en: 'Part 1' },
+    'para.t2': { zh: '第二段', en: 'Part 2' },
+    'para.t3': { zh: '第三段', en: 'Part 3' },
+    'para.t4': { zh: '第四段', en: 'Part 4' },
+    'para.s1': { zh: '开头 · 表明立场', en: 'Intro · state your stance' },
+    'para.s2': { zh: '正面论述 · 补贴', en: 'Body · the case for subsidies' },
+    'para.s3': { zh: '反面论述 · 征税', en: 'Body · the case for taxing' },
+    'para.s4': { zh: '结尾 · 结论与建议', en: 'Conclusion · summary and advice' },
+    'role.bg': { zh: '背景', en: 'Background' },
+    'role.views': { zh: '双方', en: 'Both views' },
+    'role.stance': { zh: '立场', en: 'Your stance' },
+    'role.ts': { zh: '段首句', en: 'Topic sentence' },
+    'role.pt1': { zh: '分论点1', en: 'Point 1' },
+    'role.pt2': { zh: '分论点2', en: 'Point 2' },
+    'role.pt3': { zh: '分论点3', en: 'Point 3' },
+    'role.sum': { zh: '总结', en: 'Summary' },
+    'role.sug': { zh: '建议', en: 'Advice' },
+    'para.words': { zh: '{N} 词', en: '{N} words' },
+    'zh.aria': { zh: '中文输入', en: 'Chinese input' },
+    'zh.placeholder': { zh: '用一句中文描述这句话要表达什么（可从左侧数据库拖入）', en: 'Describe this sentence in one line of Chinese (drag in from the Ideas panel)' },
+    'go.check': { zh: '校验 →', en: 'Check →' },
+    'go.edit': { zh: '修改中文', en: 'Edit Chinese' },
+    'go.recheck': { zh: '重新校验', en: 'Re-check' },
+    'go.accept': { zh: '接受修改', en: 'Accept changes' },
+    'asm.reset': { zh: '重置', en: 'Reset' },
+    'asm.reset.tip': { zh: '清空本句已拼的词块', en: 'Clear the blocks placed in this sentence' },
+    'asm.go': { zh: '确认', en: 'Check' },
+    'asm.go.checking': { zh: '检查中…', en: 'Checking…' },
+    'asm.empty.done': { zh: '本句已完成', en: 'Sentence complete' },
+    'asm.empty.wait': { zh: '确认中文后开始拼装', en: 'Confirm your Chinese to start building' },
+    'asm.empty.guide': { zh: '点击或拖入词块，按正确语序拼出这句 · 骨架空位拖入积木', en: 'Click or drag blocks to build this sentence in order · drop blocks into frame slots' },
+    'asm.tchip.tip': { zh: '点击取出 · 拖动换位', en: 'Click to remove · drag to reorder' },
+    'slot.prefix': { zh: '空位 · ', en: 'Slot · ' },
+    'slot.content': { zh: '内容', en: 'content' },
+    'slot.clause': { zh: '从句', en: 'clause' },
+    'slot.np': { zh: '名词短语', en: 'noun phrase' },
+    'slot.vp': { zh: '动词短语', en: 'verb phrase' },
+    'ans.tag': { zh: '参考答案', en: 'Model answer' },
+    'ans.next': { zh: '下一句 →', en: 'Next →' },
+    'ans.notePrefix': { zh: '✎ 语法点评 · ', en: '✎ Grammar note · ' },
+    'zone.hint.skel': { zh: '句型模板 · 拖入句子', en: 'Sentence frames · drag into the sentence' },
+    'zone.hint.topic': { zh: '本题短语 · 点击放入', en: 'Topic phrases · click to insert' },
+    'zone.hint.bonus': { zh: '学术搭配 · 点击放入', en: 'Academic collocations · click to insert' },
+    'zone.hint.part': { zh: '功能词·零散词 · 可自建', en: 'Function & stray words · add your own' },
+    'part.input.ph': { zh: '缺什么词？输入后回车，生成配件块', en: 'Missing a word? Type it and press Enter' },
+    'part.input.aria': { zh: '自建配件词', en: 'Add your own part' },
+    'part.add.tip': { zh: '生成配件块', en: 'Create block' },
+    'zone.empty.done': { zh: '全文完成', en: 'Essay complete' },
+    'zone.empty.wait': { zh: '确认中文后生成本句积木', en: 'Confirm your Chinese to generate blocks' },
+    'tip.reg.general': { zh: '通用', en: 'general' },
+    'tip.reg.written': { zh: '书面', en: 'written' },
+    'tip.reg.formal': { zh: '正式', en: 'formal' },
+    'tip.dom.med': { zh: '医学', en: 'medical' },
+    'tip.dom.phy': { zh: '物理', en: 'physics' },
+    'tip.dom.soc': { zh: '社科', en: 'social science' },
+    'tip.strength': { zh: '强度{N}', en: 'strength {N}' },
+    'tip.metaphor': { zh: '隐喻', en: 'metaphorical' },
+    'tip.colloc': { zh: '常搭 {W}', en: 'often with {W}' },
+    'tip.alt': { zh: '可换 {W}', en: 'alt: {W}' },
+    'zhh.done': { zh: '全文完成 · 共 {N} 词', en: 'Essay complete · {N} words' },
+    'zhh.sentDone': { zh: '已完成 · 可点「修改中文」重来，或直接改词序', en: 'Done · click “Edit Chinese” to redo, or just reorder the blocks' },
+    'zhh.struck': { zh: '已划掉偏离部分 · 接受或继续编辑', en: 'Off-target parts struck out · accept or keep editing' },
+    'zhh.confirmed': { zh: '✓ 已确认', en: '✓ Confirmed' },
+    'zhh.suggFilled': { zh: '数据库建议已填入 · 可修改后校验', en: 'Suggestion inserted · edit if you like, then check' },
+    'zhh.localMode': { zh: '本地规则模式 · 直接输入中文即可', en: 'Local rule mode · just type your Chinese sentence' },
+    'zhh.zhEdited': { zh: '中文已修改 · 需重新校验', en: 'Chinese edited · needs a re-check' },
+    'zhh.sugging': { zh: '建议生成中…', en: 'Generating a suggestion…' },
+    'zhh.unlocked': { zh: '已解锁 · 修改后重新校验', en: 'Unlocked · re-check after editing' },
+    'zhh.needZh': { zh: '先写一句中文', en: 'Write a Chinese sentence first' },
+    'zhh.offBrief': { zh: '不符合本句要点，请修改', en: 'This doesn’t match the brief for this sentence — please revise' },
+    'zhh.notZh': { zh: '过短或不是中文', en: 'Too short or not Chinese' },
+    'zhh.checking': { zh: '校验中…', en: 'Checking…' },
+    'zhh.confBlocks': { zh: '✓ 已确认 · 词块已生成', en: '✓ Confirmed · blocks generated' },
+    'zhh.resplit': { zh: '重新拆分中…', en: 'Re-splitting…' },
+    'zhh.blocking': { zh: '词块生成中…', en: 'Generating blocks…' },
+    'zhh.keepEmpty': { zh: '保留部分为空 · 请重写', en: 'Nothing left to keep · please rewrite' },
+    'zhh.edited': { zh: '已编辑 · 重新校验', en: 'Edited · re-check' },
+    'zhh.dbFilled': { zh: '已从数据库填入 · 可修改后校验', en: 'Inserted from the Ideas panel · edit if you like, then check' },
+    'asmh.needBlocks': { zh: '先确认中文生成词块，再自建配件', en: 'Confirm your Chinese and generate blocks first' },
+    'asmh.needEnglish': { zh: '配件请输入英文单词或短语', en: 'Please enter an English word or phrase' },
+    'asmh.allDone': { zh: '✓ 全部句子已拼装正确', en: '✓ Every sentence built correctly' },
+    'asmh.sentOk': { zh: '✓ 本句正确 · 可继续调整', en: '✓ Correct · adjust if you like' },
+    'asmh.left': { zh: '剩余 {N} 块', en: '{N} blocks left' },
+    'asmh.allPlaced': { zh: '全部放入 · 点「确认」检查', en: 'All placed · click “Check”' },
+    'asmh.leftAny': { zh: '剩余 {N} 块 · 可随时点「确认」', en: '{N} blocks left · check any time' },
+    'asmh.allPlaced2': { zh: '全部放入 · 可点「确认」检查', en: 'All placed · ready to check' },
+    'asmh.tip.colloc': { zh: '搭配微提示', en: 'Collocation tip' },
+    'asmh.tip.grammar': { zh: '语法微提示', en: 'Grammar tip' },
+    'asmh.tip.register': { zh: '语体微提示', en: 'Register tip' },
+    'asmh.guide': { zh: '拖入骨架 · 空位填积木 · 共 {N} 块 · 双击空白处进入创想空间 (⌘⏎)', en: 'Drag in a frame · fill its slots · {N} blocks · double-click blank space for Focus mode (⌘⏎)' },
+    'asmh.autoCheck': { zh: '全部放入 · 自动检查中…', en: 'All placed · checking…' },
+    'asmh.ok': { zh: '✓ 正确', en: '✓ Correct' },
+    'asmh.okEquiv': { zh: '✓ 正确 · 意思与语法均通过', en: '✓ Correct · meaning and grammar both pass' },
+    'asmh.slotN': { zh: '第{N}空：', en: 'Slot {N}: ' },
+    'asmh.slotOrder': { zh: '词序调整', en: 'fix the word order' },
+    'asmh.slotNeed': { zh: '此处需要{type}', en: 'this slot needs {type}' },
+    'asmh.orderMove': { zh: '词序：调整 ', en: 'Order: move ' },
+    'asmh.equivChecking': { zh: '对照中文检查中…', en: 'Checking against your Chinese…' },
+    'asmh.backbone': { zh: '先搭主干（主语+动词+宾语），连接词放在它连接的两部分之间，介词紧随其宾语前。', en: 'Build the backbone first (subject + verb + object). Linking words sit between the two parts they join; prepositions come right before their object.' },
+    'asmh.tipping': { zh: '提示生成中…', en: 'Generating a tip…' },
+    'asmh.reset': { zh: '已重置 · 重新拼装', en: 'Reset · build it again' },
+    'asmh.needFirst': { zh: '先放入词块再确认', en: 'Place some blocks first' },
+    'asmh.noPunc': { zh: '先放词块，再插标点', en: 'Place blocks before punctuation' },
+    'cs.exit.aria': { zh: '退出创想空间（Esc）', en: 'Exit Focus mode (Esc)' },
+    'cs.exit.title': { zh: '退出创想空间 (Esc)', en: 'Exit Focus mode (Esc)' }
+  };
+  function t(k) { var e = I18N[k]; return e ? (e[LANG.v] || e.zh) : k; }
+  function tN(k, n) { return t(k).replace('{N}', String(n)); }
+  /* 段落标题/副题/职能 → i18n key（ESSAY_PLAN 数据保持中文原文，供 AI 提示词用） */
+  var PKEY = [['para.t1', 'para.s1'], ['para.t2', 'para.s2'], ['para.t3', 'para.s3'], ['para.t4', 'para.s4']];
+  var ROLE_KEY = { '背景': 'role.bg', '双方': 'role.views', '立场': 'role.stance', '段首句': 'role.ts', '分论点1': 'role.pt1', '分论点2': 'role.pt2', '分论点3': 'role.pt3', '总结': 'role.sum', '建议': 'role.sug' };
+  function paraTitle(pi) { return t(PKEY[pi] ? PKEY[pi][0] : 'para.t1'); }
+  function paraSub(pi) { return t(PKEY[pi] ? PKEY[pi][1] : 'para.s1'); }
+  function roleNow(r) { var k = ROLE_KEY[r]; return k ? t(k) : r; }
+  function noteNow(n) { return (n && typeof n === 'object') ? (n[LANG.v] || n.zh) : (n || ''); }
+  function noteZh(n) { return (n && typeof n === 'object') ? n.zh : (n || ''); }
+  function labelNow(f) { return paraTitle(f.pi) + ' s' + (f.si + 1); }
+  function slotLabel(kind) { return t({ clause: 'slot.clause', noun: 'slot.np', verb: 'slot.vp' }[kind] || 'slot.content'); }
+  /* 静态文案：data-i18n / -title / -aria / -dph 四类属性 + 页签标题 + html lang */
+  function applyStaticLang() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) { el.setAttribute('title', t(el.getAttribute('data-i18n-title'))); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+    document.querySelectorAll('[data-i18n-dph]').forEach(function (el) { el.setAttribute('data-placeholder', t(el.getAttribute('data-i18n-dph'))); });
+    document.title = t('app.title');
+    document.documentElement.lang = LANG.v === 'en' ? 'en' : 'zh-CN';
+    updateBilingualHeads();
+    updateLangToggle();
+  }
+  /* 恒双语区：观点库标题 + 四栏标题（英文模式英文为主、中文小字；中文模式维持原状） */
+  function updateBilingualHeads() {
+    var h2 = document.getElementById('dbTitle'), en = document.getElementById('dbTitleEn');
+    if (h2) h2.textContent = t('db.title');
+    if (en) en.textContent = t('db.titleSub');
+    ZONES.forEach(function (z) {
+      var zt = document.querySelector('#zone-' + z.key + ' .zone-title');
+      if (!zt) return;
+      var prim = LANG.v === 'en' ? z.en : z.name, sec = LANG.v === 'en' ? z.name : z.en;
+      if (zt.firstChild) zt.firstChild.nodeValue = prim;
+      var sp = zt.querySelector('.en'); if (sp) sp.textContent = sec;
+      var zh = document.querySelector('#zone-' + z.key + ' .zone-hint'); if (zh) zh.textContent = t(z.hintKey);
+    });
+    var pi2 = document.getElementById('partInput'); if (pi2) pi2.placeholder = t('part.input.ph');
+  }
+  function updateLangToggle() {
+    document.querySelectorAll('#langToggle button').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-l') === LANG.v);
+    });
+  }
+  function setLang(v) {
+    if (v !== 'en' && v !== 'zh') v = 'zh';
+    if (LANG.v === v) return;
+    LANG.v = v;
+    try { localStorage.setItem(LANG_KEY, v); } catch (e) {}
+    applyStaticLang();
+    renderAll();
+  }
+
   var ZONES = [
-    { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
-    { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
-    { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
-    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true }
+    { key: 'skel',  name: '骨架',   en: 'Frames', hint: '句型模板 · 拖入句子', hintKey: 'zone.hint.skel', zone: 'zone-pattern', chip: 'chip-pattern', blk: 'oblock', tc: 'tc-o' },
+    { key: 'topic', name: '话题料', en: 'Topic',  hint: '本题短语 · 点击放入', hintKey: 'zone.hint.topic', zone: 'zone-purple',  chip: 'chip-purple',  blk: 'pblock', tc: 'tc-p' },
+    { key: 'bonus', name: '加分词', en: 'Bonus',  hint: '学术搭配 · 点击放入', hintKey: 'zone.hint.bonus', zone: 'zone-prep',    chip: 'chip-prep',    blk: 'xblock', tc: 'tc-x' },
+    { key: 'part',  name: '配件',   en: 'Parts',  hint: '功能词·零散词 · 可自建', hintKey: 'zone.hint.part', zone: 'zone-part', chip: 'chip-part', blk: 'cblock', tc: 'tc-c', hideEmpty: true, input: true }
   ];
   var zonesEl = document.getElementById('zones');
   var zHtml = ZONES.map(function (z) {
@@ -1071,9 +1268,9 @@ body.creative .cs-close { display: inline-flex; }
       '<span class="chip ' + z.chip + '" aria-hidden="true"></span>' +
       '<span class="zone-title">' + z.name + '<span class="en">' + z.en + '</span></span>' +
       '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
-      '<span class="zone-hint">' + z.hint + '</span>' +
+      '<span class="zone-hint">' + t(z.hintKey) + '</span>' +
       '</div>' +
-      (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="缺什么词？输入后回车，生成配件块" maxlength="40" spellcheck="false" aria-label="自建配件词"><button type="button" id="partAdd" title="生成配件块">＋</button></div>' : '') +
+      (z.input ? '<div class="part-add"><input type="text" id="partInput" placeholder="' + t('part.input.ph') + '" maxlength="40" spellcheck="false" aria-label="' + t('part.input.aria') + '" data-i18n-aria="part.input.aria"><button type="button" id="partAdd" title="' + t('part.add.tip') + '" data-i18n-title="part.add.tip">＋</button></div>' : '') +
       '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
   }).join('');
   /* [单容器] 四区同入一个滚动层（无遮罩渐隐，栏目标题永不被裁；配件不再固定底部） */
@@ -1096,8 +1293,8 @@ body.creative .cs-close { display: inline-flex; }
     var it = cur();
     var raw = partInput.value.replace(/\s+/g, ' ').trim().slice(0, 40);
     if (!raw) return;
-    if (!it.blocks.length) { setAsmHint('先确认中文生成词块，再自建配件', 'err'); return; }
-    if (!/[A-Za-z0-9]/.test(raw)) { setAsmHint('配件请输入英文单词或短语', 'err'); return; }
+    if (!it.blocks.length) { setAsmHint(t('asmh.needBlocks'), 'err'); return; }
+    if (!/[A-Za-z0-9]/.test(raw)) { setAsmHint(t('asmh.needEnglish'), 'err'); return; }
     /* 同形态（忽略大小写）合并计数 */
     var k = formKey({ t: 'part', en: raw }), idx = -1;
     for (var i = 0; i < it.blocks.length; i++) {
@@ -1153,13 +1350,13 @@ body.creative .cs-close { display: inline-flex; }
         var cls = it.done ? 'done' : (i === S.cur ? 'cur' : (unlocked(i) ? '' : 'lock'));
         if (!it.done) doneAll = false;
         if (i === S.cur) hasCur = true;
-        chips += '<span class="schip ' + cls + '" data-i="' + i + '" title="' + esc('s' + (si + 1) + ' ' + s.role + '：' + s.note) + '">s' + (si + 1) + '</span>';
+        chips += '<span class="schip ' + cls + '" data-i="' + i + '" title="' + esc('s' + (si + 1) + ' ' + roleNow(s.role) + '：' + noteNow(s.note)) + '">s' + (si + 1) + '</span>';
       });
       html += '<div class="para' + (doneAll ? ' done' : (hasCur ? ' cur' : '')) + '" data-p="' + pi + '">' +
-        '<span class="p-tag">' + p.title + '</span>' +
-        '<span class="p-sub">' + p.sub + '</span>' +
+        '<span class="p-tag">' + paraTitle(pi) + '</span>' +
+        '<span class="p-sub">' + paraSub(pi) + '</span>' +
         '<span class="schips">' + chips + '</span>' +
-        '<span class="p-count">' + paraWords(pi) + ' 词</span></div>';
+        '<span class="p-count">' + tN('para.words', paraWords(pi)) + '</span></div>';
     });
     parasEl.innerHTML = html;
   }
@@ -1258,7 +1455,7 @@ body.creative .cs-close { display: inline-flex; }
       if (!it.blocks.length) {
         if (z.hideEmpty) { ZONE_DIV[z.key].style.display = 'none'; return; }
         ZONE_DIV[z.key].style.display = '';
-        box.innerHTML = '<div class="zone-empty">' + (allDone() ? '全文完成' : '确认中文后生成本句积木') + '</div>';
+        box.innerHTML = '<div class="zone-empty">' + (allDone() ? t('zone.empty.done') : t('zone.empty.wait')) + '</div>';
         ZONE_CNT[z.key].textContent = 0;
         return;
       }
@@ -1288,7 +1485,7 @@ body.creative .cs-close { display: inline-flex; }
     var fills = e.fills[k] || [];
     var inner = fills.map(function (fe, fi) { return entryHTML(fe, path.concat([k, fi])); }).join('');
     var fs = formSlots(cur().blocks[e.id]);
-    var tip = '空位 · ' + (KLABEL[fs[k] && fs[k].slot] || '内容');
+    var tip = t('slot.prefix') + slotLabel(fs[k] && fs[k].slot);
     var pad = 2 + Math.min(path.length, 3) * 2; /* 嵌套越深内边距越大，内层空位不被挤扁 */
     return '<span class="asm-slot' + (fills.length ? '' : ' empty') + '" data-tip="' + tip + '" style="padding:' + pad + 'px 6px" data-slotpath="' + path.join(',') + '.' + k + '">' + inner + '</span>';
   }
@@ -1311,7 +1508,7 @@ body.creative .cs-close { display: inline-flex; }
       return '<span class="tchip ' + TC_CLS[formZone(b)] + ' or' + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" data-pick="' + (e.pick == null ? '' : e.pick) + '">' + opts + '</span>';
     }
     if (b.t === 'punc') {
-      return '<span class="tchip pn' + (b.src === 'user' ? ' upn' : '') + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + esc(b.ch) + '</span>';
+      return '<span class="tchip pn' + (b.src === 'user' ? ' upn' : '') + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="' + esc(t('asm.tchip.tip')) + '">' + esc(b.ch) + '</span>';
     }
     if (b.t === 'skel') {
       var si = 0;
@@ -1319,9 +1516,9 @@ body.creative .cs-close { display: inline-flex; }
         if (typeof part === 'string') return '<span class="sk-txt">' + esc(part) + '</span>';
         return slotHTML(e, path, true, si++);
       }).join('');
-      return '<span class="tchip ' + TC_CLS[formZone(b)] + ' skel' + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + inner + '</span>';
+      return '<span class="tchip ' + TC_CLS[formZone(b)] + ' skel' + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="' + esc(t('asm.tchip.tip')) + '">' + inner + '</span>';
     }
-    return '<span class="tchip ' + TC_CLS[b.t] + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="点击取出 · 拖动换位">' + esc(b.en) + '</span>';
+    return '<span class="tchip ' + TC_CLS[b.t] + doneCls + '" data-bi="' + e.id + '" data-path="' + p + '" title="' + esc(t('asm.tchip.tip')) + '">' + esc(b.en) + '</span>';
   }
   /* 确认键状态：有积木且未完成时可见；随时可点 */
   function updateAsmGo() {
@@ -1330,18 +1527,18 @@ body.creative .cs-close { display: inline-flex; }
     asmGo.hidden = !show;
     if (!show) return;
     asmGo.disabled = false;
-    asmGo.textContent = '确认';
+    asmGo.textContent = t('asm.go');
   }
   function renderStrip() {
     var it = cur();
     asmReset.hidden = !it.order.length;
     updateAsmGo();
     if (!it.blocks.length) {
-      asmStrip.innerHTML = '<span class="asm-empty">' + (it.done ? '本句已完成' : '确认中文后开始拼装') + '</span>';
+      asmStrip.innerHTML = '<span class="asm-empty">' + (it.done ? t('asm.empty.done') : t('asm.empty.wait')) + '</span>';
       return;
     }
     if (!it.order.length) {
-      asmStrip.innerHTML = '<span class="asm-empty">点击或拖入词块，按正确语序拼出这句 · 骨架空位拖入积木</span>';
+      asmStrip.innerHTML = '<span class="asm-empty">' + esc(t('asm.empty.guide')) + '</span>';
       return;
     }
     asmStrip.innerHTML = it.order.map(function (e, i) {
@@ -1371,41 +1568,41 @@ body.creative .cs-close { display: inline-flex; }
 
   function renderWorkbench() {
     var f = FLAT[S.cur], it = cur();
-    stageEyebrow.textContent = f.label + ' · ' + f.s.role;
-    zhNote.textContent = f.s.note || ''; /* 题目说明移入中文框第一行（不可编辑行，纯展示） */
+    stageEyebrow.textContent = labelNow(f) + ' · ' + roleNow(f.s.role);
+    zhNote.textContent = noteNow(f.s.note) || ''; /* 题目说明移入中文框第一行（不可编辑行，纯展示） */
     stageStep.textContent = (S.cur + 1) + ' / ' + FLAT.length;
     var inStrike = !it.confirmed && !!it.strikeParts;
     acceptBtn.hidden = !inStrike;
-    goBtn.textContent = it.confirmed ? '修改中文' : (it.blocks.length ? '重新校验' : '校验 →');
+    goBtn.textContent = it.confirmed ? t('go.edit') : (it.blocks.length ? t('go.recheck') : t('go.check'));
     goBtn.classList.toggle('ghost', !!it.confirmed);
     zhEdit.contentEditable = it.confirmed ? 'false' : 'true';
     zhEdit.textContent = it.confirmed ? it.zh : (it.zh || it.sugg);
     zhEdit.classList.toggle('sugg', !it.confirmed && !it.zh && !!it.sugg);
     if (allDone()) {
-      setZhHint('全文完成 · 共 ' + totalWords() + ' 词', 'ok');
-      setAsmHint('✓ 全部句子已拼装正确', 'ok');
+      setZhHint(tN('zhh.done', totalWords()), 'ok');
+      setAsmHint(t('asmh.allDone'), 'ok');
     } else if (it.done) {
-      setZhHint('已完成 · 可点「修改中文」重来，或直接改词序', '');
-      setAsmHint('✓ 本句正确 · 可继续调整', 'ok');
+      setZhHint(t('zhh.sentDone'), '');
+      setAsmHint(t('asmh.sentOk'), 'ok');
     } else if (inStrike) {
       zhEdit.innerHTML = it.strikeParts.map(function (p) {
         return p.ok ? esc(p.text) : '<span class="strike">' + esc(p.text) + '</span>';
       }).join('');
-      setZhHint('已划掉偏离部分 · 接受或继续编辑', '');
+      setZhHint(t('zhh.struck'), '');
       setAsmHint('');
     } else if (it.confirmed) {
-      setZhHint('✓ 已确认', 'ok');
+      setZhHint(t('zhh.confirmed'), 'ok');
       setAsmHint(!it.blocks.length ? '' : (nodeCount(it.order) < nodeCount(it.seq)
-        ? '剩余 ' + (nodeCount(it.seq) - nodeCount(it.order)) + ' 块'
-        : '全部放入 · 点「确认」检查'));
+        ? tN('asmh.left', nodeCount(it.seq) - nodeCount(it.order))
+        : t('asmh.allPlaced')));
     } else if (!it.blocks.length) {
-      setZhHint(it.sugg ? '数据库建议已填入 · 可修改后校验' : (MODEL_ON() ? '' : '本地规则模式 · 直接输入中文即可'));
+      setZhHint(it.sugg ? t('zhh.suggFilled') : (MODEL_ON() ? '' : t('zhh.localMode')));
       setAsmHint('');
     } else {
-      setZhHint('中文已修改 · 需重新校验', '');
+      setZhHint(t('zhh.zhEdited'), '');
       setAsmHint(nodeCount(it.order) < nodeCount(it.seq)
-        ? '剩余 ' + (nodeCount(it.seq) - nodeCount(it.order)) + ' 块 · 可随时点「确认」'
-        : '全部放入 · 可点「确认」检查');
+        ? tN('asmh.leftAny', nodeCount(it.seq) - nodeCount(it.order))
+        : t('asmh.allPlaced2'));
     }
   }
 
@@ -1421,9 +1618,10 @@ body.creative .cs-close { display: inline-flex; }
   function dbDigest() {
     var out = [];
     document.querySelectorAll('#dbList .card').forEach(function (c) {
-      var tag = c.querySelector('.tag').textContent.trim();
+      var tEl = c.querySelector('.tag');
+      var tZh = tEl ? (tEl.getAttribute('data-zh') || tEl.textContent).trim() : '';
       var zh = c.querySelector('.zh').textContent.trim();
-      out.push(tag + '：' + zh);
+      out.push(tZh + '：' + zh);
     });
     return out.join('\n');
   }
@@ -1431,20 +1629,22 @@ body.creative .cs-close { display: inline-flex; }
   function localSuggest(f) {
     var tag = f.p.tag, hit = '';
     document.querySelectorAll('#dbList .card').forEach(function (c) {
-      if (!hit && c.querySelector('.tag').textContent.indexOf(tag) > -1) hit = c.querySelector('.zh').textContent.trim();
+      var tEl = c.querySelector('.tag');
+      var tZh = tEl ? (tEl.getAttribute('data-zh') || tEl.textContent) : '';
+      if (!hit && tZh.indexOf(tag) > -1) hit = c.querySelector('.zh').textContent.trim();
     });
     if (hit) return hit;
     if (f.pi === 0) return '政府应该补贴蔬果还是对不健康食品征税，人们看法不一，我支持后者。';
     if (f.pi === 3) return '总的来说，征税比补贴更能引导健康饮食，政府同时应宣传均衡饮食。';
-    return '围绕「' + f.s.note + '」用一句中文表达。';
+    return '围绕「' + noteZh(f.s.note) + '」用一句中文表达。';
   }
 
   function suggest() {
     var f = FLAT[S.cur], at = S.cur;
     if (!MODEL_ON()) { cur().sugg = localSuggest(f); renderWorkbench(); return; }
-    setZhHint('建议生成中…');
+    setZhHint(t('zhh.sugging'));
     var msg = '雅思题目：' + QTEXT + '\n用户观点库素材：\n' + dbDigest() + '\n' +
-      '当前要写：' + f.label + '（' + f.p.sub + '），本句职能：' + f.s.role + '，要点：' + f.s.note + '。' +
+      '当前要写：' + f.label + '（' + f.p.sub + '），本句职能：' + f.s.role + '，要点：' + noteZh(f.s.note) + '。' +
       '参考素材与要点，用一句中文（15～35字）写出这一句该表达的内容。只输出这句中文，不要任何解释。';
     askModel([{ role: 'user', content: msg }], { temperature: 0.5 })
       .then(function (out) {
@@ -1470,13 +1670,13 @@ body.creative .cs-close { display: inline-flex; }
       save();
       zhEdit.contentEditable = 'true';
       goBtn.classList.remove('ghost');
-      goBtn.textContent = '重新校验';
-      setZhHint('已解锁 · 修改后重新校验', '');
+      goBtn.textContent = t('go.recheck');
+      setZhHint(t('zhh.unlocked'), '');
       zhEdit.focus();
       return;
     }
     var text = zhEdit.textContent.replace(/\s+/g, ' ').trim();
-    if (!text) { setZhHint('先写一句中文', 'err'); return; }
+    if (!text) { setZhHint(t('zhh.needZh'), 'err'); return; }
     it.zh = text;
     it.sugg = '';
     zhEdit.classList.remove('sugg');
@@ -1497,9 +1697,9 @@ body.creative .cs-close { display: inline-flex; }
         return p.ok ? esc(p.text) : '<span class="strike">' + esc(p.text) + '</span>';
       }).join('');
       acceptBtn.hidden = false;
-      setZhHint('已划掉偏离部分 · 接受或继续编辑', '');
+      setZhHint(t('zhh.struck'), '');
     };
-    var fail = function (issue) { setZhHint(issue || '不符合本句要点，请修改', 'err'); };
+    var fail = function (issue) { setZhHint(issue || t('zhh.offBrief'), 'err'); };
     var handle = function (j) {
       if (j && Array.isArray(j.parts)) {
         var flat = j.parts.map(function (p) { return (p && p.text) || ''; }).join('').replace(/\s+/g, ' ').trim();
@@ -1515,14 +1715,14 @@ body.creative .cs-close { display: inline-flex; }
       confirmZh(text);
     };
     if (!MODEL_ON()) {
-      if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail('过短或不是中文');
+      if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail(t('zhh.notZh'));
       return;
     }
     goBtn.disabled = true;
     acceptBtn.hidden = true;
-    setZhHint('校验中…');
+    setZhHint(t('zhh.checking'));
     var msg = '雅思题目：' + QTEXT + '\n全文结构：' + ESSAY_PLAN.map(function (p) { return p.title + p.sub; }).join('；') + '\n' +
-      '本句位置：' + f.label + '（' + f.p.sub + '），职能：' + f.s.role + '，要点：' + f.s.note + '。用户中文：«' + text + '»\n' +
+      '本句位置：' + f.label + '（' + f.p.sub + '），职能：' + f.s.role + '，要点：' + noteZh(f.s.note) + '。用户中文：«' + text + '»\n' +
       '判断这句中文是否切题、是否符合该句职能要点，并标出偏离部分。只输出 JSON，三种形式之一：\n' +
       '{"clean":true} —— 完全符合\n' +
       '{"parts":[{"text":"…","ok":true},{"text":"…","ok":false}]} —— 部分偏离：把用户原句切成连续片段，偏离的标 ok:false，符合的标 ok:true；所有 text 按顺序逐字拼接必须完全等于用户原句\n' +
@@ -1536,7 +1736,7 @@ body.creative .cs-close { display: inline-flex; }
       .catch(function () {
         goBtn.disabled = false;
         if (S.cur !== at) return;
-        if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail('过短或不是中文');
+        if (text.length >= 8 && /[一-鿿]/.test(text)) confirmZh(text); else fail(t('zhh.notZh'));
       });
   }
 
@@ -1738,16 +1938,16 @@ body.creative .cs-close { display: inline-flex; }
   /* 词条间关系：仅用于翻译选词参考、评判提示与 or 过滤（反义/易混/程度差不得成 or）；
      note 只说区别，不判对错、不泄答案 */
   var ACAD_REL = [
-    { a: 'specially', b: 'especially', t: 'cf', note: 'specially 与 especially 意思不同：specially＝特意、专门地（表目的）；especially＝尤其、特别地' },
-    { a: 'somewhat', b: 'considerably', t: 'deg', note: 'somewhat 与 considerably 程度不同：somewhat＝略微；considerably＝大幅' },
-    { a: 'significantly', b: 'slightly', t: 'deg', note: 'significantly 与 slightly 程度相反：显著 vs 略微' },
-    { a: 'directly', b: 'indirectly', t: 'ant', note: 'directly 与 indirectly 方向相反：直接地 / 间接地' },
-    { a: 'prove', b: 'indicate', t: 'deg', note: 'prove 与 indicate 断言强度不同：prove＝证明（最强）；indicate＝表明（中性）' },
-    { a: 'demonstrate', b: 'indicate', t: 'deg', note: 'demonstrate 与 indicate 断言强度不同：demonstrate＝（以证据）证明；indicate＝表明（中性）' },
-    { a: 'result in', b: 'result from', t: 'ant', note: 'result in 与 result from 方向相反：result in＝导致（前因后果）；result from＝源于（前果后因）' },
-    { a: 'claim', b: 'argue', t: 'cf', note: 'claim 与 argue 不同：claim＝声称（未必属实）；argue＝论辩（给出理由）' },
-    { a: 'sharply', b: 'gradually', t: 'ant', note: 'sharply 与 gradually 相反：急剧地 / 逐渐地' },
-    { a: 'remain', b: 'increase', t: 'ant', note: 'remain 与 increase 相反：保持不变 / 增长' }
+    { a: 'specially', b: 'especially', t: 'cf', note: { zh: 'specially 与 especially 意思不同：specially＝特意、专门地（表目的）；especially＝尤其、特别地', en: 'specially = on purpose, for a specific aim; especially = particularly, above all' } },
+    { a: 'somewhat', b: 'considerably', t: 'deg', note: { zh: 'somewhat 与 considerably 程度不同：somewhat＝略微；considerably＝大幅', en: 'somewhat = slightly; considerably = greatly' } },
+    { a: 'significantly', b: 'slightly', t: 'deg', note: { zh: 'significantly 与 slightly 程度相反：显著 vs 略微', en: 'significantly = markedly; slightly = only a little — opposite degrees' } },
+    { a: 'directly', b: 'indirectly', t: 'ant', note: { zh: 'directly 与 indirectly 方向相反：直接地 / 间接地', en: 'directly and indirectly are opposites' } },
+    { a: 'prove', b: 'indicate', t: 'deg', note: { zh: 'prove 与 indicate 断言强度不同：prove＝证明（最强）；indicate＝表明（中性）', en: 'prove = establish as certain (strongest); indicate = point to, suggest (neutral)' } },
+    { a: 'demonstrate', b: 'indicate', t: 'deg', note: { zh: 'demonstrate 与 indicate 断言强度不同：demonstrate＝（以证据）证明；indicate＝表明（中性）', en: 'demonstrate = show with evidence; indicate = point to, suggest (neutral)' } },
+    { a: 'result in', b: 'result from', t: 'ant', note: { zh: 'result in 与 result from 方向相反：result in＝导致（前因后果）；result from＝源于（前果后因）', en: 'result in = cause (A leads to B); result from = be caused by (B comes from A) — opposite directions' } },
+    { a: 'claim', b: 'argue', t: 'cf', note: { zh: 'claim 与 argue 不同：claim＝声称（未必属实）；argue＝论辩（给出理由）', en: 'claim = state as fact without proof; argue = make a case with reasons' } },
+    { a: 'sharply', b: 'gradually', t: 'ant', note: { zh: 'sharply 与 gradually 相反：急剧地 / 逐渐地', en: 'sharply = rapidly; gradually = step by step — opposites' } },
+    { a: 'remain', b: 'increase', t: 'ant', note: { zh: 'remain 与 increase 相反：保持不变 / 增长', en: 'remain = stay the same; increase = go up — opposites' } }
   ];
 
   /* ================= 加分词·语境词块库 v2（模块隔离区 · 试点 18 条） =================
@@ -2100,8 +2300,8 @@ body.creative .cs-close { display: inline-flex; }
     });
     return out;
   }
-  var BONUS_ERR_PREFIX = { preposition: '搭配微提示', collocation: '搭配微提示', pos: '搭配微提示',
-    uncountable: '语法微提示', subject_verb_agreement: '语法微提示', register_trap: '语体微提示' };
+  var BONUS_ERR_PREFIX = { preposition: 'asmh.tip.colloc', collocation: 'asmh.tip.colloc', pos: 'asmh.tip.colloc',
+    uncountable: 'asmh.tip.grammar', subject_verb_agreement: 'asmh.tip.grammar', register_trap: 'asmh.tip.register' };
   function bonusCheckText(s) {
     var n = lexNorm(String(s || ''));
     var c = BONUS_ERR_BY[n]; /* 整串优先 */
@@ -2109,19 +2309,19 @@ body.creative .cs-close { display: inline-flex; }
       var ws = n.split(' ');
       for (var i = 0; i < ws.length; i++) if (BONUS_ERR_BY[ws[i]]) { c = BONUS_ERR_BY[ws[i]]; break; }
     }
-    return c ? (BONUS_ERR_PREFIX[c.type] || '搭配微提示') + ' · ' + c.rule_hint : null;
+    return c ? t(BONUS_ERR_PREFIX[c.type] || 'asmh.tip.colloc') + ' · ' + c.rule_hint : null;
   }
   function bonusBlockTip(b) {
     var e = ACAD_BY[lexNorm(String(b && b.en || ''))];
     if (!e) return '';
-    var REG = { n: '通用', sf: '书面', f: '正式' };
-    var DOM = { medical: '医学', physics: '物理', social_science: '社科' };
+    var REG = { n: 'tip.reg.general', sf: 'tip.reg.written', f: 'tip.reg.formal' };
+    var DOM = { medical: 'tip.dom.med', physics: 'tip.dom.phy', social_science: 'tip.dom.soc' };
     var v2 = e.v2 || {}, nv = v2.nuance || {};
-    var bits = [e.g || '', REG[e.reg || 'n'], '强度' + (e.str || 2)];
-    if (nv.is_metaphorical) bits.push('隐喻');
-    if (DOM[nv.domain]) bits.push(DOM[nv.domain]);
-    if (e.co && e.co.length) bits.push('常搭 ' + e.co.slice(0, 3).join(' / '));
-    if (v2.transformations && v2.transformations.length) bits.push('可换 ' + v2.transformations.map(function (t) { return t.equivalent_form; }).join(' / '));
+    var bits = [e.g || '', t(REG[e.reg || 'n']), tN('tip.strength', e.str || 2)];
+    if (nv.is_metaphorical) bits.push(t('tip.metaphor'));
+    if (DOM[nv.domain]) bits.push(t(DOM[nv.domain]));
+    if (e.co && e.co.length) bits.push(t('tip.colloc').replace('{W}', e.co.slice(0, 3).join(' / ')));
+    if (v2.transformations && v2.transformations.length) bits.push(t('tip.alt').replace('{W}', v2.transformations.map(function (x) { return x.equivalent_form; }).join(' / ')));
     if (e.d) bits.push(e.d);
     return ' title="' + esc(bits.join(' · ')) + '"';
   }
@@ -2312,7 +2512,7 @@ body.creative .cs-close { display: inline-flex; }
     });
     if (!hit) return '';
     logLexErr(hit.a + '|' + hit.b);
-    return hit.note;
+    return noteNow(hit.note);
   }
   window.lexStats = function () {
     var c = {};
@@ -2762,8 +2962,8 @@ body.creative .cs-close { display: inline-flex; }
       caretAt = -1; fillSlotPath = '';
       resetUndo(); /* 重新生成：快照与光标作废 */
       save();
-      setZhHint('✓ 已确认 · 词块已生成', 'ok');
-      setAsmHint('拖入骨架 · 空位填积木 · 共 ' + nodeCount(seq) + ' 块 · 双击空白处进入创想空间 (⌘⏎)');
+      setZhHint(t('zhh.confBlocks'), 'ok');
+      setAsmHint(tN('asmh.guide', nodeCount(seq)));
       renderZones();
       renderStrip();
     };
@@ -2816,7 +3016,7 @@ body.creative .cs-close { display: inline-flex; }
       finalize(tree, anchor);
     };
     var doSplit = function () {
-      setZhHint(retryNote ? '重新拆分中…' : '词块生成中…');
+      setZhHint(retryNote ? t('zhh.resplit') : t('zhh.blocking'));
       var msg = '把下面这句英文按短语拆成积木树，用于语序拼装练习。只输出 JSON：{"tree":[节点,…]}\n' +
         '节点五种：\n' +
         '{"t":"skel","parts":["文本",{"slot":"clause|noun|verb"},…],"fills":[[节点,…],…]} 骨架：跨话题高复用句型模板；parts 里的 {"slot":…} 是空位（clause=从句位，noun=名词短语位，verb=动词短语位）；fills[i] 是第 i 个空位里的节点序列，可以再嵌套骨架\n' +
@@ -2870,7 +3070,7 @@ body.creative .cs-close { display: inline-flex; }
     };
     var doTranslate = function (transNote, transTries) {
       if (S.cur !== at) return;
-      setZhHint('词块生成中…');
+      setZhHint(t('zhh.blocking'));
       var msg = '把这句中文写成一句地道的雅思英文（15～28词）。只输出 JSON：{"sentence":"完整英文句子","back_zh":"这句英文的中文回译"}\n' +
         '要求：忠实原意、表达自然的完整单句（可含从句）；中文常省略主语，英文必须补出明确主语（如 some people / the government / we）；动词形态、时态语态按英文习惯。\n' +
         '学术化升级（忠实优先，意思与断言强度不变）：\n' +
@@ -2924,7 +3124,9 @@ body.creative .cs-close { display: inline-flex; }
     tokensOfTree: tokensOfTree, verifyText: verifyText, puncScan: puncScan,
     stripPuncNodes: stripPuncNodes, withPuncNodes: withPuncNodes, ingestTree: ingestTree,
     ACAD: ACAD, ACAD_BY: ACAD_BY, ACAD_EQ: ACAD_EQ, ACAD_REL_BY: ACAD_REL_BY,
-    ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText, bonusBlockTip: bonusBlockTip
+    ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText, bonusBlockTip: bonusBlockTip,
+    I18N: I18N, LANG: LANG, LANG_KEY: LANG_KEY, t: t, tN: tN, setLang: setLang,
+    noteNow: noteNow, noteZh: noteZh, roleNow: roleNow, paraTitle: paraTitle, paraSub: paraSub, labelNow: labelNow, slotLabel: slotLabel
   };
 
   /* ================= 拼装与评判 ================= */
@@ -2967,7 +3169,7 @@ body.creative .cs-close { display: inline-flex; }
     renderParas();
     if (!it.done) {
       var left = nodeCount(it.seq) - nodeCount(it.order);
-      setAsmHint(left > 0 ? '剩余 ' + left + ' 块 · 可随时点「确认」' : '全部放入 · 自动检查中…');
+      setAsmHint(left > 0 ? tN('asmh.leftAny', left) : t('asmh.autoCheck'));
       if (left <= 0 && it.order.length && !asmGo.hidden && !asmGo.disabled) asmGo.click(); /* 词块（含标点积木）全放入：自动评判 */
     }
   }
@@ -2989,7 +3191,7 @@ body.creative .cs-close { display: inline-flex; }
     save();
     renderStrip();
     renderParas();
-    setAsmHint(via === 'equiv' ? '✓ 正确 · 意思与语法均通过' : '✓ 正确', 'ok');
+    setAsmHint(via === 'equiv' ? t('asmh.okEquiv') : t('asmh.ok'), 'ok');
     Array.prototype.forEach.call(asmStrip.querySelectorAll('.tchip'), function (c) { c.classList.add('ok'); });
     revealAnswer();
     askGramNote(it);
@@ -3015,12 +3217,12 @@ body.creative .cs-close { display: inline-flex; }
   function renderAnswer() {
     var it = cur(), f = FLAT[S.cur];
     if (!it.ansShown || !it.answer) { ansBox.hidden = true; ansBox.innerHTML = ''; return; }
-    var h = '<div class="ans-head"><span class="ans-tag">参考答案</span>' +
-      '<span class="ans-role">' + esc(f.label) + ' · ' + esc(f.s.role) + '</span></div>' +
+    var h = '<div class="ans-head"><span class="ans-tag">' + esc(t('ans.tag')) + '</span>' +
+      '<span class="ans-role">' + esc(labelNow(f)) + ' · ' + esc(roleNow(f.s.role)) + '</span></div>' +
       '<p class="ans-en" lang="en">' + esc(it.answer) + '</p>';
     if (it.zh) h += '<p class="ans-zh">' + esc(it.zh) + '</p>';
-    if (it.gramNote) h += '<p class="ans-note">' + esc(it.gramNote) + '</p>';
-    if (ansNextPending) h += '<div class="ans-foot"><button type="button" class="ans-next" id="ansNext">下一句 →</button></div>';
+    if (it.gramNote) h += '<p class="ans-note"><span class="ans-note-pre">' + esc(t('ans.notePrefix')) + '</span>' + esc(it.gramNote) + '</p>';
+    if (ansNextPending) h += '<div class="ans-foot"><button type="button" class="ans-next" id="ansNext">' + esc(t('ans.next')) + '</button></div>';
     ansBox.innerHTML = h;
     ansBox.hidden = false;
     var nb = document.getElementById('ansNext');
@@ -3077,7 +3279,7 @@ body.creative .cs-close { display: inline-flex; }
       pairs.forEach(function (pr) { cmpFills(pr[0], pr[1], issues); });
       if (issues.length) {
         var msgs = issues.slice(0, 3).map(function (s) {
-          return '第' + s.k + '空：' + (s.reorder ? '词序调整' : '此处需要' + (KLABEL[s.kind] || '其他内容'));
+          return tN('asmh.slotN', s.k) + (s.reorder ? t('asmh.slotOrder') : t('asmh.slotNeed').replace('{type}', slotLabel(s.kind)));
         });
         setAsmHint(msgs.join(' · '), 'err');
         return;
@@ -3086,14 +3288,14 @@ body.creative .cs-close { display: inline-flex; }
       it.order.forEach(function (e, pos) { if (!inU[pos]) moved.push(entryName(it.blocks[e.id])); });
       moved = moved.filter(function (x, k) { return moved.indexOf(x) === k; });
       if (moved.length && moved.length <= 3) {
-        setAsmHint('词序：调整 ' + moved.slice(0, 3).join('、'), 'err');
+        setAsmHint(t('asmh.orderMove') + moved.slice(0, 3).join('、'), 'err');
         return;
       }
       microHint();
     };
     if (!MODEL_ON()) { structHints(); return; }
     var at = S.cur, assembled = orderText(it.order);
-    setAsmHint('对照中文检查中…');
+    setAsmHint(t('asmh.equivChecking'));
     askModel([{ role: 'user', content: '学生在做雅思英文句子拼装练习。这句的中文原意：«' + it.zh + '»\n学生用词块拼出的英文：«' + assembled + '»\n判断两点：1. 这句英文语法是否正确（词形、语序、结构完整）；2. 意思是否与中文原意一致（同义改写可以接受，不要求逐词对应）。\n只输出 JSON：{"ok":true}（两者都满足）或 {"issue":"一句话中文指出问题，20字内"}' }], { temperature: 0.1, maxTokens: 400, noThink: true })
       .then(function (out) {
         if (S.cur !== at) return;
@@ -3159,13 +3361,13 @@ body.creative .cs-close { display: inline-flex; }
 
   function microHint() {
     var it = cur(), f = FLAT[S.cur];
-    var fallback = '先搭主干（主语+动词+宾语），连接词放在它连接的两部分之间，介词紧随其宾语前。';
+    var fallback = t('asmh.backbone');
     if (!MODEL_ON()) { setAsmHint(fallback, 'err'); return; }
-    setAsmHint('提示生成中…');
+    setAsmHint(t('asmh.tipping'));
     var at = S.cur;
     var assembled = orderText(it.order);
     var patt = it.blocks.filter(function (b) { return formZone(b) === 'skel'; }).map(function (b) { return entryName(b); }).join(' / ');
-    var msg = '学生在拼一句雅思英文，语序不对。句子要点：' + f.s.note + '。用到的句型词：' + (patt || '一般陈述句') + '。学生当前语序：«' + assembled + '»\n' +
+    var msg = '学生在拼一句雅思英文，语序不对。句子要点：' + noteZh(f.s.note) + '。用到的句型词：' + (patt || '一般陈述句') + '。学生当前语序：«' + assembled + '»\n' +
       '学生句中的学术词用法（提示可参考槽位/惯用句式，但不得泄露正确答案）：' + (lexCtxOf(assembled) || '无') + '\n' +
       '用中文给一句微型提示（30字内）：说明这类句型的用法或主干顺序，或指出某词的槽位（如「该词修饰形容词」）或惯用句式（如「此词常用于否定句」），可另给一个完全不同主题的英文例句。' +
       '绝对不能复述正确语序或正确答案。只输出提示文字。';
@@ -3217,7 +3419,7 @@ body.creative .cs-close { display: inline-flex; }
     if (!it.strikeParts) return;
     var kept = it.strikeParts.filter(function (p) { return p.ok; })
       .map(function (p) { return p.text; }).join('').replace(/\s+/g, ' ').trim();
-    if (!kept) { setZhHint('保留部分为空 · 请重写', 'err'); return; }
+    if (!kept) { setZhHint(t('zhh.keepEmpty'), 'err'); return; }
     it.strikeParts = null;
     it.zh = kept;
     it.confirmed = true;
@@ -3236,7 +3438,7 @@ body.creative .cs-close { display: inline-flex; }
     if (it.strikeParts && !it.confirmed) {
       it.strikeParts = null;
       acceptBtn.hidden = true;
-      setZhHint('已编辑 · 重新校验');
+      setZhHint(t('zhh.edited'));
     }
   });
   zhEdit.addEventListener('paste', function (e) {
@@ -3258,7 +3460,7 @@ body.creative .cs-close { display: inline-flex; }
     renderZones();
     renderParas();
     renderAnswer();
-    setAsmHint('已重置 · 重新拼装');
+    setAsmHint(t('asmh.reset'));
   });
 
   /* 确认键：随时可点、按下即检查（不要求用完所有积木）；通过即解锁下一句 */
@@ -3266,11 +3468,11 @@ body.creative .cs-close { display: inline-flex; }
     var it = cur();
     if (it.done || asmGo.disabled) return;
     if (!it.order.length) {
-      setAsmHint('先放入词块再确认', 'err');
+      setAsmHint(t('asmh.needFirst'), 'err');
       return;
     }
     asmGo.disabled = true;
-    asmGo.textContent = '检查中…';
+    asmGo.textContent = t('asm.go.checking');
     judge(true);
   });
 
@@ -3561,7 +3763,7 @@ body.creative .cs-close { display: inline-flex; }
   }
   function insertPuncAt(bi, idx, srcRect) {
     var it = cur();
-    if (!it.order.length) { setAsmHint('先放词块，再插标点', 'err'); return; }
+    if (!it.order.length) { setAsmHint(t('asmh.noPunc'), 'err'); return; }
     if (idx < 0 || idx > it.order.length) idx = it.order.length;
     if (idx === 0) idx = 1; /* 句首不放标点 */
     flipCapture();
@@ -3934,7 +4136,7 @@ body.creative .cs-close { display: inline-flex; }
       b = pl && pl.list[pl.idx] ? it.blocks[pl.list[pl.idx].id] : null;
     }
     if (!b || b.t !== 'punc') return idx;
-    if (!it.order.length) { setAsmHint('先放词块，再插标点', 'err'); return -1; }
+    if (!it.order.length) { setAsmHint(t('asmh.noPunc'), 'err'); return -1; }
     return idx === 0 ? 1 : idx;
   }
 
@@ -4018,13 +4220,13 @@ body.creative .cs-close { display: inline-flex; }
     if (!dbDragging) return;
     e.preventDefault();
     zhBox.classList.remove('over');
-    fillZh(dbDragging.querySelector('.zh').textContent.trim(), '已从数据库填入 · 可修改后校验');
+    fillZh(dbDragging.querySelector('.zh').textContent.trim(), t('zhh.dbFilled'));
     dbDragging = null;
   });
   document.getElementById('dbList').addEventListener('click', function (e) {
     var card = e.target.closest('.card');
     if (!card) return;
-    fillZh(card.querySelector('.zh').textContent.trim(), '已从数据库填入 · 可修改后校验');
+    fillZh(card.querySelector('.zh').textContent.trim(), t('zhh.dbFilled'));
   });
 
   function fillZh(text, hint) {
@@ -4047,7 +4249,7 @@ body.creative .cs-close { display: inline-flex; }
     acceptBtn.hidden = true;
     zhEdit.contentEditable = 'true';
     goBtn.classList.remove('ghost');
-    goBtn.textContent = '校验 →';
+    goBtn.textContent = t('go.check');
     zhEdit.textContent = text;
     zhEdit.classList.remove('sugg');
     setZhHint(hint, '');
@@ -4060,8 +4262,8 @@ body.creative .cs-close { display: inline-flex; }
   restartBtn.addEventListener('click', function () {
     if (!restartArmed) {
       restartArmed = true;
-      restartBtn.textContent = '确认清空？';
-      restartTimer = setTimeout(function () { restartArmed = false; restartBtn.textContent = '重新开始'; }, 3000);
+      restartBtn.textContent = t('btn.restart.confirm');
+      restartTimer = setTimeout(function () { restartArmed = false; restartBtn.textContent = t('btn.restart'); }, 3000);
       return;
     }
     clearTimeout(restartTimer);
@@ -4071,6 +4273,11 @@ body.creative .cs-close { display: inline-flex; }
 
   /* ================= 启动 ================= */
   load();
+  applyStaticLang();
+  document.getElementById('langToggle').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) setLang(b.getAttribute('data-l'));
+  });
   var start = 0;
   for (var i = 0; i < FLAT.length; i++) {
     if (!S.items[i].done) { start = i; break; }
@@ -4313,7 +4520,7 @@ body.creative .cs-close { display: inline-flex; }
 </script>
 
 <!-- 创想空间退出按钮（仅 body.creative 时显示，搭积木模块专属） -->
-<button type="button" class="cs-close" id="csClose" aria-label="退出创想空间（Esc）" title="退出创想空间 (Esc)">×</button>
+<button type="button" class="cs-close" id="csClose" aria-label="退出创想空间（Esc）" title="退出创想空间 (Esc)" data-i18n-aria="cs.exit.aria" data-i18n-title="cs.exit.title">×</button>
 <script>
 /* [视觉升级] 窄屏观点库抽屉开关（纯展示层：只切 body 类，不碰业务状态） */
 (function () {
