@@ -76,6 +76,10 @@
   --lg-fill: hsla(200, 34%, 30%, .48);  /* 静态兜底：取色脚本未跑/失败时 */
   --lg-ink: #1D2A28;
   --lg-sh: hsl(200, 34%, 16%);
+  /* 已耗尽遮罩（.lex-mask）：淡底/墨色/文字影同样随背景照片推导 */
+  --lex-mask-tint: rgba(60, 139, 193, .28);
+  --lex-mask-ink: #1F2A37;
+  --lex-mask-sh: rgba(255, 255, 255, .2);
   --ring: rgba(90, 125, 138, .4);
   --caret: #B9695C;
   --caret-glow: rgba(185, 105, 92, .35);
@@ -137,6 +141,9 @@
     --lg-fill: hsla(200, 34%, 24%, .48);
     --lg-ink: #F4F8FA;
     --lg-sh: hsl(200, 40%, 5%);
+    --lex-mask-tint: rgba(60, 139, 193, .3);
+    --lex-mask-ink: #FFFFFF;
+    --lex-mask-sh: rgba(0, 0, 0, .2);
     --ring: rgba(127, 163, 176, .5);
     --caret: #D08A7C;
     --caret-glow: rgba(208, 138, 124, .45);
@@ -192,6 +199,9 @@
   --lg-fill: hsla(200, 34%, 24%, .48);
   --lg-ink: #F4F8FA;
   --lg-sh: hsl(200, 40%, 5%);
+  --lex-mask-tint: rgba(60, 139, 193, .3);
+  --lex-mask-ink: #FFFFFF;
+  --lex-mask-sh: rgba(0, 0, 0, .2);
   --ring: rgba(127, 163, 176, .5);
   --caret: #D08A7C;
   --caret-glow: rgba(208, 138, 124, .45);
@@ -473,7 +483,8 @@ body.creative #bgFx { display: none; }
 .zh-row { display: flex; align-items: center; gap: 12px; }
 .zh-edit {
   flex: 1; min-width: 0; min-height: 34px; outline: none;
-  font-size: 21px; font-weight: 400; line-height: 1.75; word-break: break-word;
+  font-size: 24px; font-weight: 600; line-height: 1.75; word-break: break-word;
+  margin: 12px 0; /* 与上下英文行的呼吸：用 margin，不动行高 */
   text-align: justify; text-align-last: left;
 }
 .zh-edit:empty::before { content: attr(data-placeholder); color: var(--ink-3); font-size: 15px; }
@@ -625,12 +636,37 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .ans-next:active { transform: scale(.97); filter: brightness(.9); }
 
 /* ---------- 右：素材区（四栏同一滚动容器） ---------- */
-.lex { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+.lex { position: relative; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 .lex-scroll {
   flex: 1; min-height: 0; overflow: auto;
   display: flex; flex-direction: column; gap: 16px;
   padding: 4px 6px 20px 4px;
 }
+/* [已耗尽遮罩] 整个积木区只此一张（盖住四区与间隙）：磨砂玻璃 = 同色系淡底 + 模糊提饱和 + 5% 细噪点；
+   出现 300ms / 退场 200ms / 拖回让路 150ms（reduce 下全局禁过渡=瞬时）；pointer-events 关，
+   从句子拖回的落点判定不受影响；四区另以 inert 冻结键盘/焦点 */
+.lex-mask {
+  position: absolute; inset: 0; z-index: 6; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lex-mask-tint);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .2s ease, visibility .2s;
+}
+.lex-mask::before { /* 磨砂颗粒：120px 平铺灰噪点 */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
+  opacity: .05;
+}
+.lex-mask.on { opacity: 1; visibility: visible; transition-duration: .3s; }
+.lex-mask.hold { transition-duration: .15s; }
+.lex-mask-txt {
+  font-size: 23px; font-weight: 600; letter-spacing: .08em;
+  color: var(--lex-mask-ink);
+  text-shadow: 0 1px 2px var(--lex-mask-sh);
+}
+body.creative .lex-mask { display: none; }
 
 .zone {
   border-radius: 20px; border: 1px solid rgba(255, 255, 255, .4);
@@ -1275,6 +1311,7 @@ body.creative .cs-close { display: inline-flex; }
     'zh.aria': { zh: '中文输入', en: 'Chinese input' },
     'zh.placeholder': { zh: '用一句中文描述这句话要表达什么（可从左侧数据库拖入）', en: 'Describe this sentence in one line of Chinese (drag in from the Ideas panel)' },
     'go.check': { zh: '校验 →', en: 'Check →' },
+    'lex.used': { zh: '已耗尽', en: 'All used' },
     'go.edit': { zh: '修改中文', en: 'Edit Chinese' },
     'go.recheck': { zh: '重新校验', en: 'Re-check' },
     'go.accept': { zh: '接受修改', en: 'Accept changes' },
@@ -1424,6 +1461,43 @@ body.creative .cs-close { display: inline-flex; }
     TC_CLS[z.key] = z.tc;
     ZKEYS.push(z.key);
   });
+  /* [已耗尽遮罩] 积木区整块只此一张：盖住四区与间隙的外轮廓。.lex-scroll 会滚动，
+     所以挂在 .lex 上（position:relative，见样式）；不在 renderZones 里重建 */
+  var lexMask = document.createElement('div');
+  lexMask.className = 'lex-mask';
+  var lexMaskTxt = document.createElement('span');
+  lexMaskTxt.className = 'lex-mask-txt';
+  lexMaskTxt.setAttribute('role', 'status');
+  lexMaskTxt.setAttribute('data-i18n', 'lex.used');
+  lexMaskTxt.innerHTML = esc(t('lex.used'));
+  lexMask.appendChild(lexMaskTxt);
+  zonesEl.appendChild(lexMask);
+  var lexMaskOn = false;
+  function lexMaskApply() { /* 创想空间不遮罩（那四区是搭积木的原料行，交互照常） */
+    var on = lexMaskOn && !document.body.classList.contains('creative');
+    lexMask.className = 'lex-mask' + (on ? ' on' : '');
+    ZKEYS.forEach(function (k) {
+      var zd = ZONE_DIV[k];
+      if (!zd) return;
+      if (on) zd.setAttribute('inert', '');
+      else zd.removeAttribute('inert');
+    });
+  }
+  function lexMaskSync(on) { /* 只在状态翻转时动 DOM；遮罩期间栏目本就空，inert 无副作用 */
+    if (!!on === lexMaskOn) return;
+    lexMaskOn = !!on;
+    lexMaskApply();
+  }
+  function lexMaskHold() { /* 从句子往回拖：遮罩让路（~150ms 淡出，露出四区作落点） */
+    lexMask.className = 'lex-mask hold';
+    ZKEYS.forEach(function (k) {
+      var zd = ZONE_DIV[k];
+      if (zd) zd.removeAttribute('inert');
+    });
+  }
+  function lexMaskRestore() { /* 拖拽结束：若没有积木回来（lexMaskOn 仍真）则复现 */
+    setTimeout(function () { lexMaskApply(); }, 150);
+  }
   var acceptBtn = document.getElementById('acceptBtn');
 
   /* [配件自建已下线] 组装所需全部词块与必需标点都在配件栏内（方案B 自动生成）；
@@ -1561,6 +1635,16 @@ body.creative .cs-close { display: inline-flex; }
 
   /* [配件平铺] 不再按功能词类别分组：全部配件块连续流式排列（归类逻辑在归栏阶段已完成） */
 
+  function blocksExhausted(it) { /* 剩余计数直接读现有量：count - usedCount，不另算 */
+    var real = 0;
+    for (var bi = 0; bi < it.blocks.length; bi++) {
+      var b = it.blocks[bi];
+      if (b.t === 'punc' && b.src === 'user') continue;
+      real++;
+      if (b.count - usedCount(it.order, bi) > 0) return false;
+    }
+    return real > 0;
+  }
   function renderZones() {
     var it = cur();
     ZONES.forEach(function (z) {
@@ -1587,6 +1671,7 @@ body.creative .cs-close { display: inline-flex; }
       /* 配件栏带自建输入：句子进入拼装阶段就显示（即使暂无配件块） */
       if (z.hideEmpty) ZONE_DIV[z.key].style.display = (anyForm || (z.input && it.blocks.length)) ? '' : 'none';
     });
+    lexMaskSync(blocksExhausted(it));
   }
 
   /* ---------- 拼装区：树状渲染（骨架空位可嵌套） ---------- */
@@ -3221,6 +3306,7 @@ body.creative .cs-close { display: inline-flex; }
     nodeFromJSON: nodeFromJSON, stripFills: stripFills, formKey: formKey,
     visibleWords: visibleWords, checkBackbone: checkBackbone, scanParts: scanParts,
     mechanicalSplit: mechanicalSplit, localBlocks: localBlocks,
+    blocksExhausted: blocksExhausted, buildBlocks: buildBlocks,
     placeBlockAt: placeBlockAt, setCaret: setCaret, undoRedo: undoRedo, resetUndo: resetUndo, cur: cur,
     caretState: function () { return { caretAt: caretAt, fill: fillSlotPath, undo: undoStk.length, redo: redoStk.length }; },
     revealAnswer: revealAnswer, renderAnswer: renderAnswer, askGramNote: askGramNote,
@@ -3614,12 +3700,14 @@ body.creative .cs-close { display: inline-flex; }
     document.body.classList.add('creative');
     document.body.classList.remove('cs-return');
     csRowOrder();
+    lexMaskApply();
     setTimeout(function () { csFitLine(); csFollow(); }, 60); /* 布局落定后再量宽缩字号 */
   }
   function csExit() {
     if (!csOn) return;
     csOn = false;
     document.body.classList.remove('creative');
+    lexMaskApply();
     document.body.classList.add('cs-return'); /* 主布局淡入退场 */
     asmStrip.style.fontSize = ''; /* 还原主界面字号 */
     setTimeout(function () { document.body.classList.remove('cs-return'); }, 220);
@@ -4089,6 +4177,7 @@ body.creative .cs-close { display: inline-flex; }
     d.x = e.clientX; d.y = e.clientY - (d.touch ? DND.LIFT_Y : 0); /* 判定点 = 积木中心 */
     document.body.classList.add('dnd-active');
     d.el.classList.add('dnd-src');
+    if (d.source === 'strip') lexMaskHold();
     d.targets = buildTargets();
     d.ghost = makeGhost(d.el);
     d.snap = null; d.ph = null; d.timer = null;
@@ -4166,6 +4255,7 @@ body.creative .cs-close { display: inline-flex; }
       return i;
     })() : -1;
     cleanupVisuals();
+    lexMaskRestore();
     drag = null;
     /* 落在素材库：条内积木 = 取出；素材积木 = 放回；标点条 = 取消（未生成实例） */
     if (snap && snap.kind === 'zone') {
@@ -4224,6 +4314,7 @@ body.creative .cs-close { display: inline-flex; }
     removeDragListeners();
     if (d.holdT) clearTimeout(d.holdT);
     if (d.active) { killClickOnce(); cleanupVisuals(); }
+    lexMaskRestore();
     drag = null;
   }
   function onDragKey(e) {
@@ -4805,6 +4896,38 @@ var DEFAULT_BACKGROUND_IMAGE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIA
           root.setProperty('--lg-sh', 'hsl(' + Math.round(h) + ',' + Math.round(s2 * 100) + '%,' + (dark ? 4 : 16) + '%)');
         }
       } catch (e) { /* 推导失败：保留 CSS 静态兜底 */ }
+      /* [已耗尽遮罩配色] 底≈四栏面均值盖在页底（照片+纱）上；25–35% 同色系淡底（bgA/bgD）
+         里取首个达标的组合（白墨需底亮度 ≤.183 · 深墨 #1F2A37 需 ≥.275），都不达标取余量最大者 */
+      try {
+        var mkRe = /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i;
+        var lmRGB = function (mm) { return mm ? [parseInt(mm[1], 16) / 255, parseInt(mm[2], 16) / 255, parseInt(mm[3], 16) / 255] : null; };
+        var lmLin = function (v) { v = Math.min(1, Math.max(0, v)); return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+        var lmLum = function (c) { return .2126 * lmLin(c[0]) + .7152 * lmLin(c[1]) + .0722 * lmLin(c[2]); };
+        var pm2 = lmRGB(mkRe.exec(pal.photo || '')), pa2 = lmRGB(mkRe.exec(pal.bgA || '')), pd2 = lmRGB(mkRe.exec(pal.bgD || ''));
+        if (pm2) {
+          var dk2 = false;
+          try { dk2 = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e3) {}
+          var zc2 = dk2 ? [.275, .333, .361] : [.451, .443, .435], za2 = dk2 ? .5 : .65;
+          var veil2 = dk2 ? .55 : .62, pv2 = dk2 ? [.047, .071, .086] : [1, 1, 1];
+          var pg2 = [veil2 * pv2[0] + (1 - veil2) * pm2[0], veil2 * pv2[1] + (1 - veil2) * pm2[1], veil2 * pv2[2] + (1 - veil2) * pm2[2]];
+          var base2 = [za2 * zc2[0] + (1 - za2) * pg2[0], za2 * zc2[1] + (1 - za2) * pg2[1], za2 * zc2[2] + (1 - za2) * pg2[2]];
+          var cands = [[pa2, .3], [pa2, .35], [pa2, .25], [pd2, .3], [pd2, .35], [pd2, .25]], hit2 = null, best2 = null, bestM = -1;
+          cands.forEach(function (cd) {
+            if (!cd[0] || hit2) return;
+            var a = cd[1];
+            var c = [(1 - a) * base2[0] + a * cd[0][0], (1 - a) * base2[1] + a * cd[0][1], (1 - a) * base2[2] + a * cd[0][2]];
+            var L = lmLum(c), mW = .183 - L, mD = L - .275, m = Math.max(mW, mD);
+            if (m >= 0) hit2 = { c: c, a: a, w: mW >= mD };
+            if (m > bestM) { best2 = { c: c, a: a, w: mW >= mD }; bestM = m; }
+          });
+          var pick2 = hit2 || best2;
+          if (pick2) {
+            root.setProperty('--lex-mask-tint', 'rgba(' + Math.round(pick2.c[0] * 255) + ',' + Math.round(pick2.c[1] * 255) + ',' + Math.round(pick2.c[2] * 255) + ',' + pick2.a.toFixed(2) + ')');
+            root.setProperty('--lex-mask-ink', pick2.w ? '#FFFFFF' : '#1F2A37');
+            root.setProperty('--lex-mask-sh', pick2.w ? 'rgba(0, 0, 0, .2)' : 'rgba(255, 255, 255, .2)');
+          }
+        }
+      } catch (e) { /* 失败：CSS 静态兜底 */ }
     });
   } catch (e) { /* 整块失败也不影响主应用 */ }
 })();
