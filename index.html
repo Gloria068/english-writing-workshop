@@ -67,7 +67,15 @@
   --accent: #5A7D8A;            /* 当前/主操作：灰蓝 */
   --accent-deep: #2F4F5C;
   --accent-ink: #EAF3F5;
-  --logo: #6B8E9B;
+  /* 液态玻璃确认键（.liq）：参数集中在此；--lg-fill/--lg-ink/--lg-sh 运行期由取色脚本按背景照片推导 */
+  --lg-blur: 16px;        /* 背景模糊半径（12–18px 档） */
+  --lg-sat: 1.7;          /* 玻璃饱和提升（1.6–1.8 档） */
+  --lg-bright: 1.05;      /* 玻璃亮度提升 */
+  --lg-alpha: .48;        /* 填充不透明度（40–55% 档，与取色脚本同值） */
+  --lg-spring-ms: 420ms;  /* 按压回弹时长（350–450ms 档，WAAPI 同值） */
+  --lg-fill: hsla(200, 34%, 30%, .48);  /* 静态兜底：取色脚本未跑/失败时 */
+  --lg-ink: #1D2A28;
+  --lg-sh: hsl(200, 34%, 16%);
   --ring: rgba(90, 125, 138, .4);
   --caret: #B9695C;
   --caret-glow: rgba(185, 105, 92, .35);
@@ -126,7 +134,9 @@
     --err-bg-2: rgba(208, 138, 124, .4);
     --accent: #7FA3B0;
     --accent-deep: #C9DEE5;
-    --logo: #7FA3B0;
+    --lg-fill: hsla(200, 34%, 24%, .48);
+    --lg-ink: #F4F8FA;
+    --lg-sh: hsl(200, 40%, 5%);
     --ring: rgba(127, 163, 176, .5);
     --caret: #D08A7C;
     --caret-glow: rgba(208, 138, 124, .45);
@@ -179,7 +189,9 @@
   --err-bg-2: rgba(208, 138, 124, .4);
   --accent: #7FA3B0;
   --accent-deep: #C9DEE5;
-  --logo: #7FA3B0;
+  --lg-fill: hsla(200, 34%, 24%, .48);
+  --lg-ink: #F4F8FA;
+  --lg-sh: hsl(200, 40%, 5%);
   --ring: rgba(127, 163, 176, .5);
   --caret: #D08A7C;
   --caret-glow: rgba(208, 138, 124, .45);
@@ -282,10 +294,8 @@ body.creative #bgFx { display: none; }
   border-radius: 9999px;
   box-shadow: var(--bar-shadow);
 }
-.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--logo); flex: none; }
 .app-name { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .app-name h1 { font-size: 16px; font-weight: 700; letter-spacing: .01em; }
-.app-name .sub { font-size: 12px; font-weight: 400; color: var(--ink-3); }
 .db-toggle {
   display: none; margin-left: 0; /* 顶栏右端留位给 .lang-toggle（决定3 语言切换） */
   appearance: none; border: 1px solid rgba(30, 55, 65, .22); background: var(--sub-bg);
@@ -549,26 +559,51 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .asm-hint { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; color: var(--ink-2); min-height: 18px; line-height: 1.55; }
 .asm-hint.err { color: var(--err); }
 .asm-hint.ok { color: var(--ok-ink); }
-.asm-go {
-  /* 背景同色系深色玻璃：--go-deep 由取色脚本从背景主色推导（L≈25%、饱和略增），
-     换背景照片自动跟随；兜底为静态调色板同系深青 */
-  --go-bg: var(--go-deep, #2E4E60);
-  appearance: none; border: 1px solid rgba(255, 255, 255, .30); cursor: pointer; flex: none;
+/* ---------- 液态玻璃材质模块（Apple Liquid Glass 风格 · 可复用基类 .liq） ----------
+   目前仅确认（Check）按钮应用（.asm-go.liq）；参数集中在 :root --lg-*（模糊/饱和/亮度/透明度/回弹时长），
+   填充与墨色 --lg-fill/--lg-ink/--lg-sh 由取色脚本跟随背景照片推导；按压形变由 WAAPI 弹簧曲线驱动 */
+.liq {
+  appearance: none; border: none; cursor: pointer; position: relative; isolation: isolate;
+  border-radius: 999px; flex: none; white-space: nowrap; text-align: center;
+  color: var(--lg-ink); font-weight: 600;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%),
-    color-mix(in srgb, var(--go-bg) 70%, transparent);
-  color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 20px; border-radius: 12px;
-  white-space: nowrap;
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  backdrop-filter: blur(12px) saturate(150%);
+    linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 42%, rgba(0, 0, 0, .06)),
+    var(--lg-fill); /* 半透明有色玻璃体（非实色）：体积感来自上下渐变 + 底下模糊的背景 */
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .30),
-    0 6px 16px color-mix(in srgb, var(--go-bg) 42%, transparent);
-  transition: transform .12s ease, filter .12s ease, opacity .15s ease;
+    inset 0 1px 0 rgba(255, 255, 255, .5),                        /* 顶内高光 */
+    inset 0 0 14px rgba(255, 255, 255, .10),                      /* 内柔光 */
+    0 1px 2px color-mix(in srgb, var(--lg-sh) 45%, transparent),  /* 贴地接触阴影 */
+    0 8px 22px color-mix(in srgb, var(--lg-sh) 28%, transparent); /* 同色系柔和投影（不用大黑影） */
+  transition: filter .18s ease, opacity .15s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
-.asm-go:hover:not(:disabled) { filter: brightness(1.06); }
-.asm-go:active:not(:disabled) { transform: scale(.97); filter: brightness(.93); }
-.asm-go:disabled { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+.liq:hover:not(:disabled) { filter: brightness(1.05); }
+.liq:disabled { opacity: .45; cursor: not-allowed; } /* 禁用保持玻璃质感，仅降不透明度 */
+/* 1px 高光描边：左上/右下最亮（mask 挖空，只留边框一圈） */
+.liq::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 2; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .9), rgba(255, 255, 255, .16) 30%, rgba(255, 255, 255, .10) 55%, rgba(255, 255, 255, .7) 82%, rgba(255, 255, 255, .3));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: .85; transition: opacity .18s ease;
+}
+.liq:hover:not(:disabled)::before { opacity: 1; }
+/* 指针跟随柔高光：中心 .32 × 图层 .75 ≈ 24% ≤25%；触屏无 hover 自然不显示（JS 仅精确指针设备更新坐标） */
+.liq::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 1; pointer-events: none;
+  background: radial-gradient(120px circle at var(--lg-x, 50%) var(--lg-y, 30%), rgba(255, 255, 255, .32), rgba(255, 255, 255, 0) 70%);
+  opacity: 0; transition: opacity .25s ease;
+}
+.liq:hover:not(:disabled)::after { opacity: .75; }
+/* Chromium：SVG 位移贴图做边缘折射（feDisplacementMap）；Safari/Firefox 由 JS 特性检测自动回退普通玻璃 */
+.liq.lg-lens {
+  -webkit-backdrop-filter: url(#lgLens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  backdrop-filter: url(#lgLens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+}
+/* 应用：确认键（胶囊 · 现高度档 · 热区 ≥44px） */
+.asm-go { font-size: 13px; padding: 10px 24px; min-height: 44px; }
 .asm-reset { position: absolute; top: 6px; right: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: none; cursor: pointer; padding: 1px 2px; }
 .asm-reset:hover { color: var(--err); }
 
@@ -576,7 +611,6 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 .ans-box { border: 1px solid var(--sub-brd); border-radius: 16px; corner-shape: squircle; background: var(--sub-bg); padding: 12px 16px; margin-top: 14px; }
 .ans-head { display: flex; align-items: baseline; gap: 10px; }
 .ans-tag { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ok-ink); white-space: nowrap; }
-.ans-role { font-size: 12px; font-weight: 400; color: var(--ink-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ans-en { margin: 7px 0 0; font-size: 15px; line-height: 1.65; font-weight: 600; color: var(--ink); text-align: left; }
 .ans-zh { margin: 5px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-2); text-align: justify; text-align-last: left; }
 .ans-note { margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed var(--divider); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
@@ -604,30 +638,29 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 4px 16px rgba(30, 55, 65, .10);
 }
 .zone-title { font-size: 15px; font-weight: 700; color: var(--ztitle); }
-.zone-count { margin-left: auto; font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: rgba(255, 255, 255, .4); color: var(--zen); font-variant-numeric: tabular-nums; }
 .zone-empty { font-size: 14px; font-weight: 400; color: var(--ztitle); opacity: .45; width: 100%; text-align: center; padding: 10px 0 2px; }
 .chip { width: 12px; height: 12px; border-radius: 4px; flex: none; }
 .zone-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 
 /* 栏目语义色（浅色）：话题料 青灰 / 骨架 橄榄 / 加分词 玫瑰 / 配件 深石板 */
-.zone-purple  { background: rgba(74, 114, 130, .6);   --ztitle: #12262E; --zen: #1E3A45; }
-.zone-pattern { background: rgba(150, 140, 96, .6);   --ztitle: #2B2813; --zen: #3F3B1F; }
-.zone-prep    { background: rgba(176, 122, 134, .6);   --ztitle: #33151D; --zen: #4A2530; }
-.zone-part    { background: rgba(62, 76, 84, .8);     --ztitle: #F0F3F5; --zen: #DDE3E7; }
+.zone-purple  { background: rgba(74, 114, 130, .6);   --ztitle: #12262E; }
+.zone-pattern { background: rgba(150, 140, 96, .6);   --ztitle: #2B2813; }
+.zone-prep    { background: rgba(176, 122, 134, .6);   --ztitle: #33151D; }
+.zone-part    { background: rgba(62, 76, 84, .8);     --ztitle: #F0F3F5; }
 .chip-purple { background: #4A7282; }
 .chip-pattern { background: #968C60; }
 .chip-prep { background: #B07A86; }
 .chip-part { background: rgba(255, 255, 255, .55); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; }
-  :root:not([data-theme="light"]) .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; }
-  :root:not([data-theme="light"]) .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; }
-  :root:not([data-theme="light"]) .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; }
+  :root:not([data-theme="light"]) .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; }
+  :root:not([data-theme="light"]) .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; }
+  :root:not([data-theme="light"]) .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; }
+  :root:not([data-theme="light"]) .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; }
 }
-:root[data-theme="dark"] .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; --zen: #9FBFC9; }
-:root[data-theme="dark"] .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; --zen: #C6BC97; }
-:root[data-theme="dark"] .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; --zen: #D5AFB9; }
-:root[data-theme="dark"] .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; --zen: #DDE3E7; }
+:root[data-theme="dark"] .zone-purple  { background: rgba(74, 114, 130, .38);  --ztitle: #C9DEE5; }
+:root[data-theme="dark"] .zone-pattern { background: rgba(150, 140, 96, .32);  --ztitle: #E6DFC6; }
+:root[data-theme="dark"] .zone-prep    { background: rgba(176, 122, 134, .34); --ztitle: #F0D6DC; }
+:root[data-theme="dark"] .zone-part    { background: rgba(48, 58, 66, .94);    --ztitle: #F0F3F5; }
 
 .blocks { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 12px 10px; min-height: 48px; }
 
@@ -736,7 +769,7 @@ body.dnd-active .asm-slot.empty:not(.inert) { transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
   .schip.cur, .tchip.ok, #wwCaret.on, .tchip.fly-in { animation: none !important; }
-  .asm-go:active:not(:disabled), .lang-toggle:active::before,
+  .lang-toggle:active::before,
   .lang-toggle[data-v="en"]:active::before, .lang-toggle[data-v="zh"]:active::before { transform: none; }
 }
 
@@ -820,9 +853,11 @@ body.creative #wwCaret::after { bottom: -4px; }
 body.creative .asm-foot { justify-content: center; align-items: center; gap: 14px; margin-top: 2.5vh; }
 body.creative .asm-hint { flex: none; text-align: center; font-size: 14px; color: #7A8194; background: none; border: none; padding: 0; }
 body.creative .asm-go {
-  font-size: 14px; font-weight: 500; padding: 8px 22px; border-radius: 999px;
+  font-size: 14px; font-weight: 500; padding: 8px 22px; min-height: 0; border-radius: 999px;
   background: #FFFFFF; border: 1px solid #C4C9D4; color: #444B5C; cursor: pointer;
+  box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
 }
+body.creative .asm-go::before, body.creative .asm-go::after { content: none; }
 body.creative .asm-go:hover { border-color: #8FD3C6; color: #0D5247; }
 
 /* ---------- 下半：备用积木（#F6F7FA，四色行，垂直居中，超高内滚） ---------- */
@@ -872,12 +907,18 @@ body.creative .cs-close { display: inline-flex; }
 
 <div id="bgFx" aria-hidden="true"><div class="bg-photo" id="bgPhoto"></div><i class="bg-blob b1"></i><i class="bg-blob b2"></i><i class="bg-blob b3"></i><i class="bg-blob b4"></i></div>
 
+<!-- 液态玻璃确认键的边缘折射滤镜：位移集中在边缘、中心平缓（Chromium 生效；Safari/Firefox 由 JS 特性检测自动回退普通玻璃） -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <filter id="lgLens" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <feImage preserveAspectRatio="none" result="map"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='96'%3E%3Cdefs%3E%3ClinearGradient id='dx' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.13' stop-color='%23808080'/%3E%3Cstop offset='.87' stop-color='%23808080'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/linearGradient%3E%3ClinearGradient id='dy' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%230f0'/%3E%3Cstop offset='.13' stop-color='%23008000'/%3E%3Cstop offset='.87' stop-color='%23008000'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='240' height='96' fill='url(%23dx)'/%3E%3Crect width='240' height='96' fill='url(%23dy)' style='mix-blend-mode:screen'/%3E%3C/svg%3E" />
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="12" xChannelSelector="R" yChannelSelector="G" />
+  </filter>
+</svg>
 <div class="app">
   <header class="topbar">
-    <div class="logo" aria-hidden="true"></div>
     <div class="app-name">
       <h1 data-i18n="app.title">英语写作工作台</h1>
-      <span class="sub" data-i18n="app.sub">English Writing Workshop</span>
     </div>
     <div class="lang-toggle" id="langToggle" data-v="zh" role="radiogroup" aria-label="界面语言 / Language"><button type="button" role="radio" aria-checked="false" data-l="en">EN</button><button type="button" role="radio" aria-checked="true" data-l="zh" class="on">中</button></div>
     <button type="button" class="db-toggle" id="dbToggle" aria-expanded="false" data-i18n="topbar.ideas">观点库</button>
@@ -954,7 +995,7 @@ body.creative .cs-close { display: inline-flex; }
           <div class="asm-strip" id="asmStrip"></div>
           <div class="asm-foot">
             <div class="asm-hint" id="asmHint"></div>
-            <button type="button" class="asm-go" id="asmGo" hidden data-i18n="asm.go">确认</button>
+            <button type="button" class="asm-go liq" id="asmGo" hidden data-i18n="asm.go">确认</button>
           </div>
         </div>
         <!-- 搭积木专属：提交后亮出的参考答案条（未提交前隐藏） -->
@@ -1095,11 +1136,83 @@ body.creative .cs-close { display: inline-flex; }
   var asmBox = document.getElementById('asmBox');
   var ansBox = document.getElementById('ansBox');
   var restartBtn = document.getElementById('restartBtn');
-  var QTEXT = (function (el) {
-    var ps = el ? el.querySelectorAll('p') : [];
-    var parts = Array.prototype.map.call(ps, function (p) { return (p.textContent || '').trim(); }).filter(Boolean);
-    return parts.length ? parts.join(' ') : ((el && el.textContent) || '').trim();
-  })(document.getElementById('qText'));
+  /* ================= 题目数据（按功能分字段：statement=内容句 / task=指令句） =================
+     当前题静态给定；换题走 applyTopicText（规则切分 → 一次 AI 校正并缓存 → 末句兜底） */
+  var TOPIC = {
+    statement: [
+      'Some people think the government should subsidise fruits and vegetables to make healthy food more affordable.',
+      'Others argue that the government should tax unhealthy food instead.'
+    ],
+    task: ['Discuss both views and give your opinion.']
+  };
+  var QTEXT = (TOPIC.statement.concat(TOPIC.task).join(' ')).trim();
+  function renderTopic() {
+    var el = document.getElementById('qText');
+    if (!el) return;
+    var h = TOPIC.statement.length ? '<p class="q-statement">' + esc(TOPIC.statement.join(' ')) + '</p>' : '';
+    if (TOPIC.task.length) h += '<p class="q-task">' + esc(TOPIC.task.join(' ')) + '</p>';
+    el.innerHTML = h;
+  }
+  /* 切句：句末 .?! + 可选收尾引号/括号（无 lookbehind，兼容老内核）；逐句去首尾空格 */
+  function topicSentences(text) {
+    var v = String(text || '').replace(/\s+/g, ' ').trim();
+    var m = v.match(/[^.?!]+[.?!]+(?:["”\')\]]+)*/g);
+    if (!m || !m.length) return v ? [v] : [];
+    return m.map(function (sen) { return sen.trim(); }).filter(Boolean);
+  }
+  /* 指令句识别：祈使开头（Discuss/Write/Give…）或疑问句式（To what extent…? / What…?） */
+  var TASK_IMPERATIVE = /^(discuss|write|give|explain|describe|compare|suggest|consider|evaluate|analyse|analyze|outline|summarise|summarize|illustrate|justify|propose|recommend|state|mention)\b/i;
+  var TASK_QUESTION = /^(to what extent|what|why|how|which|who|whose|when|where|do |does |did |is |are |was |were |has |have |had |will |would |shall |should |can |could |may |might |must )/i;
+  function isTaskSentence(sent) {
+    var v = String(sent || '').trim().replace(/^["“'([]+/, '');
+    if (TASK_IMPERATIVE.test(v)) return true;
+    return /\?\s*["”')\]]*$/.test(v) && TASK_QUESTION.test(v);
+  }
+  /* 规则切分：末段连续指令句 → 确定；规则吃不准（无指令句/中间穿插）→ certain=false 交 AI */
+  function splitTopicText(text) {
+    var sens = topicSentences(text);
+    if (sens.length <= 1) return { statement: sens, task: [], certain: true };
+    var flags = sens.map(isTaskSentence);
+    var first = flags.indexOf(true);
+    if (first === -1) return { statement: sens, task: [], certain: false };
+    for (var i = first + 1; i < sens.length; i++) {
+      if (!flags[i]) return { statement: sens.slice(0, first), task: sens.slice(first), certain: false };
+    }
+    return { statement: sens.slice(0, first), task: sens.slice(first), certain: true };
+  }
+  /* AI 校正：一题只问一次（localStorage 缓存）；失败 → null 由调用方末句兜底 */
+  function classifyTopicByAI(text, cb) {
+    var hit = null;
+    try { hit = JSON.parse(localStorage.getItem('yasi-topic-split') || 'null'); } catch (e) {}
+    if (hit && hit.q === text) { cb(hit.r); return; }
+    askModel([{
+      role: 'user',
+      content: '下面是一道雅思写作大作文题目，已按句切分。判断哪些句子是【指令句】（要求考生怎么写，如 Discuss both views / To what extent do you agree / What problems…），其余是【内容句】。只输出 JSON，形如 {"task":[2]}（task 为指令句的 0 起序号数组；无指令句输出 {"task":[]}）：\n' +
+        topicSentences(text).map(function (sen, i) { return i + '. ' + sen; }).join('\n')
+    }], { temperature: 0.1, maxTokens: 400 })
+      .then(function (out) {
+        var j = parseJSON(out) || {};
+        var r = Array.isArray(j.task) ? j.task.map(Number).filter(function (n) { return n >= 0; }) : [];
+        try { localStorage.setItem('yasi-topic-split', JSON.stringify({ q: text, r: r })); } catch (e) {}
+        cb(r);
+      })
+      .catch(function () { cb(null); });
+  }
+  function applyTopicText(text) {
+    var sp = splitTopicText(text);
+    TOPIC.statement = sp.statement; TOPIC.task = sp.task;
+    renderTopic();
+    if (sp.certain) return;
+    var sens = topicSentences(text);
+    classifyTopicByAI(text, function (idx) {
+      if (idx === null && sens.length > 1) idx = [sens.length - 1]; /* AI 定不了：末句当指令句 */
+      var t = (idx || []).filter(function (i) { return i >= 0 && i < sens.length; });
+      var first = t.length ? Math.min.apply(null, t) : -1;
+      TOPIC.statement = first > -1 ? sens.slice(0, first) : sens;
+      TOPIC.task = first > -1 ? sens.slice(first) : [];
+      renderTopic();
+    });
+  }
   /* ================= 标点规则表（渲染/评判都读这里，不写死在代码里） =================
      before/after: 1=前/后有空格，0=无；必需标点固定生成成块，按普通积木参与判卷 */
   var PUNCT = {
@@ -1127,7 +1240,6 @@ body.creative .cs-close { display: inline-flex; }
   try { if (localStorage.getItem(LANG_KEY) === 'en') LANG.v = 'en'; } catch (e) {}
   var I18N = {
     'app.title': { zh: '英语写作工作台', en: 'English Writing Workshop' },
-    'app.sub': { zh: 'English Writing Workshop', en: '雅思写作 · 拼积木学写作' },
     'topbar.ideas': { zh: '观点库', en: 'Ideas' },
     'db.title': { zh: '观点库', en: 'Ideas' },
     'db.desc': { zh: '前置对话沉淀的论点与论据', en: 'Arguments and evidence from your earlier discussion' },
@@ -1181,7 +1293,7 @@ body.creative .cs-close { display: inline-flex; }
     'slot.vp': { zh: '动词短语', en: 'verb phrase' },
     'ans.tag': { zh: '参考答案', en: 'Model answer' },
     'ans.next': { zh: '下一句 →', en: 'Next →' },
-    'ans.notePrefix': { zh: '✎ 语法点评 · ', en: '✎ Grammar note · ' },
+    'ans.notePrefix': { zh: '语法点评 · ', en: 'Grammar note · ' },
     'zone.empty.done': { zh: '全文完成', en: 'Essay complete' },
     'zone.empty.wait': { zh: '确认中文后生成本句积木', en: 'Confirm your Chinese to generate blocks' },
     'tip.reg.general': { zh: '通用', en: 'general' },
@@ -1195,7 +1307,6 @@ body.creative .cs-close { display: inline-flex; }
     'tip.colloc': { zh: '常搭 {W}', en: 'often with {W}' },
     'tip.alt': { zh: '可换 {W}', en: 'alt: {W}' },
     'zhh.done': { zh: '全文完成 · 共 {N} 词', en: 'Essay complete · {N} words' },
-    'zhh.sentDone': { zh: '已完成 · 可点「修改中文」重来，或直接改词序', en: 'Done · click “Edit Chinese” to redo, or just reorder the blocks' },
     'zhh.struck': { zh: '已划掉偏离部分 · 接受或继续编辑', en: 'Off-target parts struck out · accept or keep editing' },
     'zhh.confirmed': { zh: '✓ 已确认', en: '✓ Confirmed' },
     'zhh.suggFilled': { zh: '数据库建议已填入 · 可修改后校验', en: 'Suggestion inserted · edit if you like, then check' },
@@ -1233,7 +1344,6 @@ body.creative .cs-close { display: inline-flex; }
     'asmh.equivChecking': { zh: '对照中文检查中…', en: 'Checking against your Chinese…' },
     'asmh.backbone': { zh: '先搭主干（主语+动词+宾语），连接词放在它连接的两部分之间，介词紧随其宾语前。', en: 'Build the backbone first (subject + verb + object). Linking words sit between the two parts they join; prepositions come right before their object.' },
     'asmh.tipping': { zh: '提示生成中…', en: 'Generating a tip…' },
-    'asmh.reset': { zh: '已重置 · 重新拼装', en: 'Reset · build it again' },
     'asmh.needFirst': { zh: '先放入词块再确认', en: 'Place some blocks first' },
     'asmh.noPunc': { zh: '先放词块，再插标点', en: 'Place blocks before punctuation' },
     'cs.exit.aria': { zh: '退出创想空间（Esc）', en: 'Exit Focus mode (Esc)' },
@@ -1301,16 +1411,14 @@ body.creative .cs-close { display: inline-flex; }
       '<div class="zone-head">' +
       '<span class="chip ' + z.chip + '" aria-hidden="true"></span>' +
       '<span class="zone-title">' + t(z.titleKey) + '</span>' +
-      '<span class="zone-count" id="cnt-' + z.key + '">0</span>' +
       '</div>' +
       '<div class="blocks" id="blocks-' + z.key + '"></div></div>';
   }).join('');
   /* [单容器] 四区同入一个滚动层（无遮罩渐隐，栏目标题永不被裁；配件不再固定底部） */
   zonesEl.innerHTML = '<div class="lex-scroll">' + zHtml + '</div>';
-  var ZONE_BOX = {}, ZONE_CNT = {}, ZONE_DIV = {}, FORM_CLS = {}, TC_CLS = {}, ZKEYS = [];
+  var ZONE_BOX = {}, ZONE_DIV = {}, FORM_CLS = {}, TC_CLS = {}, ZKEYS = [];
   ZONES.forEach(function (z) {
     ZONE_BOX[z.key] = document.getElementById('blocks-' + z.key);
-    ZONE_CNT[z.key] = document.getElementById('cnt-' + z.key);
     ZONE_DIV[z.key] = document.getElementById('zone-' + z.key);
     FORM_CLS[z.key] = z.blk;
     TC_CLS[z.key] = z.tc;
@@ -1461,23 +1569,20 @@ body.creative .cs-close { display: inline-flex; }
         if (z.hideEmpty) { ZONE_DIV[z.key].style.display = 'none'; return; }
         ZONE_DIV[z.key].style.display = '';
         box.innerHTML = '<div class="zone-empty">' + (allDone() ? t('zone.empty.done') : t('zone.empty.wait')) + '</div>';
-        ZONE_CNT[z.key].textContent = 0;
         return;
       }
-      var remTotal = 0, html = '', anyForm = false;
+      var html = '', anyForm = false;
       it.blocks.forEach(function (b, bi) {
         if (b.t === 'punc' && b.src === 'user') return; /* 用户标点不占缺口（物理键盘插入，不进托盘渲染） */
         if (formZone(b) !== z.key) return;
         anyForm = true;
         var rem = b.count - usedCount(it.order, bi);
-        remTotal += rem;
         var badge = rem > 1 ? '<span class="b-ct">×' + rem + '</span>' : '';
         var btn = '<button type="button" class="block ' + FORM_CLS[z.key] + (rem <= 0 ? ' used' : '') + '"' +
           (rem <= 0 ? ' disabled' : '') + (z.key === 'bonus' ? bonusBlockTip(b) : '') + ' data-bi="' + bi + '">' +
           formHTML(b) + badge + '</button>';
         html += btn;
       });
-      ZONE_CNT[z.key].textContent = remTotal;
       box.innerHTML = anyForm ? html : '<div class="zone-empty">—</div>';
       /* 配件栏带自建输入：句子进入拼装阶段就显示（即使暂无配件块） */
       if (z.hideEmpty) ZONE_DIV[z.key].style.display = (anyForm || (z.input && it.blocks.length)) ? '' : 'none';
@@ -1585,7 +1690,6 @@ body.creative .cs-close { display: inline-flex; }
       setZhHint(tN('zhh.done', totalWords()), 'ok');
       setAsmHint(t('asmh.allDone'), 'ok');
     } else if (it.done) {
-      setZhHint(t('zhh.sentDone'), '');
       setAsmHint(t('asmh.sentOk'), 'ok');
     } else if (inStrike) {
       zhEdit.innerHTML = it.strikeParts.map(function (p) {
@@ -3129,7 +3233,8 @@ body.creative .cs-close { display: inline-flex; }
     ACAD: ACAD, ACAD_BY: ACAD_BY, ACAD_EQ: ACAD_EQ, ACAD_REL_BY: ACAD_REL_BY,
     ACAD_V2: ACAD_V2, bonusTriggerDict: bonusTriggerDict, bonusCheckText: bonusCheckText, bonusBlockTip: bonusBlockTip,
     I18N: I18N, LANG: LANG, LANG_KEY: LANG_KEY, t: t, tN: tN, setLang: setLang,
-    noteNow: noteNow, noteZh: noteZh, roleNow: roleNow, paraTitle: paraTitle, paraSub: paraSub, labelNow: labelNow, slotLabel: slotLabel
+    noteNow: noteNow, noteZh: noteZh, roleNow: roleNow, paraTitle: paraTitle, paraSub: paraSub, labelNow: labelNow, slotLabel: slotLabel,
+    TOPIC: TOPIC, topicSentences: topicSentences, isTaskSentence: isTaskSentence, splitTopicText: splitTopicText, renderTopic: renderTopic, applyTopicText: applyTopicText
   };
 
   /* ================= 拼装与评判 ================= */
@@ -3217,8 +3322,7 @@ body.creative .cs-close { display: inline-flex; }
   function renderAnswer() {
     var it = cur(), f = FLAT[S.cur];
     if (!it.ansShown || !it.answer) { ansBox.hidden = true; ansBox.innerHTML = ''; return; }
-    var h = '<div class="ans-head"><span class="ans-tag">' + esc(t('ans.tag')) + '</span>' +
-      '<span class="ans-role">' + esc(labelNow(f)) + ' · ' + esc(roleNow(f.s.role)) + '</span></div>' +
+    var h = '<div class="ans-head"><span class="ans-tag">' + esc(t('ans.tag')) + '</span></div>' +
       '<p class="ans-en" lang="en">' + esc(it.answer) + '</p>';
     if (it.zh) h += '<p class="ans-zh">' + esc(it.zh) + '</p>';
     if (it.gramNote) h += '<p class="ans-note"><span class="ans-note-pre">' + esc(t('ans.notePrefix')) + '</span>' + esc(it.gramNote) + '</p>';
@@ -3459,7 +3563,6 @@ body.creative .cs-close { display: inline-flex; }
     renderZones();
     renderParas();
     renderAnswer();
-    setAsmHint(t('asmh.reset'));
   });
 
   /* 确认键：随时可点、按下即检查（不要求用完所有积木）；通过即解锁下一句 */
@@ -4269,9 +4372,46 @@ body.creative .cs-close { display: inline-flex; }
     location.reload();
   });
 
+  /* ================= 液态玻璃确认键：折射特性检测 + 指针高光 + 弹性按压 ================= */
+  (function () {
+    var lensOK = typeof CSS !== 'undefined' && CSS.supports &&
+      (CSS.supports('backdrop-filter', 'url(#lgLens)') || CSS.supports('-webkit-backdrop-filter', 'url(#lgLens)'));
+    if (lensOK) asmGo.classList.add('lg-lens');
+    /* 指针跟随柔高光：仅精确指针（鼠标）设备 */
+    if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+      asmGo.addEventListener('pointermove', function (e) {
+        var r = asmGo.getBoundingClientRect();
+        asmGo.style.setProperty('--lg-x', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
+        asmGo.style.setProperty('--lg-y', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
+      });
+    }
+    /* 弹性按压：按下压扁 ~4%，松手回弹（回弹 420ms 过冲曲线；减动效时全部关闭） */
+    var noMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var still = function () { return !!(noMotion && noMotion.matches); };
+    var pressed = null;
+    asmGo.addEventListener('pointerdown', function () {
+      if (asmGo.disabled || still()) return;
+      pressed = asmGo.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(.96) scaleY(.92)' }],
+        { duration: 110, easing: 'ease-out', fill: 'forwards' });
+    });
+    function rebound() {
+      if (!pressed) return;
+      pressed.cancel(); pressed = null;
+      if (still()) return;
+      asmGo.animate(
+        [{ transform: 'scale(.96) scaleY(.92)' }, { transform: 'scale(1.025, 1.015)', offset: .45 }, { transform: 'scale(1)' }],
+        { duration: 420, easing: 'cubic-bezier(.34, 1.56, .64, 1)' });
+    }
+    asmGo.addEventListener('pointerup', rebound);
+    asmGo.addEventListener('pointercancel', rebound);
+    asmGo.addEventListener('pointerleave', function () { if (pressed) rebound(); });
+  })();
+
   /* ================= 启动 ================= */
   load();
   applyStaticLang();
+  renderTopic();
   var langToggleEl = document.getElementById('langToggle');
   langToggleEl.addEventListener('click', function (e) {
     var b = e.target.closest('button');
@@ -4624,7 +4764,9 @@ var DEFAULT_BACKGROUND_IMAGE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIA
       if (pal.bgB) root.setProperty('--bgB', pal.bgB);
       if (pal.bgC) root.setProperty('--bgC', pal.bgC);
       if (pal.bgD) root.setProperty('--bgD', pal.bgD);
-      /* 确认键深色玻璃基色：取背景主色（photo），色相不变、亮度压到 25%、饱和略增 */
+      /* 液态玻璃确认键取色：跟随背景照片推导 --lg-fill/--lg-ink/--lg-sh
+         填充 = 照片色相、饱和微升(×1.12+.04)、亮度比照片低 14 个点、alpha 48%；
+         墨色按「填充×卡面」sRGB 合成的对比度自动深/浅，死区（白字>.183 · 深字<.268）内微调逃出 */
       try {
         var m = /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i.exec(pal.photo || '');
         if (m) {
@@ -4636,17 +4778,33 @@ var DEFAULT_BACKGROUND_IMAGE = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIA
             else h = (r - g) / df + 4;
             h *= 60; if (h < 0) h += 360;
           }
-          var sat = mx ? df / mx : 0, sat2 = Math.min(1, sat * 1.15 + .05), l2 = .25; /* L 25–35% 区间取下限保对比度 */
-          var c = sat2 * (1 - Math.abs(2 * l2 - 1)), x = c * (1 - Math.abs((h / 60) % 2 - 1)), m2 = l2 - c / 2;
-          var rr = 0, gg = 0, bb = 0;
-          if (h < 60) { rr = c; gg = x; } else if (h < 120) { rr = x; gg = c; }
-          else if (h < 180) { gg = c; bb = x; } else if (h < 240) { gg = x; bb = c; }
-          else if (h < 300) { rr = x; bb = c; } else { rr = c; bb = x; }
-          function b2(v) { var q = Math.round((v + m2) * 255); return ('0' + (q || 0).toString(16)).slice(-2); }
-          var hx2 = '#' + b2(rr) + b2(gg) + b2(bb);
-          root.setProperty('--go-deep', hx2.toUpperCase());
+          var lP = (mx + mn) / 2, satH = df === 0 ? 0 : df / (1 - Math.abs(2 * lP - 1)); /* HSV→HSL */
+          var dark = false;
+          try { dark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e2) {}
+          var s2 = Math.min(1, (satH || 0) * 1.12 + .04), A = .48, surf = dark ? .06 : .92;
+          function lgLin(v) { v = Math.min(1, Math.max(0, v)); return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }
+          function lgHsl(hh, ss, ll) {
+            var c = ss * (1 - Math.abs(2 * ll - 1)), x = c * (1 - Math.abs((hh / 60) % 2 - 1)), mm = ll - c / 2;
+            var q1 = 0, q2 = 0, q3 = 0;
+            if (hh < 60) { q1 = c; q2 = x; } else if (hh < 120) { q1 = x; q2 = c; }
+            else if (hh < 180) { q2 = c; q3 = x; } else if (hh < 240) { q2 = x; q3 = c; }
+            else if (hh < 300) { q1 = x; q3 = c; } else { q1 = c; q3 = x; }
+            return [q1 + mm, q2 + mm, q3 + mm];
+          }
+          function lgMixLum(ll) { /* 填充按 alpha 合成到卡面后的相对亮度 */
+            var f = lgHsl(h, s2, ll);
+            var cr = A * f[0] + (1 - A) * surf, cg = A * f[1] + (1 - A) * surf, cb = A * f[2] + (1 - A) * surf;
+            return .2126 * lgLin(cr) + .7152 * lgLin(cg) + .0722 * lgLin(cb);
+          }
+          var fillL = Math.max(0, Math.min(1, lP - .14));
+          for (var k = 0; k < 6 && !((dark && lgMixLum(fillL) <= .175) || (!dark && lgMixLum(fillL) >= .32)); k++) {
+            fillL = dark ? Math.max(0, fillL - .05) : Math.min(lP, fillL + .04);
+          }
+          root.setProperty('--lg-fill', 'hsla(' + Math.round(h) + ',' + Math.round(s2 * 100) + '%,' + Math.round(fillL * 100) + '%,' + A + ')');
+          root.setProperty('--lg-ink', lgMixLum(fillL) <= .18 ? '#F4F8FA' : '#1D2A28');
+          root.setProperty('--lg-sh', 'hsl(' + Math.round(h) + ',' + Math.round(s2 * 100) + '%,' + (dark ? 4 : 16) + '%)');
         }
-      } catch (e) { /* 推导失败：保留 CSS 静态兜底色 */ }
+      } catch (e) { /* 推导失败：保留 CSS 静态兜底 */ }
     });
   } catch (e) { /* 整块失败也不影响主应用 */ }
 })();
